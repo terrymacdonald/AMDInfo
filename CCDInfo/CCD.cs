@@ -201,8 +201,10 @@ namespace CCDInfo
     public struct DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO : IEquatable<DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
+        [MarshalAs(UnmanagedType.U4)]
         public uint Value;
         public DISPLAYCONFIG_COLOR_ENCODING ColorEncoding;
+        [MarshalAs(UnmanagedType.U4)]
         public int BitsPerColorChannel;
 
         public bool AdvancedColorSupported => (Value & 0x1) == 0x1;

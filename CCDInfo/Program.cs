@@ -35,11 +35,21 @@ namespace CCDInfo
             if (args.Length > 0)
             {
                 if (args[0] == "save")
-                {
+                {                    
                     saveToFile(args[1]);
+                    if (!File.Exists(args[1]))
+                    {
+                        Console.WriteLine($"ERROR - Couldn't save settings to the file {args[1]}");
+                        Environment.Exit(1);
+                    }
                 }
                 else if (args[0] == "load")
                 {
+                    if (!File.Exists(args[1]))
+                    {
+                        Console.WriteLine($"ERROR - Couldn't find the file {args[1]} to load settings from it");
+                        Environment.Exit(1);
+                    }
                     loadFromFile(args[1]);
                 }
             }            
@@ -236,13 +246,12 @@ namespace CCDInfo
                     throw new Win32Exception((int)err);
 
 
-                hdrInfos[hdrInfoCount] = new ADVANCED_HDR_INFO_PER_PATH
-                {
-                    AdapterId = path.TargetInfo.AdapterId,
-                    Id = path.TargetInfo.Id,
-                    AdvancedColorInfo = colorInfo,
-                    SDRWhiteLevel = whiteLevelInfo,
-                };
+                hdrInfos[hdrInfoCount] = new ADVANCED_HDR_INFO_PER_PATH();
+                hdrInfos[hdrInfoCount].AdapterId = path.TargetInfo.AdapterId;
+                hdrInfos[hdrInfoCount].Id = path.TargetInfo.Id;
+                hdrInfos[hdrInfoCount].AdvancedColorInfo = colorInfo;
+                hdrInfos[hdrInfoCount].SDRWhiteLevel = whiteLevelInfo;
+                hdrInfoCount++;
             }
 
 
