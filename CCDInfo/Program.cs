@@ -32,6 +32,10 @@ namespace CCDInfo
 
         static void Main(string[] args)
         {
+            Console.WriteLine($"CCDInfo v1.0.0");
+            Console.WriteLine($"==============");
+            Console.WriteLine($"By Terry MacDonald 2021\n");
+
             if (args.Length > 0)
             {
                 if (args[0] == "save")
@@ -51,6 +55,15 @@ namespace CCDInfo
                         Environment.Exit(1);
                     }
                     loadFromFile(args[1]);
+                }
+                else if (args[0] == "help" || args[0] == "--help" || args[0] == "-h" || args[0] == "/?" || args[0] == "-?")
+                {
+                    Console.WriteLine($"CCDInfo is a little program to help test setting display layout and HDR settings in Windows 10 64-bit.\n");
+                    Console.WriteLine($"You can run it without any command line parameters, and it will print all the information it can find from the \nWindows Display CCD interface.\n");
+                    Console.WriteLine($"You can also run it with 'CCDInfo save myfilename.cfg' and it will save the current display configuration into\nthe myfilename.cfg file.\n");
+                    Console.WriteLine($"This is most useful when you subsequently use the 'CCDInfo load myfilename.cfg' command, as it will load the\ndisplay configuration from the myfilename.cfg file and make it live.");
+                    Console.WriteLine($"In this way, you can make yourself a library of different cfg files with different display layouts, then use\nthe CCDInfo load command to swap between them.");
+                    Environment.Exit(1);
                 }
             }            
 
