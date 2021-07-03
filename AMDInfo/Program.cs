@@ -185,7 +185,7 @@ namespace AMDInfo
                             Console.WriteLine($"AMDLibrary/SetActiveProfile: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} ({oneAdapter.AdapterName}) AdapterID display ID#{oneDisplayInfo.DisplayID.DisplayLogicalIndex} is a real display");
 
                             // At this point we know we have a real display, so we can begin to interrogate it.
-
+                            
                         }
 
 

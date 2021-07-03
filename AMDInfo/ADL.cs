@@ -615,35 +615,6 @@ namespace AMDInfo
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
-    /*public struct ConvertedDDCInfoFlag
-    {
-        /// <summary> Indicates the display is a projector .</summary>
-        public bool PROJECTORDEVICE;
-        /// <summary> Indicates the display has an EDID extension</summary>
-        public bool EDIDEXTENSION;
-        /// <summary> Indicates the display is a digital device</summary>
-        public bool DIGITALDEVICE;
-        /// <summary> Indicates the display has HDMI audio capabilities</summary>
-        public bool HDMIAUDIODEVICE;
-        /// <summary> Indicates the display supports AI</summary>
-        public bool SUPPORTS_AI;
-        /// <summary> Indicates the display supports xvYCC601</summary>
-        public bool SUPPORT_xvYCC601;
-        /// <summary> Indicates the display supports xvYCC709</summary>
-        public bool SUPPORT_xvYCC709;
-    }
-
-    public struct ConvertedSupportedHDR
-    {
-        /// <summary> HDR10/CEA861.3 HDR supported</summary>
-        public bool CEA861_3;
-        /// <summary> DolbyVision HDR supported</summary>
-        public bool DOLBYVISION;
-        /// <summary> FreeSync HDR supported.</summary>
-        public bool FREESYNC_HDR;
-    }*/
-
-
     /// <summary> ADLDisplayID Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_DISPLAY_ID : IEquatable<ADL_DISPLAY_ID>
@@ -696,6 +667,121 @@ namespace AMDInfo
         ///<summary> Indicating the display info value.<summary>
         public int DisplayInfoValue;
 
+        // Display Type - no idea what the settings are
+
+        // Display Output Type settings
+        public bool DisplayOutputTypeIsUnknown => DisplayOutputType == 0;
+        public bool DisplayOutputTypeIsVGA => DisplayOutputType == 1;
+        public bool DisplayOutputTypeIsDVI_D => DisplayOutputType == 2;
+        public bool DisplayOutputTypeIsDVI_I => DisplayOutputType == 3;
+        public bool DisplayOutputTypeIsATICVDongleNTSC => DisplayOutputType == 4;
+        public bool DisplayOutputTypeIsATICVDongleJPN => DisplayOutputType == 5;
+        public bool DisplayOutputTypeIsATICVDongleNonI2CJPN => DisplayOutputType == 6;
+        public bool DisplayOutputTypeIsATICVDongleNonI2CNTSC => DisplayOutputType == 7;
+        public bool DisplayOutputTypeIsProprietary => DisplayOutputType == 8;
+        public bool DisplayOutputTypeIsHDMITypeA => DisplayOutputType == 10;
+        public bool DisplayOutputTypeIsHDMITypeB => DisplayOutputType == 11;
+        public bool DisplayOutputTypeIsSVideo => DisplayOutputType == 12;
+        public bool DisplayOutputTypeIsComposite => DisplayOutputType == 13;
+        public bool DisplayOutputTypeIsRCA3Component => DisplayOutputType == 14;
+        public bool DisplayOutputTypeIsDisplayPort => DisplayOutputType == 15;
+        public bool DisplayOutputTypeIsEDP => DisplayOutputType == 16;
+        public bool DisplayOutputTypeIsWirelessDisplay => DisplayOutputType == 17;
+        public bool DisplayOutputTypeIsUSBTypeC => DisplayOutputType == 18;
+
+
+        /*#define ADL_DISPLAY_CONTYPE_UNKNOWN                 0
+        #define ADL_DISPLAY_CONTYPE_VGA                     1
+        #define ADL_DISPLAY_CONTYPE_DVI_D                   2
+        #define ADL_DISPLAY_CONTYPE_DVI_I                   3
+        #define ADL_DISPLAY_CONTYPE_ATICVDONGLE_NTSC        4
+        #define ADL_DISPLAY_CONTYPE_ATICVDONGLE_JPN         5
+        #define ADL_DISPLAY_CONTYPE_ATICVDONGLE_NONI2C_JPN  6
+        #define ADL_DISPLAY_CONTYPE_ATICVDONGLE_NONI2C_NTSC 7
+        #define ADL_DISPLAY_CONTYPE_PROPRIETARY                8
+        #define ADL_DISPLAY_CONTYPE_HDMI_TYPE_A             10
+        #define ADL_DISPLAY_CONTYPE_HDMI_TYPE_B             11
+        #define ADL_DISPLAY_CONTYPE_SVIDEO                   12
+        #define ADL_DISPLAY_CONTYPE_COMPOSITE               13
+        #define ADL_DISPLAY_CONTYPE_RCA_3COMPONENT          14
+        #define ADL_DISPLAY_CONTYPE_DISPLAYPORT             15
+        #define ADL_DISPLAY_CONTYPE_EDP                     16
+        #define ADL_DISPLAY_CONTYPE_WIRELESSDISPLAY         17
+        #define ADL_DISPLAY_CONTYPE_USB_TYPE_C              18*/
+
+        // Display Connector
+
+        public bool DisplayConnectorIsVGA => DisplayConnector == 0;
+        public bool DisplayConnectorIsDVI => DisplayConnector == 1;
+        public bool DisplayConnectorIsDVI_SL => DisplayConnector == 2;
+        public bool DisplayConnectorIsHDMI => DisplayConnector == 3;
+        public bool DisplayConnectorIsDisplayPort=> DisplayConnector == 4;
+        public bool DisplayConnectorIsActiveDongleDP_DVI_SL => DisplayConnector == 5;
+        public bool DisplayConnectorIsActiveDongleDP_DVI_DL => DisplayConnector == 6;
+        public bool DisplayConnectorIsActiveDongleDP_HDMI => DisplayConnector == 7;
+        public bool DisplayConnectorIsActiveDongleDP_VGA => DisplayConnector == 8;
+        public bool DisplayConnectorIsPassiveDongleDP_HDMI => DisplayConnector == 9;
+        public bool DisplayConnectorIsPassiveDongleDP_DVI => DisplayConnector == 10;
+        public bool DisplayConnectorIsMST => DisplayConnector == 11;
+        public bool DisplayConnectorIsActiveDongle => DisplayConnector == 12;
+        public bool DisplayConnectorIsVirtual => DisplayConnector == 13;       
+
+        /*#define ADL_CONNECTION_TYPE_VGA 0
+        #define ADL_CONNECTION_TYPE_DVI 1
+        #define ADL_CONNECTION_TYPE_DVI_SL 2
+        #define ADL_CONNECTION_TYPE_HDMI 3
+        #define ADL_CONNECTION_TYPE_DISPLAY_PORT 4
+        #define ADL_CONNECTION_TYPE_ACTIVE_DONGLE_DP_DVI_SL 5
+        #define ADL_CONNECTION_TYPE_ACTIVE_DONGLE_DP_DVI_DL 6
+        #define ADL_CONNECTION_TYPE_ACTIVE_DONGLE_DP_HDMI 7
+        #define ADL_CONNECTION_TYPE_ACTIVE_DONGLE_DP_VGA 8
+        #define ADL_CONNECTION_TYPE_PASSIVE_DONGLE_DP_HDMI 9
+        #define ADL_CONNECTION_TYPE_PASSIVE_DONGLE_DP_DVI 10
+        #define ADL_CONNECTION_TYPE_MST 11
+        #define ADL_CONNECTION_TYPE_ACTIVE_DONGLE          12
+        #define ADL_CONNECTION_TYPE_VIRTUAL    13*/
+
+
+        // Display Info Mask settings
+        public bool DisplayConnectedSupported => (DisplayInfoMask & 0x1) == 0x1;
+        public bool DisplayMappedSupported => (DisplayInfoMask & 0x2) == 0x2;
+        public bool NonLocalSupported => (DisplayInfoMask & 0x4) == 0x4;
+        public bool ForcibleSupported => (DisplayInfoMask & 0x8) == 0x8;
+        public bool GenLockSupported => (DisplayInfoMask & 0x10) == 0x10;
+        public bool MultiVPUSupported => (DisplayInfoMask & 0x20) == 0x20;
+        public bool LDADisplaySupported => (DisplayInfoMask & 0x40) == 0x40;
+        public bool ModeTimingOverrideSupported => (DisplayInfoMask & 0x80) == 0x80;
+        public bool MannerSingleSupported => (DisplayInfoMask & 0x100) == 0x100;
+        public bool MannerCloneSupported => (DisplayInfoMask & 0x200) == 0x200;
+        public bool Manner2VStretchSupported => (DisplayInfoMask & 0x400) == 0x400;
+        public bool Manner2HStretchSupported => (DisplayInfoMask & 0x800) == 0x800;
+        public bool MannerExtendedSupported => (DisplayInfoMask & 0x1000) == 0x1000;
+        public bool MannerNStretch1GPUSupported => (DisplayInfoMask & 0x10000) == 0x10000;
+        public bool MannerNStretchNGPUSupported => (DisplayInfoMask & 0x20000) == 0x20000;
+        public bool MannerReserved2Supported => (DisplayInfoMask & 0x40000) == 0x40000;
+        public bool MannerReserved3Supported => (DisplayInfoMask & 0x80000) == 0x80000;
+        public bool ShowTypeProjectorSupported => (DisplayInfoMask & 0x100000) == 0x100000;
+
+        // Display Info Value settings
+        public bool DisplayConnectedSet => (DisplayInfoValue & 0x1) == 0x1;
+        public bool DisplayMappedSet => (DisplayInfoValue & 0x2) == 0x2;
+        public bool NonLocalSet => (DisplayInfoValue & 0x4) == 0x4;
+        public bool ForcibleSet => (DisplayInfoValue & 0x8) == 0x8;
+        public bool GenLockSet => (DisplayInfoValue & 0x10) == 0x10;
+        public bool MultiVPUSet => (DisplayInfoValue & 0x20) == 0x20;
+        public bool LDADisplaySet => (DisplayInfoValue & 0x40) == 0x40;
+        public bool ModeTimingOverrideSet => (DisplayInfoValue & 0x80) == 0x80;
+        public bool MannerSingleSet => (DisplayInfoValue & 0x100) == 0x100;
+        public bool MannerCloneSet => (DisplayInfoValue & 0x200) == 0x200;
+        public bool Manner2VStretchSet => (DisplayInfoValue & 0x400) == 0x400;
+        public bool Manner2HStretchSet => (DisplayInfoValue & 0x800) == 0x800;
+        public bool MannerExtendedSet => (DisplayInfoValue & 0x1000) == 0x1000;
+        public bool MannerNStretch1GPUSet => (DisplayInfoValue & 0x10000) == 0x10000;
+        public bool MannerNStretchNGPUSet => (DisplayInfoValue & 0x20000) == 0x20000;
+        public bool MannerReserved2Set => (DisplayInfoValue & 0x40000) == 0x40000;
+        public bool MannerReserved3Set => (DisplayInfoValue & 0x80000) == 0x80000;
+        public bool ShowTypeProjectorSet => (DisplayInfoValue & 0x100000) == 0x100000;
+
         public bool Equals(ADL_DISPLAY_INFO other)
             => DisplayID.Equals(other.DisplayID) &&
                 DisplayControllerIndex == other.DisplayControllerIndex &&
@@ -715,46 +801,7 @@ namespace AMDInfo
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
-    /*public struct ConvertedDisplayInfoValue
-    {
-        /// <summary> Indicates the display is connected .</summary>
-        public bool DISPLAYCONNECTED;
-        /// <summary> Indicates the display is mapped within OS </summary>
-        public bool DISPLAYMAPPED;
-        /// <summary> Indicates the display can be forced </summary>
-        public bool FORCIBLESUPPORTED;
-        /// <summary> Indicates the display supports genlock </summary>
-        public bool GENLOCKSUPPORTED;
-        /// <summary> Indicates the display is an LDA display.</summary>
-        public bool LDA_DISPLAY;
-        /// <summary> Indicates the display supports 2x Horizontal stretch </summary>
-        public bool MANNER_SUPPORTED_2HSTRETCH;
-        /// <summIndicates the display supports 2x Vertical stretch </summary>
-        public bool MANNER_SUPPORTED_2VSTRETCH;
-        /// <summary> Indicates the display supports cloned desktops </summary>
-        public bool MANNER_SUPPORTED_CLONE;
-        /// <summary> Indicates the display supports extended desktops </summary>
-        public bool MANNER_SUPPORTED_EXTENDED;
-        /// <summary> Indicates the display supports N Stretched on 1 GPU</summary>
-        public bool MANNER_SUPPORTED_NSTRETCH1GPU;
-        /// <summary> Indicates the display supports N Stretched on N GPUs</summary>
-        public bool MANNER_SUPPORTED_NSTRETCHNGPU;
-        /// <summary> Reserved display info flag #2</summary>
-        public bool MANNER_SUPPORTED_RESERVED2;
-        /// <summary> Reserved display info flag #3</summary>
-        public bool MANNER_SUPPORTED_RESERVED3;
-        /// <summary> Indicates the display supports single desktop </summary>
-        public bool MANNER_SUPPORTED_SINGLE;
-        /// <summary> Indicates the display supports overriding the mode timing </summary>
-        public bool MODETIMING_OVERRIDESSUPPORTED;
-        /// <summary> Indicates the display supports multi-vpu</summary>
-        public bool MULTIVPU_SUPPORTED;
-        /// <summary> Indicates the display is non-local to this machine </summary>
-        public bool NONLOCAL;
-        /// <summary> Indicates the display is a projector </summary>
-        public bool SHOWTYPE_PROJECTOR;
-    }*/
-
+   
     /// <summary> ADLDisplayConfig Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_DISPLAY_CONFIG : IEquatable<ADL_DISPLAY_CONFIG>
@@ -769,6 +816,19 @@ namespace AMDInfo
         public long OverriddedDeviceData;
         /// <summary> Reserved for future use</summary>
         public long Reserved;
+
+        // Connector Type
+        public bool ConnectorTypeIsUnknown => ConnectorType == 0;
+        public bool ConnectorTypeIsCVNonI2CJP => ConnectorType == 1;
+        public bool ConnectorTypeIsCVJPN => ConnectorType == 2;
+        public bool ConnectorTypeIsCVNA => ConnectorType == 3;
+        public bool ConnectorTypeIsCVNonI2CNA => ConnectorType == 4;
+        public bool ConnectorTypeIsVGA => ConnectorType == 5;
+        public bool ConnectorTypeIsDVI_D => ConnectorType == 6;
+        public bool ConnectorTypeIsDVI_I => ConnectorType == 7;
+        public bool ConnectorTypeIsHDMITypeA => ConnectorType == 8;
+        public bool ConnectorTypeIsHDMITypeB => ConnectorType == 9;
+        public bool ConnectorTypeIsDisplayPort => ConnectorType == 10;
 
         public bool Equals(ADL_DISPLAY_CONFIG other)
             => Size == other.Size &&
@@ -800,6 +860,26 @@ namespace AMDInfo
         public int DisplayMapMask;
         /// <summary> The bit mask identifies the display status. The detailed definition is in ADL_DISPLAY_DISPLAYMAP_MANNER_xxx.</summary>
         public int DisplayMapValue;
+
+        // Display Map Mask settings
+        public bool DisplayMapReservedSupported => (DisplayMapMask & 0x1) == 0x1;
+        public bool DisplayMapNotActiveSupported => (DisplayMapMask & 0x2) == 0x2;
+        public bool DisplayMapSingleSupported => (DisplayMapMask & 0x4) == 0x4;
+        public bool DisplayMapCloneSupported => (DisplayMapMask & 0x8) == 0x8;
+        public bool DisplayMapReserved1Supported => (DisplayMapMask & 0x10) == 0x10;
+        public bool DisplayMapHStretchSupported => (DisplayMapMask & 0x20) == 0x20;
+        public bool DisplayMapVStretchSupported => (DisplayMapMask & 0x40) == 0x40;
+        public bool DisplayMapVLDSupported => (DisplayMapMask & 0x80) == 0x80;
+
+        // Display Map Value settings
+        public bool DisplayMapReservedSet => (DisplayMapValue & 0x1) == 0x1;
+        public bool DisplayMapNotActiveSet => (DisplayMapValue & 0x2) == 0x2;
+        public bool DisplayMapSingleSet => (DisplayMapValue & 0x4) == 0x4;
+        public bool DisplayMapCloneSet => (DisplayMapValue & 0x8) == 0x8;
+        public bool DisplayMapReserved1Set => (DisplayMapValue & 0x10) == 0x10;
+        public bool DisplayMapHStretchSet => (DisplayMapValue & 0x20) == 0x20;
+        public bool DisplayMapVStretchSet => (DisplayMapValue & 0x40) == 0x40;
+        public bool DisplayMapVLDSet => (DisplayMapValue & 0x80) == 0x80;
 
         public bool Equals(ADL_DISPLAY_MAP other)
             => DisplayMapIndex == other.DisplayMapIndex &&
@@ -837,6 +917,30 @@ namespace AMDInfo
         public int CapsValue;
         /// <summary> Number of Connectors for this adapter. </summary>
         public int NumConnectors;
+
+        // Caps Mask settings
+        public bool CapNotActiveSupported => (CapsMask & 0x1) == 0x1;
+        public bool CapSingleSupported => (CapsMask & 0x2) == 0x2;
+        public bool CapCloneSupported => (CapsMask & 0x4) == 0x4;
+        public bool CapNStretch1GPUSupported => (CapsMask & 0x8) == 0x8;
+        public bool CapNStretchNGPUSupported => (CapsMask & 0x10) == 0x10;
+        public bool Cap2VStretchSupported => (CapsMask & 0x20) == 0x20;
+        public bool Cap2HStretchSupported => (CapsMask & 0x40) == 0x40;
+        public bool CapExtendedSupported => (CapsMask & 0x80) == 0x80;
+        public bool CapPreferredDisplaySupported => (CapsMask & 0x100) == 0x100;
+        public bool CapBezelSupported => (CapsMask & 0x200) == 0x200;
+
+        // Caps Value settings
+        public bool CapNotActiveSet => (CapsValue & 0x1) == 0x1;
+        public bool CapSingleSet => (CapsValue & 0x2) == 0x2;
+        public bool CapCloneSet => (CapsValue & 0x4) == 0x4;
+        public bool CapNStretch1GPUSet => (CapsValue & 0x8) == 0x8;
+        public bool CapNStretchNGPUSet => (CapsValue & 0x10) == 0x10;
+        public bool Cap2VStretchSet => (CapsValue & 0x20) == 0x20;
+        public bool Cap2HStretchSet => (CapsValue & 0x40) == 0x40;
+        public bool CapExtendedSet => (CapsValue & 0x80) == 0x80;
+        public bool CapPreferredDisplaySet => (CapsValue & 0x100) == 0x100;
+        public bool CapBezelSet => (CapsValue & 0x200) == 0x200;
 
         public bool Equals(ADL_ADAPTER_CAPSX2 other)
             => AdapterID == other.AdapterID &&
