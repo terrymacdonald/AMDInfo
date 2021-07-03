@@ -67,178 +67,114 @@ namespace AMDInfo
                 }
             }
 
+            // Set up some variables
             ADL_STATUS ADLRet;
             IntPtr _adlContextHandle = IntPtr.Zero;
+            bool _initialised = false;
 
-            // Second parameter is 1: Get only the present adapters
-            ADLRet = ADLImport.ADL2_Main_Control_Create(ADLImport.ADL_Main_Memory_Alloc, (int) 1, out _adlContextHandle);
+            try
+            {
+                // Second parameter is 1: Get only the present adapters
+                ADLRet = ADLImport.ADL2_Main_Control_Create(ADLImport.ADL_Main_Memory_Alloc, (int)1, out _adlContextHandle);
+                if (ADLRet == ADL_STATUS.ADL_OK)
+                {
+                    _initialised = true;
+                    Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2 library was initialised successfully");
+                }
+                else
+                {
+                    Console.WriteLine($"AMDLibrary/AMDLibrary: Error intialising ADL2 library. ADL2_Main_Control_Create() returned error code {ADLRet}");
+                    Environment.Exit(1);
+                }
+
+                if (_initialised)
+                {
+
+                    int[] gpuBusIndexes = new int[4];
+                    int numAdapters = 0;
+                    int busNumber;
+                    bool gpuFound = false;
+                    IntPtr adapterInfoBuffer = IntPtr.Zero;
+                    //ADLImport.ADL2_Adapter_NumberOfAdapters_Get(_adlContextHandle, ref NumberOfAdapters);
+                    ADLRet = ADLImport.ADL2_Adapter_AdapterInfoX3_Get(_adlContextHandle, ADLImport.ADL_ADAPTER_INDEX_ALL, out numAdapters, out adapterInfoBuffer);
+                    if (ADLRet == ADL_STATUS.ADL_OK)
+                    {
+                        Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Adapter_AdapterInfoX3_Get worked!");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Adapter_AdapterInfoX3_Get() returned error code {ADLRet}");
+                        Environment.Exit(1);
+                    }
+
+                    ADL_ADAPTER_INFO oneAdapter = new ADL_ADAPTER_INFO();
+                    List<ADL_ADAPTER_INFO> adapterInfoList = new List<ADL_ADAPTER_INFO>();
+                    for(int adapter = 0; adapter < numAdapters; adapter++)
+                    {
+                        oneAdapter = (ADL_ADAPTER_INFO)Marshal.PtrToStructure(new IntPtr(adapterInfoBuffer.ToInt64() + (adapter * Marshal.SizeOf(oneAdapter))), oneAdapter.GetType());
+                        adapterInfoList.Add(oneAdapter);
+
+                        if (oneAdapter.Exist != 1 || oneAdapter.Present != 1)
+                        {
+                            Console.WriteLine($"AMDLibrary/AMDLibrary: The Adapter {oneAdapter.DisplayName} does not exist or is not present.");
+                            continue;
+                        }
+
+                        Console.WriteLine($"AMDLibrary/AMDLibrary: The Adapter {oneAdapter.DisplayName} exists and is present.");
+
+
+                        // Get whiether this adapter is active
+                        int isActive = ADLImport.ADL_FALSE;
+                        ADLRet = ADLImport.ADL2_Adapter_Active_Get(_adlContextHandle, oneAdapter.AdapterIndex, ref isActive);
+                        if (ADLRet == ADL_STATUS.ADL_OK)
+                        {
+                            Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Adapter_Active_Get on adapter {oneAdapter.AdapterIndex} worked!");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Adapter_Active_Get() returned error code {ADLRet}");
+                            Environment.Exit(1);
+                        }
+
+                        if (isActive != ADLImport.ADL_TRUE)
+                        {
+                            Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} is NOT active! Skipping");
+                            continue;
+                        }
+
+                        if (isActive != ADLImport.ADL_TRUE)
+                        {
+                            Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} is NOT active! Skipping");
+                            continue;
+                        }
+
+                        if (oneAdapter.AdapterIndex < 0)
+                        {
+                            Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} has an index less than 0. Skipping");
+                            continue;
+                        }
+
+                        Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} really exists!");
+
+                    }
+                    
+                    Console.WriteLine($"AMDLibrary/GenerateProfileDisplayIdentifiers: Number Of Adapters: {numAdapters.ToString()} ");
+
+                    
+
+                    // Destroy the context handle and memory
+                    ADLImport.ADL2_Main_Control_Destroy(_adlContextHandle);
+                }
+                else
+                {
+                    Console.WriteLine($"ERROR - Couldn't initialise the AMD ADL library.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR - Exception while trying to access ADL2_Main_Control_Create");
+            }
             
-            if (ADLRet == ADL_STATUS.ADL_OK)
-            {
-                //_initialised = true;
-                Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2 library was initialised successfully");
-            }
-            else
-            {
-                Console.WriteLine($"AMDLibrary/AMDLibrary: Error intialising ADL2 library. ADL2_Main_Control_Create() returned error code {ADLRet}");
-                Environment.Exit(1);
-            }
-
-            int NumberOfAdapters = 0;
-            ADLImport.ADL2_Adapter_NumberOfAdapters_Get(_adlContextHandle, ref NumberOfAdapters);
-            Console.WriteLine($"AMDLibrary/GenerateProfileDisplayIdentifiers: Number Of Adapters: {NumberOfAdapters.ToString()} ");
-
-
-            /*ADL_STATU err = ADLImport.GetDisplayConfigBufferSizes(QDC.QDC_ONLY_ACTIVE_PATHS, out var pathCount, out var modeCount);
-            if (err != WIN32STATUS.ERROR_SUCCESS)
-                throw new Win32Exception((int)err);
-
-            var paths = new DISPLAYCONFIG_PATH_INFO[pathCount];
-            var modes = new DISPLAYCONFIG_MODE_INFO[modeCount];
-            err = CCDImport.QueryDisplayConfig(QDC.QDC_ONLY_ACTIVE_PATHS, ref pathCount, paths, ref modeCount, modes, IntPtr.Zero);
-            if (err != WIN32STATUS.ERROR_SUCCESS)
-                throw new Win32Exception((int)err);
-
-            foreach (var path in paths)
-            {
-                Console.WriteLine($"----++++==== Path ====++++----");
-
-                // get display source name
-                var sourceInfo = new DISPLAYCONFIG_GET_SOURCE_NAME();
-                sourceInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
-                sourceInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_GET_SOURCE_NAME>();
-                sourceInfo.Header.AdapterId = path.SourceInfo.AdapterId;
-                sourceInfo.Header.Id = path.SourceInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref sourceInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                Console.WriteLine($"****** Investigating Display Source {sourceInfo.ViewGdiDeviceName} *******");
-                Console.WriteLine();
-
-                // get display target name
-                var targetInfo = new DISPLAYCONFIG_GET_TARGET_NAME();
-                targetInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
-                targetInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_GET_TARGET_NAME>();
-                targetInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                targetInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref targetInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                Console.WriteLine($"****** Investigating Display Target {targetInfo.MonitorFriendlyDeviceName} *******");
-                Console.WriteLine(" Connector Instance: " + targetInfo.ConnectorInstance);
-                Console.WriteLine(" EDID Manufacturer ID: " + targetInfo.EdidManufactureId);
-                Console.WriteLine(" EDID Product Code ID: " + targetInfo.EdidProductCodeId);
-                Console.WriteLine(" Flags Friendly Name from EDID: " + targetInfo.Flags.FriendlyNameFromEdid);
-                Console.WriteLine(" Flags Friendly Name Forced: " + targetInfo.Flags.FriendlyNameForced);
-                Console.WriteLine(" Flags EDID ID is Valid: " + targetInfo.Flags.EdidIdsValid);
-                Console.WriteLine(" Monitor Device Path: " + targetInfo.MonitorDevicePath);
-                Console.WriteLine(" Monitor Friendly Device Name: " + targetInfo.MonitorFriendlyDeviceName);
-                Console.WriteLine(" Output Technology: " + targetInfo.OutputTechnology);
-                Console.WriteLine();
-
-                // get display adapter name
-                var adapterInfo = new DISPLAYCONFIG_GET_ADAPTER_NAME();
-                adapterInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME;
-                adapterInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_GET_ADAPTER_NAME>();
-                adapterInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                adapterInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref adapterInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                Console.WriteLine($"****** Investigating Adapter {adapterInfo.AdapterDevicePath} *******");
-                Console.WriteLine();
-
-
-                // get display target preferred mode
-                var targetPreferredInfo = new DISPLAYCONFIG_GET_TARGET_PREFERRED_NAME();
-                targetPreferredInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE;
-                targetPreferredInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_GET_TARGET_PREFERRED_NAME>();
-                targetPreferredInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                targetPreferredInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref targetPreferredInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                Console.WriteLine($"****** Investigating Display Target Preferred Mode  *******");
-                Console.WriteLine(" Width: " + targetPreferredInfo.Width);
-                Console.WriteLine(" Height: " + targetPreferredInfo.Height);
-                Console.WriteLine($" Target Video Signal Info Active Size: ({targetPreferredInfo.TargetMode.TargetVideoSignalInfo.ActiveSize.Cx}x{targetPreferredInfo.TargetMode.TargetVideoSignalInfo.ActiveSize.Cy})");
-                Console.WriteLine($" Target Video Signal Info Total Size: ({targetPreferredInfo.TargetMode.TargetVideoSignalInfo.TotalSize.Cx}x{targetPreferredInfo.TargetMode.TargetVideoSignalInfo.TotalSize.Cy})");
-                Console.WriteLine(" Target Video Signal Info HSync Frequency: " + targetPreferredInfo.TargetMode.TargetVideoSignalInfo.HSyncFreq);
-                Console.WriteLine(" Target Video Signal Info VSync Frequency: " + targetPreferredInfo.TargetMode.TargetVideoSignalInfo.VSyncFreq);
-                Console.WriteLine(" Target Video Signal Info Pixel Rate: " + targetPreferredInfo.TargetMode.TargetVideoSignalInfo.PixelRate);
-                Console.WriteLine(" Target Video Signal Info Scan Line Ordering: " + targetPreferredInfo.TargetMode.TargetVideoSignalInfo.ScanLineOrdering);
-                Console.WriteLine(" Target Video Signal Info Video Standard: " + targetPreferredInfo.TargetMode.TargetVideoSignalInfo.VideoStandard);
-                Console.WriteLine();
-
-                // get display target base type
-                var targetBaseTypeInfo = new DISPLAYCONFIG_GET_TARGET_BASE_TYPE();
-                targetBaseTypeInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_BASE_TYPE;
-                targetBaseTypeInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_GET_TARGET_BASE_TYPE>();
-                targetBaseTypeInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                targetBaseTypeInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref targetBaseTypeInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                Console.WriteLine($"****** Investigating Target Base Type *******");
-                Console.WriteLine(" Base Output Technology: " + targetBaseTypeInfo.BaseOutputTechnology);
-                Console.WriteLine();
-
-                // get display support virtual resolution
-                var supportVirtResInfo = new DISPLAYCONFIG_SUPPORT_VIRTUAL_RESOLUTION();
-                supportVirtResInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SUPPORT_VIRTUAL_RESOLUTION;
-                supportVirtResInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_SUPPORT_VIRTUAL_RESOLUTION>();
-                supportVirtResInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                supportVirtResInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref supportVirtResInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                Console.WriteLine($"****** Investigating Target Supporting virtual resolution *******");
-                Console.WriteLine(" Virtual Resolution is Disabled: " + supportVirtResInfo.IsMonitorVirtualResolutionDisabled);
-                Console.WriteLine();
-
-
-                //get advanced color info
-                var colorInfo = new DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO();
-                colorInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO;
-                colorInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO>();
-                colorInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                colorInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref colorInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                Console.WriteLine($"****** Investigating Advanced Color Info *******");
-                Console.WriteLine(" Advanced Color Supported: " + colorInfo.AdvancedColorSupported);
-                Console.WriteLine(" Advanced Color Enabled  : " + colorInfo.AdvancedColorEnabled);
-                Console.WriteLine(" Advanced Color Force Disabled: " + colorInfo.AdvancedColorForceDisabled);
-                Console.WriteLine(" Bits per Color Channel: " + colorInfo.BitsPerColorChannel);
-                Console.WriteLine(" Color Encoding: " + colorInfo.ColorEncoding);
-                Console.WriteLine(" Wide Color Enforced: " + colorInfo.WideColorEnforced);
-                Console.WriteLine();
-
-                // get SDR white levels
-                var whiteLevelInfo = new DISPLAYCONFIG_SDR_WHITE_LEVEL();
-                whiteLevelInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL;
-                whiteLevelInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_SDR_WHITE_LEVEL>();
-                whiteLevelInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                whiteLevelInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref whiteLevelInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                Console.WriteLine($"****** Investigating SDR White Level  *******");
-                Console.WriteLine(" SDR White Level: " + whiteLevelInfo.SDRWhiteLevel);
-                Console.WriteLine();
-            }*/
-
-            // Destroy the context handle and memory
-            ADLImport.ADL2_Main_Control_Destroy(_adlContextHandle);
 
         }
 
