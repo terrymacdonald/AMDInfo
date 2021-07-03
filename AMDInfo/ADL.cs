@@ -110,7 +110,7 @@ namespace AMDInfo
 
     /// <summary> ADLAdapterInfo Array</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_MODE
+    public struct ADL_MODE : IEquatable<ADL_MODE>
     {
         /// <summary> Adapter index. </summary>
         public int AdapterIndex;
@@ -136,6 +136,27 @@ namespace AMDInfo
         public int ModeMask;
         /// <summary> The bit mask identifying the display status. </summary>
         public int ModeValue;
+
+        public bool Equals(ADL_MODE other)
+            => AdapterIndex == other.AdapterIndex &&
+                DisplayID.Equals(other.DisplayID) &&
+                XPos == other.XPos &&
+                YPos == other.YPos &&
+                XRes == other.XRes &&
+                YRes == other.YRes &&
+                ColourDepth == other.ColourDepth &&
+                RefreshRate == other.RefreshRate &&
+                Orientation == other.Orientation &&
+                ModeFlag == other.ModeFlag &&
+                ModeMask == other.ModeMask &&
+                ModeValue == other.ModeValue;
+
+        public override int GetHashCode()
+        {
+            return (AdapterIndex, DisplayID, XPos, YPos, XRes, YRes, ColourDepth, RefreshRate, Orientation, ModeFlag, ModeMask, ModeValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /*public struct ConvertedDisplayModeFlags
@@ -160,7 +181,7 @@ namespace AMDInfo
 
     /// <summary> ADLDisplayTarget </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_DISPLAY_TARGET
+    public struct ADL_DISPLAY_TARGET : IEquatable<ADL_DISPLAY_TARGET>
     {
         /// <summary> Display IDs. </summary>
         public ADL_DISPLAY_ID DisplayID;
@@ -170,14 +191,27 @@ namespace AMDInfo
         public int DisplayTargetMask;
         /// <summary> The bit mask identifies the display status. </summary>
         public int DisplayTargetValue;
+
+        public bool Equals(ADL_DISPLAY_TARGET other)
+            => DisplayID.Equals(other.DisplayID) &&
+                DisplayMapIndex == other.DisplayMapIndex&&
+                DisplayTargetMask == other.DisplayTargetMask &&
+                DisplayTargetValue == other.DisplayTargetValue;
+
+        public override int GetHashCode()
+        {
+            return (DisplayID, DisplayMapIndex, DisplayTargetMask, DisplayTargetValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLAdapterInfo Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_ADAPTER_INFO
+    public struct ADL_ADAPTER_INFO : IEquatable<ADL_ADAPTER_INFO>
     {
         /// <summary>The size of the structure</summary>
-        int Size;
+        public int Size;
         /// <summary> Adapter Index</summary>
         public int AdapterIndex;
         /// <summary> Adapter UDID</summary>
@@ -212,12 +246,36 @@ namespace AMDInfo
         public string PNPString;
         /// <summary> OS Display Index</summary>
         public int OSDisplayIndex;
+
+        public bool Equals(ADL_ADAPTER_INFO other)
+            => Size == other.Size &&
+                AdapterIndex == other.AdapterIndex &&
+                UDID.Equals(other.UDID) &&
+                BusNumber == other.BusNumber &&
+                DriverNumber == other.DriverNumber &&
+                FunctionNumber == other.FunctionNumber &&
+                VendorID == other.VendorID &&
+                AdapterName.Equals(other.AdapterName) &&
+                DisplayName.Equals(other.DisplayName) &&
+                Present == other.Present &&
+                Exist == other.Exist &&
+                DriverPath.Equals(other.DriverPath) &&
+                DriverPathExt.Equals(other.DriverPathExt) &&
+                PNPString.Equals(other.PNPString) &&
+                OSDisplayIndex == other.OSDisplayIndex;
+
+        public override int GetHashCode()
+        {
+            return (Size, AdapterIndex, UDID, BusNumber, DriverNumber, FunctionNumber, VendorID, AdapterName, DisplayName, Present, Exist, DriverPath, DriverPathExt, PNPString, OSDisplayIndex).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
 
     /// <summary> ADLAdapterInfoX2 Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_ADAPTER_INFOX2
+    public struct ADL_ADAPTER_INFOX2 : IEquatable<ADL_ADAPTER_INFOX2>
     {
         /// <summary>The size of the structure</summary>
         public int Size;
@@ -259,11 +317,37 @@ namespace AMDInfo
         public int InfoMask;
         /// <summary> Display Info Value</summary>
         public int InfoValue;
+
+        public bool Equals(ADL_ADAPTER_INFOX2 other)
+            => Size == other.Size &&
+                AdapterIndex == other.AdapterIndex &&
+                UDID.Equals(other.UDID) &&
+                BusNumber == other.BusNumber &&
+                DeviceNumber == other.DeviceNumber &&
+                FunctionNumber == other.FunctionNumber &&
+                VendorID == other.VendorID &&
+                AdapterName.Equals(other.AdapterName) &&
+                DisplayName.Equals(other.DisplayName) &&
+                Present == other.Present &&
+                Exist == other.Exist &&
+                DriverPath.Equals(other.DriverPath) &&
+                DriverPathExt.Equals(other.DriverPathExt) &&
+                PNPString.Equals(other.PNPString) &&
+                OSDisplayIndex == other.OSDisplayIndex &&
+                InfoMask == other.InfoMask &&
+                InfoValue == other.InfoValue;
+
+        public override int GetHashCode()
+        {
+            return (Size, AdapterIndex, UDID, BusNumber, DeviceNumber, FunctionNumber, VendorID, AdapterName, DisplayName, Present, Exist, DriverPath, DriverPathExt, PNPString, OSDisplayIndex).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLDisplayEDIDData Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_DISPLAY_EDID_DATA
+    public struct ADL_DISPLAY_EDID_DATA : IEquatable<ADL_DISPLAY_EDID_DATA>
     {
         /// <summary> Size</summary>
         public int Size;
@@ -279,12 +363,26 @@ namespace AMDInfo
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public int[] Reserved;
 
+        public bool Equals(ADL_DISPLAY_EDID_DATA other)
+            => Size == other.Size &&
+                Flag == other.Flag &&
+                EDIDSize == other.EDIDSize &&
+                BlockIndex == other.BlockIndex &&
+                EDIDData.Equals(other.EDIDData);
+
+        public override int GetHashCode()
+        {
+            return (Size, Flag, EDIDSize, BlockIndex, EDIDData).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
+
     }
 
 
     /// <summary> ADLDDCInfo2 Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_DDC_INFO2
+    public struct ADL_DDC_INFO2 : IEquatable<ADL_DDC_INFO2>
     {
         /// <summary> Size of the structure. </summary>
         public int Size;
@@ -364,6 +462,57 @@ namespace AMDInfo
         /// <summary> Reserved </summary>
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public int[] Reserved;
+
+        public bool Equals(ADL_DDC_INFO2 other)
+            => Size == other.Size &&
+            SupportsDDC == other.SupportsDDC &&
+            ManufacturerID == other.ManufacturerID &&
+            ProductID == other.ProductID &&
+            DisplayName.Equals(other.DisplayName) &&
+            MaxHResolution == other.MaxHResolution &&
+            MaxVResolution == other.MaxVResolution &&
+            MaxRefresh == other.MaxRefresh &&
+            PTMCx == other.PTMCx &&
+            PTMCy== other.PTMCy &&
+            PTMRefreshRate == other.PTMRefreshRate &&
+            DDCInfoFlag == other.DDCInfoFlag &&
+            PackedPixelSupported == other.PackedPixelSupported &&
+            PanelPixelFormat == other.PanelPixelFormat &&
+            SerialID == other.SerialID &&
+            MinLuminanceData == other.MinLuminanceData &&
+            AvgLuminanceData == other.AvgLuminanceData &&
+            MaxLuminanceData == other.MaxLuminanceData &&
+            SupportedTransferFunction == other.SupportedTransferFunction &&
+            SupportedColorSpace == other.SupportedColorSpace &&
+            NativeDisplayChromaticityRedX == other.NativeDisplayChromaticityRedX &&
+            NativeDisplayChromaticityRedY == other.NativeDisplayChromaticityRedY &&
+            NativeDisplayChromaticityGreenX == other.NativeDisplayChromaticityGreenX &&
+            NativeDisplayChromaticityGreenY == other.NativeDisplayChromaticityGreenY &&
+            NativeDisplayChromaticityBlueX == other.NativeDisplayChromaticityBlueX &&
+            NativeDisplayChromaticityBlueY == other.NativeDisplayChromaticityBlueY &&
+            NativeDisplayChromaticityWhiteX == other.NativeDisplayChromaticityWhiteX &&
+            NativeDisplayChromaticityWhiteY == other.NativeDisplayChromaticityWhiteY &&
+            DiffuseScreenReflectance == other.DiffuseScreenReflectance &&
+            SpecularScreenReflectance == other.SpecularScreenReflectance &&
+            SupportedHDR == other.SupportedHDR &&
+            FreesyncFlags == other.FreesyncFlags &&
+            MinLuminanceNoDimmingData == other.MinLuminanceNoDimmingData &&
+            MaxBacklightMaxLuminanceData == other.MaxBacklightMaxLuminanceData &&
+            MinBacklightMaxLuminanceData == other.MinBacklightMaxLuminanceData &&
+            MaxBacklightMinLuminanceData == other.MaxBacklightMinLuminanceData &&
+            MinBacklightMinLuminanceData == other.MinBacklightMinLuminanceData;
+
+        public override int GetHashCode()
+        {
+            return (Size, SupportsDDC, ManufacturerID, ProductID, DisplayName, MaxHResolution, MaxVResolution, MaxRefresh, PTMCx, PTMCy, PTMRefreshRate, DDCInfoFlag,
+                PackedPixelSupported, PanelPixelFormat, SerialID, MinLuminanceData, AvgLuminanceData, MaxLuminanceData, SupportedTransferFunction, SupportedColorSpace,
+                NativeDisplayChromaticityRedX, NativeDisplayChromaticityRedY, NativeDisplayChromaticityGreenX, NativeDisplayChromaticityGreenY, 
+                NativeDisplayChromaticityBlueX, NativeDisplayChromaticityBlueY, NativeDisplayChromaticityWhiteX, NativeDisplayChromaticityWhiteY,
+                DiffuseScreenReflectance, SpecularScreenReflectance, SupportedHDR, FreesyncFlags, MinLuminanceNoDimmingData, MaxBacklightMaxLuminanceData,
+                MinBacklightMaxLuminanceData, MaxBacklightMinLuminanceData, MinBacklightMinLuminanceData).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /*public struct ConvertedDDCInfoFlag
@@ -397,7 +546,7 @@ namespace AMDInfo
 
     /// <summary> ADLDisplayID Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_DISPLAY_ID
+    public struct ADL_DISPLAY_ID : IEquatable<ADL_DISPLAY_ID>
     {
         /// <summary> Display Logical Index </summary>
         public int DisplayLogicalIndex;
@@ -407,11 +556,24 @@ namespace AMDInfo
         public int DisplayLogicalAdapterIndex;
         /// <summary> Adapter Physical Index </summary>
         public int DisplayPhysicalAdapterIndex;
+
+        public bool Equals(ADL_DISPLAY_ID other)
+            => DisplayLogicalIndex == other.DisplayLogicalIndex &&
+                DisplayPhysicalIndex == other.DisplayPhysicalIndex &&
+                DisplayLogicalAdapterIndex == other.DisplayLogicalAdapterIndex &&
+                DisplayPhysicalAdapterIndex == other.DisplayPhysicalAdapterIndex;
+
+        public override int GetHashCode()
+        {
+            return (DisplayLogicalIndex, DisplayPhysicalIndex, DisplayLogicalAdapterIndex, DisplayPhysicalAdapterIndex).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLDisplayInfo Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_DISPLAY_INFO
+    public struct ADL_DISPLAY_INFO : IEquatable<ADL_DISPLAY_INFO>
     {
         /// <summary> Display Index </summary>
         public ADL_DISPLAY_ID DisplayID;
@@ -433,6 +595,24 @@ namespace AMDInfo
         public int DisplayInfoMask;
         ///<summary> Indicating the display info value.<summary>
         public int DisplayInfoValue;
+
+        public bool Equals(ADL_DISPLAY_INFO other)
+            => DisplayID.Equals(other.DisplayID) &&
+                DisplayControllerIndex == other.DisplayControllerIndex &&
+                DisplayName.Equals(other.DisplayName) &&
+                DisplayID.Equals(other.DisplayID) &&
+                DisplayType == other.DisplayType &&
+                DisplayOutputType == other.DisplayOutputType &&
+                DisplayConnector == other.DisplayConnector &&
+                DisplayInfoMask == other.DisplayInfoMask &&
+                DisplayInfoValue == other.DisplayInfoValue;
+
+        public override int GetHashCode()
+        {
+            return (DisplayID, DisplayControllerIndex, DisplayName, DisplayID, DisplayType, DisplayOutputType, DisplayConnector, DisplayInfoMask, DisplayInfoValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /*public struct ConvertedDisplayInfoValue
@@ -477,7 +657,7 @@ namespace AMDInfo
 
     /// <summary> ADLDisplayConfig Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_DISPLAY_CONFIG
+    public struct ADL_DISPLAY_CONFIG : IEquatable<ADL_DISPLAY_CONFIG>
     {
         /// <summary> Size of this data structure </summary>
         public long Size;
@@ -490,11 +670,23 @@ namespace AMDInfo
         /// <summary> Reserved for future use</summary>
         public long Reserved;
 
+        public bool Equals(ADL_DISPLAY_CONFIG other)
+            => Size == other.Size &&
+                ConnectorType == other.ConnectorType &&
+                DeviceData == other.DeviceData &&
+                OverriddedDeviceData == other.OverriddedDeviceData;
+
+        public override int GetHashCode()
+        {
+            return (Size, ConnectorType, DeviceData, OverriddedDeviceData).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLDisplayMap Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_DISPLAY_MAP
+    public struct ADL_DISPLAY_MAP : IEquatable<ADL_DISPLAY_MAP>
     {
         /// <summary> The current display map index. It is the OS desktop index. For example, if the OS index 1 is showing clone mode, the display map will be 1. </summary>
         public int DisplayMapIndex;
@@ -508,11 +700,26 @@ namespace AMDInfo
         public int DisplayMapMask;
         /// <summary> The bit mask identifies the display status. The detailed definition is in ADL_DISPLAY_DISPLAYMAP_MANNER_xxx.</summary>
         public int DisplayMapValue;
+
+        public bool Equals(ADL_DISPLAY_MAP other)
+            => DisplayMapIndex == other.DisplayMapIndex &&
+                DisplayMode.Equals(other.DisplayMode) &&
+                NumDisplayTarget == other.NumDisplayTarget &&
+                FirstDisplayTargetArrayIndex == other.FirstDisplayTargetArrayIndex &&
+                DisplayMapMask == other.DisplayMapMask &&
+                DisplayMapValue == other.DisplayMapValue;
+
+        public override int GetHashCode()
+        {
+            return (DisplayMapIndex, DisplayMode, NumDisplayTarget, FirstDisplayTargetArrayIndex, DisplayMapMask, DisplayMapValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLAdapterCaps Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_ADAPTER_CAPSX2
+    public struct ADL_ADAPTER_CAPSX2 : IEquatable<ADL_ADAPTER_CAPSX2>
     {
         /// <summary> AdapterID for this adapter </summary>
         public int AdapterID;
@@ -530,11 +737,28 @@ namespace AMDInfo
         public int CapsValue;
         /// <summary> Number of Connectors for this adapter. </summary>
         public int NumConnectors;
+
+        public bool Equals(ADL_ADAPTER_CAPSX2 other)
+            => AdapterID == other.AdapterID &&
+                NumControllers == other.NumControllers &&
+                NumDisplays == other.NumDisplays &&
+                NumOverlays == other.NumOverlays &&
+                NumOfGLSyncConnectors == other.NumOfGLSyncConnectors &&
+                CapsMask == other.CapsMask &&
+                CapsValue == other.CapsValue &&
+                NumConnectors == other.NumConnectors;
+
+        public override int GetHashCode()
+        {
+            return (AdapterID, NumControllers, NumDisplays, NumOverlays, NumOfGLSyncConnectors, CapsMask, CapsValue, NumConnectors).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLPossibleMap Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_POSSIBLE_MAP
+    public struct ADL_POSSIBLE_MAP : IEquatable<ADL_POSSIBLE_MAP>
     {
         /// <summary> Index</summary>
         public int Index;
@@ -548,11 +772,26 @@ namespace AMDInfo
         public int NumDisplayTarget;
         /// <summary> The DisplayTargets being tested </summary>
         public ADL_DISPLAY_TARGET DisplayTargets;
+
+        public bool Equals(ADL_POSSIBLE_MAP other)
+            => Index == other.Index &&
+                AdapterIndex == other.AdapterIndex &&
+                NumDisplayMap == other.NumDisplayMap &&
+                DisplayMaps.Equals(other.DisplayMaps) &&
+                NumDisplayTarget == other.NumDisplayTarget &&
+                DisplayTargets.Equals(other.DisplayTargets);
+
+        public override int GetHashCode()
+        {
+            return (Index, AdapterIndex, NumDisplayMap, DisplayMaps, NumDisplayTarget, DisplayTargets).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLPossibleMapping Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_POSSIBLE_MAPPING
+    public struct ADL_POSSIBLE_MAPPING : IEquatable<ADL_POSSIBLE_MAPPING>
     {
         /// <summary>Display Index</summary>
         public int DisplayIndex;
@@ -560,11 +799,23 @@ namespace AMDInfo
         public int DisplayControllerIndex;
         /// <summary> The display manner options supported</summary>
         public int DisplayMannerSupported;
+
+        public bool Equals(ADL_POSSIBLE_MAPPING other)
+            => DisplayIndex == other.DisplayIndex &&
+                DisplayControllerIndex == other.DisplayControllerIndex &&
+                DisplayMannerSupported == other.DisplayMannerSupported;
+
+        public override int GetHashCode()
+        {
+            return (DisplayIndex, DisplayControllerIndex, DisplayMannerSupported).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLPossibleMapResult Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_POSSIBLE_MAP_RESULT
+    public struct ADL_POSSIBLE_MAP_RESULT : IEquatable<ADL_POSSIBLE_MAP_RESULT>
     {
         /// <summary>Index</summary>
         public int Index;
@@ -572,12 +823,24 @@ namespace AMDInfo
         /// <summary> Display Controller Index</summary>
         public int PossibleMapResultMask;
         /// <summary> The display manner options supported</summary>
-        public int PossibleMapResulValue;
+        public int PossibleMapResultValue;
+
+        public bool Equals(ADL_POSSIBLE_MAP_RESULT other)
+            => Index == other.Index &&
+                PossibleMapResultMask == other.PossibleMapResultMask &&
+                PossibleMapResultValue == other.PossibleMapResultValue;
+
+        public override int GetHashCode()
+        {
+            return (Index, PossibleMapResultMask, PossibleMapResultValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLSLSGrid Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_SLS_GRID
+    public struct ADL_SLS_GRID : IEquatable<ADL_SLS_GRID>
     {
         /// <summary> The Adapter index </summary>
         public int AdapterIndex;
@@ -591,12 +854,27 @@ namespace AMDInfo
         public int SLSGridMask;
         /// <summary> The grid bit value identifies the display status. </summary>
         public int SLSGridValue;
+
+        public bool Equals(ADL_SLS_GRID other)
+            => AdapterIndex == other.AdapterIndex &&
+                SLSGridIndex == other.SLSGridIndex &&
+                SLSGridRow == other.SLSGridRow &&
+                SLSGridColumn == other.SLSGridColumn &&
+                SLSGridMask == other.SLSGridMask &&
+                SLSGridValue == other.SLSGridValue;
+
+        public override int GetHashCode()
+        {
+            return (AdapterIndex, SLSGridIndex, SLSGridRow, SLSGridColumn, SLSGridMask, SLSGridValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLSLSMap Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_SLS_MAP
-    {
+    public struct ADL_SLS_MAP : IEquatable<ADL_SLS_MAP>
+{
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> The current display map index. It is the OS Desktop index. </summary>
@@ -628,12 +906,36 @@ namespace AMDInfo
         /// <summary> Bitmask identifies display map status </summary>
         public int SLSMapValue;
 
+        public bool Equals(ADL_SLS_MAP other)
+            => AdapterIndex == other.AdapterIndex &&
+                SLSMapIndex == other.SLSMapIndex &&
+                Grid.Equals(other.Grid) &&
+                SurfaceMapIndex == other.SurfaceMapIndex &&
+                Orientation == other.Orientation &&
+                NumSLSTarget == other.NumSLSTarget &&
+                FirstSLSTargetArrayIndex == other.FirstSLSTargetArrayIndex &&
+                NumNativeMode == other.NumNativeMode &&
+                FirstNativeModeArrayIndex == other.FirstNativeModeArrayIndex &&
+                NumBezelMode == other.NumBezelMode &&
+                FirstBezelModeArrayIndex == other.FirstBezelModeArrayIndex &&
+                NumBezelOffset == other.NumBezelOffset &&
+                FirstBezelOffsetArrayIndex == other.FirstBezelOffsetArrayIndex &&
+                SLSMapMask == other.SLSMapMask &&
+                SLSMapValue == other.SLSMapValue;
+
+        public override int GetHashCode()
+        {
+            return (AdapterIndex, SLSMapIndex, Grid, SurfaceMapIndex, Orientation, NumSLSTarget, FirstSLSTargetArrayIndex, NumNativeMode, FirstNativeModeArrayIndex, NumBezelMode, FirstBezelModeArrayIndex,
+                NumBezelOffset, FirstBezelOffsetArrayIndex, SLSMapMask, SLSMapValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLSLSTarget Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_SLS_TARGET
-    {
+    public struct ADL_SLS_TARGET : IEquatable<ADL_SLS_TARGET>
+{
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> The SLS map index. </summary>
@@ -650,12 +952,29 @@ namespace AMDInfo
         public int SLSTargetMask;
         /// <summary> The bit mask identifies status info.  </summary>
         public int SLSTargetValue;
-    }   
+
+        public bool Equals(ADL_SLS_TARGET other)
+            => AdapterIndex == other.AdapterIndex &&
+                SLSMapIndex == other.SLSMapIndex &&
+                DisplayTarget.Equals(other.DisplayTarget) &&
+                SLSGridPositionX == other.SLSGridPositionX &&
+                SLSGridPositionY == other.SLSGridPositionY &&
+                ViewSize.Equals(other.ViewSize) &&
+                SLSTargetMask == other.SLSTargetMask &&
+                SLSTargetValue == other.SLSTargetValue;
+
+        public override int GetHashCode()
+        {
+            return (AdapterIndex, SLSMapIndex, DisplayTarget, SLSGridPositionX, SLSGridPositionY, ViewSize, SLSTargetMask, SLSTargetValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
+    }
 
     /// <summary> ADLSLSMode Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_SLS_MODE
-    {
+    public struct ADL_SLS_MODE : IEquatable<ADL_SLS_MODE>
+{
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> The current display map index. It is the OS Desktop index. </summary>
@@ -669,12 +988,26 @@ namespace AMDInfo
         /// <summary> The bit mask identifies the display status. </summary>
         public int SLSNativeModeValue;
 
+        public bool Equals(ADL_SLS_MODE other)
+            => AdapterIndex == other.AdapterIndex &&
+                SLSMapIndex == other.SLSMapIndex &&
+                SLSModeIndex == other.SLSModeIndex &&
+                DisplayMode.Equals(other.DisplayMode) &&
+                SLSNativeModeMask == other.SLSNativeModeMask &&
+                SLSNativeModeValue == other.SLSNativeModeValue;
+
+        public override int GetHashCode()
+        {
+            return (AdapterIndex, SLSMapIndex, SLSModeIndex, DisplayMode, SLSNativeModeMask, SLSNativeModeValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLBezelTransientMode Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_BEZEL_TRANSIENT_MODE
-    {
+    public struct ADL_BEZEL_TRANSIENT_MODE : IEquatable<ADL_BEZEL_TRANSIENT_MODE>
+{
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> SLS Map Index. </summary>
@@ -692,12 +1025,28 @@ namespace AMDInfo
         /// <summary> The bit mask identifies the display status.  </summary>
         public int SLSBezelTransientModeValue;
 
+        public bool Equals(ADL_BEZEL_TRANSIENT_MODE other)
+            => AdapterIndex == other.AdapterIndex &&
+                SLSMapIndex == other.SLSMapIndex &&
+                SLSModeIndex == other.SLSModeIndex &&
+                DisplayMode.Equals(other.DisplayMode) &&
+                NumBezelOffset == other.NumBezelOffset &&
+                FirstBezelOffsetArrayIndex == other.FirstBezelOffsetArrayIndex &&
+                SLSBezelTransientModeMask == other.SLSBezelTransientModeMask &&
+                SLSBezelTransientModeValue == other.SLSBezelTransientModeValue;
+
+        public override int GetHashCode()
+        {
+            return (AdapterIndex, SLSMapIndex, SLSModeIndex, DisplayMode, NumBezelOffset, FirstBezelOffsetArrayIndex, SLSBezelTransientModeMask, SLSBezelTransientModeValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
     /// <summary> ADLSLSOffset Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ADL_SLS_OFFSET
-    {
+    public struct ADL_SLS_OFFSET : IEquatable<ADL_SLS_OFFSET>
+{
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> The current display map index. It is the OS Desktop index. </summary>
@@ -718,6 +1067,25 @@ namespace AMDInfo
         public int BezelOffsetMask;
         /// <summary> The bit mask identifies the display status. </summary>
         public int BezelOffsetValue;
+
+        public bool Equals(ADL_SLS_OFFSET other)
+            => AdapterIndex == other.AdapterIndex &&
+                SLSMapIndex == other.SLSMapIndex &&
+                DisplayID.Equals(other.DisplayID) &&
+                BezelModeIndex == other.BezelModeIndex &&
+                BezelOffsetX == other.BezelOffsetX &&
+                BezelOffsetY == other.BezelOffsetY &&
+                DisplayWidth == other.DisplayWidth &&
+                DisplayHeight == other.DisplayHeight &&
+                BezelOffsetMask == other.BezelOffsetMask &&
+                BezelOffsetValue == other.BezelOffsetValue;
+
+        public override int GetHashCode()
+        {
+            return (AdapterIndex, SLSMapIndex, DisplayID, BezelModeIndex, BezelOffsetX, BezelOffsetY, DisplayWidth, DisplayHeight, BezelOffsetMask, BezelOffsetValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
     }
 
 
