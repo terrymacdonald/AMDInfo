@@ -109,7 +109,7 @@ namespace AMDInfo
 
                     ADL_ADAPTER_INFO oneAdapter = new ADL_ADAPTER_INFO();
                     List<ADL_ADAPTER_INFO> adapterInfoList = new List<ADL_ADAPTER_INFO>();
-                    for(int adapter = 0; adapter < numAdapters; adapter++)
+                    for (int adapter = 0; adapter < numAdapters; adapter++)
                     {
                         oneAdapter = (ADL_ADAPTER_INFO)Marshal.PtrToStructure(new IntPtr(adapterInfoBuffer.ToInt64() + (adapter * Marshal.SizeOf(oneAdapter))), oneAdapter.GetType());
                         adapterInfoList.Add(oneAdapter);
@@ -156,11 +156,42 @@ namespace AMDInfo
 
                         Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} really exists!");
 
-                    }
-                    
-                    Console.WriteLine($"AMDLibrary/GenerateProfileDisplayIdentifiers: Number Of Adapters: {numAdapters.ToString()} ");
+                        IntPtr DisplayBuffer = IntPtr.Zero;
+                        int numDisplays = 0;
+                        // Force the display detection and get the Display Info. Use 0 as last parameter to NOT force detection
+                        ADLRet = ADLImport.ADL2_Display_DisplayInfo_Get(_adlContextHandle, oneAdapter.AdapterIndex, ref numDisplays, out DisplayBuffer, 1);
+                        if (ADLRet != ADL_STATUS.ADL_OK)
+                        {
+                            Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Display_DisplayInfo_Get() returned an error code {ADLRet}");
+                            continue;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Display_DisplayInfo_Get on adapter {oneAdapter.AdapterIndex} worked!");
+                        }
 
-                    
+                        for (int displayLoop = 0; displayLoop < numDisplays; displayLoop++)
+                        {
+                            ADL_DISPLAY_INFO oneDisplayInfo = new ADL_DISPLAY_INFO();
+                            oneDisplayInfo = (ADL_DISPLAY_INFO)Marshal.PtrToStructure(new IntPtr(DisplayBuffer.ToInt64() + (displayLoop * Marshal.SizeOf(oneDisplayInfo))), oneDisplayInfo.GetType());
+
+                            // Is the display mapped to this adapter? If not we skip it!
+                            if (oneDisplayInfo.DisplayID.DisplayLogicalAdapterIndex != oneAdapter.AdapterIndex)
+                            {
+                                Console.WriteLine($"AMDLibrary/SetActiveProfile: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} ({oneAdapter.AdapterName}) AdapterID display ID#{oneDisplayInfo.DisplayID.DisplayLogicalIndex} is not a real display as its DisplayID.DisplayLogicalAdapterIndex is -1");
+                                continue;
+                            }
+
+                            Console.WriteLine($"AMDLibrary/SetActiveProfile: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} ({oneAdapter.AdapterName}) AdapterID display ID#{oneDisplayInfo.DisplayID.DisplayLogicalIndex} is a real display");
+
+                            // At this point we know we have a real display, so we can begin to interrogate it.
+
+                        }
+
+
+                        Console.WriteLine($"AMDLibrary/GenerateProfileDisplayIdentifiers: Number Of Adapters: {numAdapters.ToString()} ");
+
+                    }
 
                     // Destroy the context handle and memory
                     ADLImport.ADL2_Main_Control_Destroy(_adlContextHandle);
