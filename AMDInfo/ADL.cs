@@ -137,6 +137,30 @@ namespace AMDInfo
         /// <summary> The bit mask identifying the display status. </summary>
         public int ModeValue;
 
+        // Mode Mask settings
+        public bool ColourFormat565Supported => (ModeMask & 0x1) == 0x1;
+        public bool ColourFormat8888Supported => (ModeMask & 0x2) == 0x2;
+        public bool Orientation000Supported => (ModeMask & 0x4) == 0x4;
+        public bool Orientation090Supported => (ModeMask & 0x8) == 0x8;
+        public bool Orientation180Supported => (ModeMask & 0x10) == 0x10;
+        public bool Orientation270Supported => (ModeMask & 0x20) == 0x20;
+        public bool RefreshRateRoundedSupported => (ModeMask & 0x40) == 0x40;
+        public bool RefreshRateOnlySupported => (ModeMask & 0x80) == 0x80;
+
+        // Mode Value settings
+        public bool ColourFormat565Set => (ModeValue & 0x1) == 0x1;
+        public bool ColourFormat8888Set => (ModeValue & 0x2) == 0x2;
+        public bool Orientation000Set => (ModeValue & 0x4) == 0x4;
+        public bool Orientation090Set => (ModeValue & 0x8) == 0x8;
+        public bool Orientation180Set => (ModeValue & 0x10) == 0x10;
+        public bool Orientation270Set => (ModeValue & 0x20) == 0x20;
+        public bool RefreshRateRoundedSet => (ModeValue & 0x40) == 0x40;
+        public bool RefreshRateOnlySet => (ModeValue & 0x80) == 0x80;
+
+        // Mode Flag settings
+        public bool ProgressiveSet => ModeValue == 0x0;
+        public bool InterlacedSet => ModeValue == 0x2;
+
         public bool Equals(ADL_MODE other)
             => AdapterIndex == other.AdapterIndex &&
                 DisplayID.Equals(other.DisplayID) &&
@@ -159,26 +183,6 @@ namespace AMDInfo
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
-    /*public struct ConvertedDisplayModeFlags
-    {
-        /// <summary> Indicates the display supports Colour Format 565.</summary>
-        public bool COLOURFORMAT_565;
-        /// <summary> Indicates the display supports Colour Format 8888.</summary>
-        public bool COLOURFORMAT_8888;
-        /// <summary> Indicates the display supports normal vertical orientation</summary>
-        public bool ORIENTATION_SUPPORTED_000;
-        /// <summary> Indicates the display supports 90 degree orientation</summary>
-        public bool ORIENTATION_SUPPORTED_090;
-        /// <summary> Indicates the display supports 180 degree orientation</summary>
-        public bool ORIENTATION_SUPPORTED_180;
-        /// <summary> Indicates the display supports 270 degree orientation</summary>
-        public bool ORIENTATION_SUPPORTED_270;
-        /// <summary> Indicates the display supports rounded refresh rates</summary>
-        public bool REFRESHRATE_ROUNDED;
-        /// <summary> Indicates the display supports exact refresh rates</summary>
-        public bool REFRESHRATE_ONLY;
-    }*/
-
     /// <summary> ADLDisplayTarget </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_DISPLAY_TARGET : IEquatable<ADL_DISPLAY_TARGET>
@@ -191,6 +195,12 @@ namespace AMDInfo
         public int DisplayTargetMask;
         /// <summary> The bit mask identifies the display status. </summary>
         public int DisplayTargetValue;
+
+        // DisplayTarget Mask settings
+        public bool DisplayTargetPreferredSupported => (DisplayTargetMask & 0x1) == 0x1;
+
+        // DisplayTarget Value settings
+        public bool DisplayTargetPreferredSet => (DisplayTargetValue & 0x1) == 0x1;
 
         public bool Equals(ADL_DISPLAY_TARGET other)
             => DisplayID.Equals(other.DisplayID) &&
@@ -317,6 +327,46 @@ namespace AMDInfo
         public int InfoMask;
         /// <summary> Display Info Value</summary>
         public int InfoValue;
+
+        // Info Mask settings
+        public bool DisplayConnectedSupported => (InfoMask & 0x1) == 0x1;
+        public bool DisplayMappedSupported => (InfoMask & 0x2) == 0x2;
+        public bool NonLocalSupported => (InfoMask & 0x4) == 0x4;
+        public bool ForcibleSupported => (InfoMask & 0x8) == 0x8;
+        public bool GenLockSupported => (InfoMask & 0x10) == 0x10;
+        public bool MultiVPUSupported => (InfoMask & 0x20) == 0x20;
+        public bool LDADisplaySupported => (InfoMask & 0x40) == 0x40;
+        public bool ModeTimingOverrideSupported => (InfoMask & 0x80) == 0x80;
+        public bool MannerSingleSupported => (InfoMask & 0x100) == 0x100;
+        public bool MannerCloneSupported => (InfoMask & 0x200) == 0x200;
+        public bool Manner2VStretchSupported => (InfoMask & 0x400) == 0x400;
+        public bool Manner2HStretchSupported => (InfoMask & 0x800) == 0x800;
+        public bool MannerExtendedSupported => (InfoMask & 0x1000) == 0x1000;
+        public bool MannerNStretch1GPUSupported => (InfoMask & 0x10000) == 0x10000;
+        public bool MannerNStretchNGPUSupported => (InfoMask & 0x20000) == 0x20000;
+        public bool MannerReserved2Supported => (InfoMask & 0x40000) == 0x40000;
+        public bool MannerReserved3Supported => (InfoMask & 0x80000) == 0x80000;
+        public bool ShowTypeProjectorSupported => (InfoMask & 0x100000) == 0x100000;
+
+        // Info Value settings
+        public bool DisplayConnectedSet => (InfoValue & 0x1) == 0x1;
+        public bool DisplayMappedSet => (InfoValue & 0x2) == 0x2;
+        public bool NonLocalSet => (InfoValue & 0x4) == 0x4;
+        public bool ForcibleSet => (InfoValue & 0x8) == 0x8;
+        public bool GenLockSet => (InfoValue & 0x10) == 0x10;
+        public bool MultiVPUSet => (InfoValue & 0x20) == 0x20;
+        public bool LDADisplaySet => (InfoValue & 0x40) == 0x40;
+        public bool ModeTimingOverrideSet => (InfoValue & 0x80) == 0x80;
+        public bool MannerSingleSet => (InfoValue & 0x100) == 0x100;
+        public bool MannerCloneSet => (InfoValue & 0x200) == 0x200;
+        public bool Manner2VStretchSet => (InfoValue & 0x400) == 0x400;
+        public bool Manner2HStretchSet => (InfoValue & 0x800) == 0x800;
+        public bool MannerExtendedSet => (InfoValue & 0x1000) == 0x1000;
+        public bool MannerNStretch1GPUSet => (InfoValue & 0x10000) == 0x10000;
+        public bool MannerNStretchNGPUSet => (InfoValue & 0x20000) == 0x20000;
+        public bool MannerReserved2Set => (InfoValue & 0x40000) == 0x40000;
+        public bool MannerReserved3Set => (InfoValue & 0x80000) == 0x80000;
+        public bool ShowTypeProjectorSet => (InfoValue & 0x100000) == 0x100000;
 
         public bool Equals(ADL_ADAPTER_INFOX2 other)
             => Size == other.Size &&
@@ -462,6 +512,56 @@ namespace AMDInfo
         /// <summary> Reserved </summary>
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public int[] Reserved;
+
+        // DDC Info Flag settings
+        public bool IsProjectorDevice => (DDCInfoFlag & 0x1) == 0x1;
+        public bool IsEDIDExtension => (DDCInfoFlag & 0x2) == 0x2;
+        public bool IsDigitalDevice => (DDCInfoFlag & 0x4) == 0x4;
+        public bool IsHDMIAudioDevice => (DDCInfoFlag & 0x8) == 0x8;
+        public bool SupportsAI => (DDCInfoFlag & 0x10) == 0x10;
+        public bool SupportsxvYCC601 => (DDCInfoFlag & 0x10) == 0x20;
+        public bool SupportsxvYCC709 => (DDCInfoFlag & 0x10) == 0x40;
+
+        /*#define ADL_DISPLAYDDCINFOEX_FLAG_PROJECTORDEVICE       (1 << 0)
+        #define ADL_DISPLAYDDCINFOEX_FLAG_EDIDEXTENSION         (1 << 1)
+        #define ADL_DISPLAYDDCINFOEX_FLAG_DIGITALDEVICE         (1 << 2)
+        #define ADL_DISPLAYDDCINFOEX_FLAG_HDMIAUDIODEVICE       (1 << 3)
+        #define ADL_DISPLAYDDCINFOEX_FLAG_SUPPORTS_AI           (1 << 4)
+        #define ADL_DISPLAYDDCINFOEX_FLAG_SUPPORT_xvYCC601      (1 << 5)
+        #define ADL_DISPLAYDDCINFOEX_FLAG_SUPPORT_xvYCC709      (1 << 6)*/
+
+        // Panel Pixel Format settings
+        public bool PixelFormatUnknown => (PanelPixelFormat & 0x1) == 0x1;
+        public bool PixelFormatRGB => (PanelPixelFormat & 0x2) == 0x2;
+        public bool PixelFormatYCRCB444 => (PanelPixelFormat & 0x4) == 0x4;
+        public bool PixelFormatYCRCB422 => (PanelPixelFormat & 0x8) == 0x8;
+        public bool PixelFormatLimitedRange => (PanelPixelFormat & 0x10) == 0x10;
+        public bool PixelFormatYCRCB420 => (PanelPixelFormat & 0x10) == 0x20;
+
+        // ADL_DISPLAY_ADJUSTMENT_PIXELFORMAT adjustment values
+        // (bit-vector)
+        /*#define ADL_DISPLAY_PIXELFORMAT_UNKNOWN             0
+        #define ADL_DISPLAY_PIXELFORMAT_RGB                       (1 << 0)
+        #define ADL_DISPLAY_PIXELFORMAT_YCRCB444                  (1 << 1)    //Limited range
+        #define ADL_DISPLAY_PIXELFORMAT_YCRCB422                 (1 << 2)    //Limited range
+        #define ADL_DISPLAY_PIXELFORMAT_RGB_LIMITED_RANGE      (1 << 3)
+        #define ADL_DISPLAY_PIXELFORMAT_RGB_FULL_RANGE    ADL_DISPLAY_PIXELFORMAT_RGB  //Full range
+        #define ADL_DISPLAY_PIXELFORMAT_YCRCB420              (1 << 4)*/
+
+        // Supported Transfer Function settings
+        //public bool DisplayConnectedSupported => (SupportedTransferFunction & 0x1) == 0x1;
+
+        // Supported Color Space settings
+        //public bool DisplayConnectedSupported => (SupportedColorSpace & 0x1) == 0x1;
+
+        // Supported HDR settings
+        public bool CEA861_3Supported => (SupportedHDR & 0x1) == 0x1;
+        public bool DolbyVisionSupported => (SupportedHDR & 0x2) == 0x2;
+        public bool FreeSyncHDRSupported => (SupportedHDR & 0x4) == 0x4;
+
+        // Freesync Flags settings
+        public bool FreeSyncHDRBacklightSupported => (SupportedHDR & 0x1) == 0x1;
+        public bool FreeSyncHDRLocalDimmingSupported => (SupportedHDR & 0x2) == 0x2;
 
         public bool Equals(ADL_DDC_INFO2 other)
             => Size == other.Size &&
