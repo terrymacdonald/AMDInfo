@@ -1004,6 +1004,28 @@ namespace AMDInfo
         /// <summary> The display manner options supported</summary>
         public int DisplayMannerSupported;
 
+        // Display Manner Supported settings
+        public bool MapReservedSupported => (DisplayMannerSupported & 0x1) == 0x1;
+        public bool MapNotActiveSupported => (DisplayMannerSupported & 0x2) == 0x2;
+        public bool MapSingleSupported => (DisplayMannerSupported & 0x4) == 0x4;
+        public bool MapCloneSupported => (DisplayMannerSupported & 0x8) == 0x8;
+        public bool MapReserved1Supported => (DisplayMannerSupported & 0x10) == 0x10;
+        public bool MapHStretchSupported => (DisplayMannerSupported & 0x20) == 0x20;
+        public bool MapVStretchSupported => (DisplayMannerSupported & 0x40) == 0x40;
+        public bool MapVLDSupported => (DisplayMannerSupported & 0x80) == 0x80;
+        
+        // ADL_DISPLAY_DISPLAYMAP_MANNER_ Definitions
+        // for ADLDisplayMap.iDisplayMapMask and ADLDisplayMap.iDisplayMapValue
+        // (bit-vector)
+        /*#define ADL_DISPLAY_DISPLAYMAP_MANNER_RESERVED            0x00000001
+        #define ADL_DISPLAY_DISPLAYMAP_MANNER_NOTACTIVE            0x00000002
+        #define ADL_DISPLAY_DISPLAYMAP_MANNER_SINGLE            0x00000004
+        #define ADL_DISPLAY_DISPLAYMAP_MANNER_CLONE                0x00000008
+        #define ADL_DISPLAY_DISPLAYMAP_MANNER_RESERVED1            0x00000010  // Removed NSTRETCH
+        #define ADL_DISPLAY_DISPLAYMAP_MANNER_HSTRETCH            0x00000020
+        #define ADL_DISPLAY_DISPLAYMAP_MANNER_VSTRETCH            0x00000040
+        #define ADL_DISPLAY_DISPLAYMAP_MANNER_VLD                0x00000080*/
+
         public bool Equals(ADL_POSSIBLE_MAPPING other)
             => DisplayIndex == other.DisplayIndex &&
                 DisplayControllerIndex == other.DisplayControllerIndex &&
@@ -1028,6 +1050,24 @@ namespace AMDInfo
         public int PossibleMapResultMask;
         /// <summary> The display manner options supported</summary>
         public int PossibleMapResultValue;
+
+        // Possible Map Result Mask settings
+        public bool MapResultValidSupported => (PossibleMapResultMask & 0x1) == 0x1;
+        public bool MapNotActiveSupported => (PossibleMapResultMask & 0x2) == 0x2;
+        public bool MapSingleSupported => (PossibleMapResultMask & 0x4) == 0x4;
+
+        // Possible Map Result Mask settings
+        public bool MapResultValidSet => (PossibleMapResultValue & 0x1) == 0x1;
+        public bool MapNotActiveSet => (PossibleMapResultValue & 0x2) == 0x2;
+        public bool MapSingleSet => (PossibleMapResultValue & 0x4) == 0x4;
+
+
+        // ADL_DISPLAY_POSSIBLEMAPRESULT_VALID Definitions
+        // for ADLPossibleMapResult.iPossibleMapResultMask and ADLPossibleMapResult.iPossibleMapResultValue
+        // (bit-vector)
+        /*#define ADL_DISPLAY_POSSIBLEMAPRESULT_VALID                0x00000001
+        #define ADL_DISPLAY_POSSIBLEMAPRESULT_BEZELSUPPORTED    0x00000002
+        #define ADL_DISPLAY_POSSIBLEMAPRESULT_OVERLAPSUPPORTED    0x00000004*/
 
         public bool Equals(ADL_POSSIBLE_MAP_RESULT other)
             => Index == other.Index &&
@@ -1058,6 +1098,36 @@ namespace AMDInfo
         public int SLSGridMask;
         /// <summary> The grid bit value identifies the display status. </summary>
         public int SLSGridValue;
+
+        // SLS Grid Mask settings
+        public bool SLSGridRelativeToLandscapeSupported => (SLSGridMask & 0x1) == 0x1;
+        public bool SLSGridRelativeToCurrentAngleSupported => (SLSGridMask & 0x2) == 0x2;
+        public bool SLSGridPortraitModeSupported => (SLSGridMask & 0x4) == 0x4;
+        public bool SLSGridKeepTargetRotationSupported => (SLSGridMask & 0x8) == 0x8;
+        public bool SLSGridSameModeSLSSupported => (SLSGridMask & 0x10) == 0x10;
+        public bool SLSGridMixModeSLSSupported => (SLSGridMask & 0x20) == 0x20;
+        public bool SLSGridDisplayRotationSupported => (SLSGridMask & 0x40) == 0x40;
+        public bool SLSGridDesktopRotationSupported => (SLSGridMask & 0x80) == 0x80;
+
+        // SLS Grid Value settings
+        public bool SLSGridRelativeToLandscapeSet => (SLSGridValue & 0x1) == 0x1;
+        public bool SLSGridRelativeToCurrentAngleSet => (SLSGridValue & 0x2) == 0x2;
+        public bool SLSGridPortraitModeSet => (SLSGridValue & 0x4) == 0x4;
+        public bool SLSGridKeepTargetRotationSet => (SLSGridValue & 0x8) == 0x8;
+        public bool SLSGridSameModeSLSSet => (SLSGridValue & 0x10) == 0x10;
+        public bool SLSGridMixModeSLSSet => (SLSGridValue & 0x20) == 0x20;
+        public bool SLSGridDisplayRotationSet => (SLSGridValue & 0x40) == 0x40;
+        public bool SLSGridDesktopRotationSet => (SLSGridValue & 0x80) == 0x80;
+
+        /*#define ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_LANDSCAPE     0x00000001
+        #define ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_CURRENTANGLE     0x00000002
+        #define ADL_DISPLAY_SLSGRID_PORTAIT_MODE                         0x00000004
+        #define ADL_DISPLAY_SLSGRID_KEEPTARGETROTATION                  0x00000080
+
+        #define ADL_DISPLAY_SLSGRID_SAMEMODESLS_SUPPORT        0x00000010
+        #define ADL_DISPLAY_SLSGRID_MIXMODESLS_SUPPORT        0x00000020
+        #define ADL_DISPLAY_SLSGRID_DISPLAYROTATION_SUPPORT    0x00000040
+        #define ADL_DISPLAY_SLSGRID_DESKTOPROTATION_SUPPORT    0x00000080*/
 
         public bool Equals(ADL_SLS_GRID other)
             => AdapterIndex == other.AdapterIndex &&
@@ -1109,6 +1179,50 @@ namespace AMDInfo
         public int SLSMapMask;
         /// <summary> Bitmask identifies display map status </summary>
         public int SLSMapValue;
+
+        // SLS Orientation settings
+        public bool Orientation000 => (Orientation & 0x1) == 0x1;
+        public bool Orientation090 => (Orientation & 0x2) == 0x2;
+        public bool Orientation180 => (Orientation & 0x4) == 0x4;
+        public bool Orientation270 => (Orientation & 0x8) == 0x8;
+
+        /*#define ADL_DISPLAY_SLSGRID_ORIENTATION_000        0x00000001
+        #define ADL_DISPLAY_SLSGRID_ORIENTATION_090        0x00000002
+        #define ADL_DISPLAY_SLSGRID_ORIENTATION_180        0x00000004
+        #define ADL_DISPLAY_SLSGRID_ORIENTATION_270        0x00000008*/
+
+        // SLS Map Mask settings
+        public bool SLSMapDisplayArrangedSupported => (SLSMapMask & 0x2) == 0x2;
+        public bool SLSMapCurrentConfigSupported => (SLSMapMask & 0x4) == 0x4;
+        public bool SLSMapBezelModeSupported => (SLSMapMask & 0x10) == 0x10;
+        public bool SLSMapLayoutModeFitSupported => (SLSMapMask & 0x100) == 0x100;
+        public bool SLSMapLayoutModeFillSupported => (SLSMapMask & 0x200) == 0x200;
+        public bool SLSMapLayoutModeExpandSupported => (SLSMapMask & 0x400) == 0x400;
+        public bool SLSMapIsSLSSupported => (SLSMapMask & 0x1000) == 0x1000;
+        public bool SLSMapIsSLSBuilderSupported => (SLSMapMask & 0x2000) == 0x2000;
+        public bool SLSMapIsCloneVTSupported => (SLSMapMask & 0x4000) == 0x4000;
+
+        // SLS Map Value settings
+        public bool SLSMapDisplayArrangedSet => (SLSMapValue & 0x2) == 0x2;
+        public bool SLSMapCurrentConfigSet => (SLSMapValue & 0x4) == 0x4;
+        public bool SLSMapBezelModeSet => (SLSMapValue & 0x10) == 0x10;
+        public bool SLSMapLayoutModeFitSet => (SLSMapValue & 0x100) == 0x100;
+        public bool SLSMapLayoutModeFillSet => (SLSMapValue & 0x200) == 0x200;
+        public bool SLSMapLayoutModeExpandSet => (SLSMapValue & 0x400) == 0x400;
+        public bool SLSMapIsSLSSet => (SLSMapValue & 0x1000) == 0x1000;
+        public bool SLSMapIsSLSBuilderSet => (SLSMapValue & 0x2000) == 0x2000;
+        public bool SLSMapIsCloneVTSet => (SLSMapValue & 0x4000) == 0x4000;
+
+
+        /*#define ADL_DISPLAY_SLSMAP_DISPLAYARRANGED        0x0002
+        #define ADL_DISPLAY_SLSMAP_CURRENTCONFIG        0x0004
+        #define ADL_DISPLAY_SLSMAP_BEZELMODE            0x0010
+        #define ADL_DISPLAY_SLSMAP_SLSLAYOUTMODE_FIT        0x0100
+        #define ADL_DISPLAY_SLSMAP_SLSLAYOUTMODE_FILL       0x0200
+        #define ADL_DISPLAY_SLSMAP_SLSLAYOUTMODE_EXPAND     0x0400
+        #define ADL_DISPLAY_SLSMAP_IS_SLS        0x1000
+        #define ADL_DISPLAY_SLSMAP_IS_SLSBUILDER 0x2000
+        #define ADL_DISPLAY_SLSMAP_IS_CLONEVT     0x4000*/
 
         public bool Equals(ADL_SLS_MAP other)
             => AdapterIndex == other.AdapterIndex &&
@@ -1271,6 +1385,17 @@ namespace AMDInfo
         public int BezelOffsetMask;
         /// <summary> The bit mask identifies the display status. </summary>
         public int BezelOffsetValue;
+
+        // BezelOffsetMask settings
+        public bool SLSBezelOffsetStepByStepSupported => (BezelOffsetMask & 0x4) == 0x4;
+        public bool SLSBezelOffsetCommitSupported => (BezelOffsetMask & 0x8) == 0x8;
+
+        // BezelOffsetValue settings
+        public bool SLSBezelOffsetStepByStepSet => (BezelOffsetValue & 0x4) == 0x4;
+        public bool SLSBezelOffsetCommitSet => (BezelOffsetValue & 0x8) == 0x8;
+
+        /*#define ADL_DISPLAY_BEZELOFFSET_STEPBYSTEPSET            0x00000004
+        #define ADL_DISPLAY_BEZELOFFSET_COMMIT                    0x00000008*/
 
         public bool Equals(ADL_SLS_OFFSET other)
             => AdapterIndex == other.AdapterIndex &&
