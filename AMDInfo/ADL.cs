@@ -1266,10 +1266,17 @@ namespace AMDInfo
         public int SLSGridPositionY;
         /// <summary> The view size width, height and rotation angle per SLS Target.  </summary>
         public ADL_MODE ViewSize;
-        /// <summary> The bit mask identifies the bits in iSLSTargetValue are currently used.  </summary>
+        /// <summary> The bit mask identifies the bits in iSLSTargetValue are currently used. Should be set to 1 unless you are using SLS Builder. </summary>
         public int SLSTargetMask;
-        /// <summary> The bit mask identifies status info.  </summary>
+        /// <summary> The bit mask identifies status info. Should be set to 1 unless you are using SLS Builder.</summary>
         public int SLSTargetValue;
+
+
+        // SLSTargetMask settings
+        public bool SLSTargetNotSLSBuilderSupported => (SLSTargetMask & 0x1) == 0x1;
+
+        // SLSTargetValue settings
+        public bool SLSTargetNotSLSBuilderSet => (SLSTargetValue & 0x1) == 0x1;        
 
         public bool Equals(ADL_SLS_TARGET other)
             => AdapterIndex == other.AdapterIndex &&
@@ -1701,6 +1708,7 @@ namespace AMDInfo
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_Main_Control_Destroy(IntPtr contextHandle);
 
+        // This is used to set the display settings permanently
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_Flush_Driver_Data(IntPtr ADLContextHandle, int adapterIndex);
 

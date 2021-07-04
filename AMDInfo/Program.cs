@@ -13,7 +13,7 @@ namespace AMDInfo
     class Program
     {
 
-        /*public struct ADVANCED_HDR_INFO_PER_PATH
+        public struct ADVANCED_HDR_INFO_PER_PATH
         {
             public LUID AdapterId;
             public uint Id;
@@ -26,9 +26,9 @@ namespace AMDInfo
             public DISPLAYCONFIG_PATH_INFO[] displayConfigPaths;
             public DISPLAYCONFIG_MODE_INFO[] displayConfigModes;
             public ADVANCED_HDR_INFO_PER_PATH[] displayHDRStates;
-        }*/
+        }
 
-        //static AMD_DISPLAY_CONFIG myDisplayConfig = new AMD_DISPLAY_CONFIG();
+        static AMD_DISPLAY_CONFIG myDisplayConfig = new AMD_DISPLAY_CONFIG();
 
         static void Main(string[] args)
         {
@@ -209,9 +209,69 @@ namespace AMDInfo
 
         }
 
-        /*static void saveToFile(string filename)
+        static void saveToFile(string filename)
         {
             Console.WriteLine($"ProfileRepository/SaveProfiles: Attempting to save the profiles repository to the {filename}.");
+
+            // Overview: 
+            // We want to first see if any of the displays are Eyefinity Displays
+            // If there are some Eyefinity Displays then we need to record the SLS configuration for them
+            // We then need to record the AMD HDR settings for any of the displays in use (even if they are part of the Eyefinity)
+            // Then we use the Windows CCD library to get all the layout information and Windows HDR settings
+            // And then we store it all in an AMD config file.
+
+            // get the primary display
+
+            // Get the DisplayMapConfig
+            // ADL2_Display_DisplayMapConfig_Get
+
+            // Get the DisplaySLS Map index
+            // ADL2_Display_SLSMapIndex_Get
+
+            iCurrentSLSTarget = 0;
+            for (i = 0; i < iRows; i++)
+            {
+                for (j = 0; j < iColumns; j++)
+                {
+
+                    pSLSTargets[iCurrentSLSTarget].iAdapterIndex = iAdapterIndex;
+                    memset(&(pSLSTargets[iCurrentSLSTarget].displayTarget), 0, sizeof(ADLDisplayTarget));
+
+                    pSLSTargets[iCurrentSLSTarget].displayTarget.displayID.iDisplayLogicalIndex = iDisplayMapIndexes[iCurrentSLSTarget];
+                    pSLSTargets[iCurrentSLSTarget].displayTarget.displayID.iDisplayPhysicalIndex = iDisplayMapIndexes[iCurrentSLSTarget];
+                    pSLSTargets[iCurrentSLSTarget].displayTarget.displayID.iDisplayLogicalAdapterIndex = iAdapterIndex;
+                    pSLSTargets[iCurrentSLSTarget].displayTarget.displayID.iDisplayPhysicalAdapterIndex = iAdapterIndex;
+
+                    pSLSTargets[iCurrentSLSTarget].iSLSMapIndex = iSLSMapIndex;
+
+                    memset(&(pSLSTargets[iCurrentSLSTarget].viewSize), 0, sizeof(ADLMode));
+
+                    pSLSTargets[iCurrentSLSTarget].viewSize.iAdapterIndex = iAdapterIndex;
+                    pSLSTargets[iCurrentSLSTarget].viewSize.iModeFlag = pModes[0].iModeFlag;
+                    pSLSTargets[iCurrentSLSTarget].viewSize.iOrientation = pModes[0].iOrientation;
+                    pSLSTargets[iCurrentSLSTarget].viewSize.fRefreshRate = pModes[0].fRefreshRate;
+                    pSLSTargets[iCurrentSLSTarget].viewSize.iColourDepth = pModes[0].iColourDepth;
+                    pSLSTargets[iCurrentSLSTarget].viewSize.iXPos = pModes[0].iXPos;
+                    pSLSTargets[iCurrentSLSTarget].viewSize.iYPos = pModes[0].iYPos;
+                    pSLSTargets[iCurrentSLSTarget].viewSize.iXRes = pModes[0].iXRes;
+                    pSLSTargets[iCurrentSLSTarget].viewSize.iYRes = pModes[0].iYRes;
+
+
+                    pSLSTargets[iCurrentSLSTarget].iSLSGridPositionX = j;
+                    pSLSTargets[iCurrentSLSTarget].iSLSGridPositionY = i;
+
+                    // this is used only for SLS builder; set "Enabled" in all other cases
+                    pSLSTargets[iCurrentSLSTarget].iSLSTargetValue = 0x0001;
+                    pSLSTargets[iCurrentSLSTarget].iSLSTargetMask = 0x0001;
+
+                    iCurrentSLSTarget++;
+                }
+            }
+
+            // Get the SLS MapConfig
+            // 
+
+
 
             // Get the size of the largest Active Paths and Modes arrays
             WIN32STATUS err = CCDImport.GetDisplayConfigBufferSizes(QDC.QDC_ONLY_ACTIVE_PATHS, out var pathCount, out var modeCount);
@@ -295,6 +355,14 @@ namespace AMDInfo
 
         static void loadFromFile(string filename)
         {
+            // Overview: 
+            // We first load the AMD config file into the C# structures
+            // We next figure out the AMD HDR settings, and enable them or disable them as needed
+            // We next see if any of the settings use Eyefinity Displays
+            // If there are some Eyefinity Displays then we need to restore the SLS configuration for them, fierst checking that the displays are there
+            // Then we use the Windows CCD library to apply all the layout information and Windows HDR settings that we saved last time
+            // And then we're done!
+
             string json = "";
             try
             {
@@ -309,7 +377,7 @@ namespace AMDInfo
             {
                 try
                 {
-                    myDisplayConfig = JsonConvert.DeserializeObject<WINDOWS_DISPLAY_CONFIG>(json, new JsonSerializerSettings
+                    myDisplayConfig = JsonConvert.DeserializeObject<AMD_DISPLAY_CONFIG>(json, new JsonSerializerSettings
                     {
                         MissingMemberHandling = MissingMemberHandling.Ignore,
                         NullValueHandling = NullValueHandling.Ignore,
@@ -327,8 +395,12 @@ namespace AMDInfo
                 // Get the size of the largest Active Paths and Modes arrays
                 WIN32STATUS err = CCDImport.GetDisplayConfigBufferSizes(QDC.QDC_ALL_PATHS, out var pathCount, out var modeCount);
                 if (err != WIN32STATUS.ERROR_SUCCESS)
+                {
+                    Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR while trying to get the largest active paths and modes");
                     throw new Win32Exception((int)err);
-               
+                }
+
+
                 // Now we want to validate the config is ok
                 if (myDisplayConfig.displayConfigPaths.Length <= pathCount - 1 &&
                     myDisplayConfig.displayConfigModes.Length <= pathCount - 1)
@@ -340,18 +412,25 @@ namespace AMDInfo
                     // Test whether a specified display configuration is supported on the computer                    
                     err = CCDImport.SetDisplayConfig(myPathsCount, myDisplayConfig.displayConfigPaths, myModesCount, myDisplayConfig.displayConfigModes, SDC.TEST_IF_VALID_DISPLAYCONFIG);
                     if (err != WIN32STATUS.ERROR_SUCCESS)
+                    {
+                        Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR white testing that the Display COnfiguration is valid");
                         throw new Win32Exception((int)err);
+                    }
 
                     Console.WriteLine($"ProfileRepository/LoadProfiles: Yay! The display configuration is valid!");
                     // Now set the specified display configuration for this computer                    
                     err = CCDImport.SetDisplayConfig(myPathsCount, myDisplayConfig.displayConfigPaths, myModesCount, myDisplayConfig.displayConfigModes, SDC.SET_DISPLAYCONFIG_AND_SAVE);
                     if (err != WIN32STATUS.ERROR_SUCCESS)
+                    {
+                        Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR while trying to set the display configuration.");
                         throw new Win32Exception((int)err);
+                    }
 
                     Console.WriteLine($"ProfileRepository/LoadProfiles: The display configuration has been successfully applied");
 
                     foreach (ADVANCED_HDR_INFO_PER_PATH myHDRstate in myDisplayConfig.displayHDRStates)
                     {
+                        Console.WriteLine($"ProfileRepository/LoadProfiles: Trying to get information whether HDR color is in use now on Display {myHDRstate.Id}.");
                         // Get advanced HDR info
                         var colorInfo = new DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO();
                         colorInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO;
@@ -360,22 +439,30 @@ namespace AMDInfo
                         colorInfo.Header.Id = myHDRstate.Id;
                         err = CCDImport.DisplayConfigGetDeviceInfo(ref colorInfo);
                         if (err != WIN32STATUS.ERROR_SUCCESS)
+                        {
+                            Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR while trying to get the display's current HDR configuration.");
                             throw new Win32Exception((int)err);
-
+                        }
 
                         if (myHDRstate.AdvancedColorInfo.AdvancedColorSupported && colorInfo.AdvancedColorEnabled != myHDRstate.AdvancedColorInfo.AdvancedColorEnabled)
                         {
+                            Console.WriteLine($"ProfileRepository/LoadProfiles: HDR is available for use on Display {myHDRstate.Id}, and we want it set to {myHDRstate.AdvancedColorInfo.AdvancedColorEnabled} but is currently {colorInfo.AdvancedColorEnabled}.");
+
                             var setColorState = new DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE();
                             setColorState.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE;
                             setColorState.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE>();
                             setColorState.Header.AdapterId = myHDRstate.AdapterId;
+                            setColorState.Header.Id = myHDRstate.Id;
                             setColorState.EnableAdvancedColor = myHDRstate.AdvancedColorInfo.AdvancedColorEnabled;
 
                             err = CCDImport.DisplayConfigSetDeviceInfo(ref setColorState);
                             if (err != WIN32STATUS.ERROR_SUCCESS)
+                            {
+                                Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR while trying to set the display's HDR configuration to {myHDRstate.AdvancedColorInfo.AdvancedColorEnabled}.");
                                 throw new Win32Exception((int)err);
+                            }
 
-                            Console.WriteLine($"ProfileRepository/LoadProfiles: HDR successfully set on Display {myHDRstate.Id}");
+                            Console.WriteLine($"ProfileRepository/LoadProfiles: HDR successfully set to {myHDRstate.AdvancedColorInfo.AdvancedColorEnabled} on Display {myHDRstate.Id}");
                         }
                         else
                         {
@@ -394,6 +481,6 @@ namespace AMDInfo
             {
                 Console.WriteLine($"ProfileRepository/LoadProfiles: The {filename} profile JSON file exists but is empty! So we're going to treat it as if it didn't exist.");
             }
-        }*/
+        }
     }
 }
