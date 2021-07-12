@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 using FARPROC = System.IntPtr;
 using HMODULE = System.IntPtr;
 
-namespace AMDInfo
+namespace DisplayMagicianShared.AMD
 {
-    public delegate IntPtr ADL_Main_Memory_Alloc_Delegate(int size);  
+    public delegate IntPtr ADL_Main_Memory_Alloc_Delegate(int size);
 
     public enum ADL_STATUS
     {
@@ -1428,6 +1428,11 @@ namespace AMDInfo
     class ADLImport
     {
 
+        /// <summary> Define false </summary>
+        public const int ADL_FALSE = 0;
+        /// <summary> Define true </summary>
+        public const int ADL_TRUE = 1;
+
         /// <summary> Selects all adapters instead of aparticular single adapter</summary>
         public const int ADL_ADAPTER_INDEX_ALL = -1;
         /// <summary> Define the maximum char</summary>
@@ -1455,11 +1460,7 @@ namespace AMDInfo
         /// <summary> Maximum number of GL-Sync ports on the GL-Sync module </summary>
         public const int ADL_MAX_GLSYNC_PORT_LEDS = 8;
         /// <summary> Maximum number of ADLModes for the adapter </summary>
-        public const int ADL_MAX_NUM_DISPLAYMODES = 1024;
-        /// <summary> Define true </summary>
-        public const int ADL_TRUE = 1;
-        /// <summary> Maximum number of ADLModes for the adapter </summary>
-        public const int ADL_FALSE = 0;
+        public const int ADL_MAX_NUM_DISPLAYMODES = 1024;        
         /// <summary> Indicates the active dongle, all types </summary>
         public const int ADL_CONNECTION_TYPE_ACTIVE_DONGLE = 12;
         /// <summary> Indicates the Active dongle DP->DVI(double link) connection type is valid. </summary>
@@ -1603,7 +1604,7 @@ namespace AMDInfo
         /// <summary> Indicates the display colour format is 565</summary>
         public const int ADL_DISPLAY_MODE_COLOURFORMAT_565 = 0x00000001;
         /// <summary> Indicates the display colour format is 8888 </summary>
-        public const int ADL_DISPLAY_MODE_COLOURFORMAT_8888 = 0x00000002;
+        public const int ADL_DISPLAY_MODE_COLOURFORMAT_8888 = 0x00000002; // 
         /// <summary> Indicates the display orientation is normal position</summary>
         public const int ADL_DISPLAY_MODE_ORIENTATION_SUPPORTED_000 = 0x00000004;
         /// <summary> Indicates the display is in the 90 degree position</summary>
@@ -1774,13 +1775,12 @@ namespace AMDInfo
         public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_PossibleAddAndRemove(IntPtr ADLContextHandle, int adapterIndex, int numDisplayMap, ref ADL_DISPLAY_MAP displayMap, int numDisplayTarget, ref ADL_DISPLAY_TARGET displayTarget, out int numPossibleAddTarget, out IntPtr possibleAddTarget, out int numPossibleRemoveTarget, out IntPtr possibleRemoveTarget);
 
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Adapter_Desktop_Caps(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, ref int DesktopCapsValue, ref int DesktopCapsMask);
-
-        [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Adapter_Desktop_SupportedSLSGridTypes_Get(IntPtr ADLContextHandle, int adapterIndex, int numDisplayTargetToUse, ref ADL_DISPLAY_TARGET displayTargetToUse, int numSLSGrid, ref ADL_DISPLAY_TARGET SLSGrid);
+        public static extern ADL_STATUS ADL2_Adapter_Desktop_Caps(IntPtr ADLContextHandle, int adapterIndex, ref int DesktopCapsValue, ref int DesktopCapsMask);
        
-        
-        
+        // Function to retrieve active desktop supported SLS grid size.
+        [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ADL_STATUS ADL2_Adapter_Desktop_SupportedSLSGridTypes_Get(IntPtr ADLContextHandle, int adapterIndex, int numDisplayTargetToUse, ref ADL_DISPLAY_TARGET displayTargetToUse, out int numSLSGrid, out ADL_DISPLAY_TARGET SLSGrid, out int option);
+
         // Function to get the current supported SLS grid patterns (MxN) for a GPU.
         // This function gets a list of supported SLS grids for a specified input adapter based on display devices currently connected to the GPU.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]

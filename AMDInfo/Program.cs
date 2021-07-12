@@ -1,335 +1,183 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using DisplayMagicianShared;
+using NLog.Config;
+using DisplayMagicianShared.AMD;
 
 namespace AMDInfo
 {
     class Program
     {
 
-        public struct ADVANCED_HDR_INFO_PER_PATH
-        {
-            public LUID AdapterId;
-            public uint Id;
-            public DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO AdvancedColorInfo;
-            public DISPLAYCONFIG_SDR_WHITE_LEVEL SDRWhiteLevel;
-        }
-
-        public struct AMD_DISPLAY_CONFIG
-        {
-            public DISPLAYCONFIG_PATH_INFO[] displayConfigPaths;
-            public DISPLAYCONFIG_MODE_INFO[] displayConfigModes;
-            public ADVANCED_HDR_INFO_PER_PATH[] displayHDRStates;
-        }
-
         static AMD_DISPLAY_CONFIG myDisplayConfig = new AMD_DISPLAY_CONFIG();
 
         static void Main(string[] args)
         {
-            Console.WriteLine($"AMDInfo v1.0.0");
+
+            // Prepare NLog for logging
+            var config = new NLog.Config.LoggingConfiguration();
+
+            // Targets where to log to: File and Console
+            //string date = DateTime.Now.ToString("yyyyMMdd.HHmmss");
+            string AppLogFilename = Path.Combine($"AMDInfo.log");
+
+            // Rules for mapping loggers to targets          
+            NLog.LogLevel logLevel = NLog.LogLevel.Trace;
+
+            // Create the log file target
+            var logfile = new NLog.Targets.FileTarget("logfile")
+            {
+                FileName = AppLogFilename,
+                DeleteOldFileOnStartup = true
+            };
+
+            // Create a logging rule to use the log file target
+            var loggingRule = new LoggingRule("LogToFile");
+            loggingRule.EnableLoggingForLevels(logLevel, NLog.LogLevel.Fatal);
+            loggingRule.Targets.Add(logfile);
+            loggingRule.LoggerNamePattern = "*";
+            config.LoggingRules.Add(loggingRule);
+
+            // Apply config           
+            NLog.LogManager.Configuration = config;
+
+            // Start the Log file
+            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.0.5");
+
+
+            Console.WriteLine($"\nAMDInfo v1.0.5");
             Console.WriteLine($"==============");
             Console.WriteLine($"By Terry MacDonald 2021\n");
 
             if (args.Length > 0)
             {
                 if (args[0] == "save")
-                {                    
-                    //saveToFile(args[1]);
+                {
+                    SharedLogger.logger.Debug($"AMDInfo/Main: Attempting to save the display settings to {args[1]} as save command was provided");
+                    if (args.Length != 2)
+                    {
+                        Console.WriteLine($"ERROR - You need to provide a filename in which to save display settings");
+                        SharedLogger.logger.Error($"AMDInfo/Main: ERROR - You need to provide a filename in which to save display settings");
+                        Environment.Exit(1);
+                    }
+                    saveToFile(args[1]);
                     if (!File.Exists(args[1]))
                     {
                         Console.WriteLine($"ERROR - Couldn't save settings to the file {args[1]}");
+                        SharedLogger.logger.Error($"AMDInfo/Main: ERROR - Couldn't save settings to the file {args[1]}");
                         Environment.Exit(1);
                     }
                 }
                 else if (args[0] == "load")
                 {
+                    SharedLogger.logger.Debug($"AMDInfo/Main: Attempting to use the display settings in {args[1]} as load command was provided");
+                    if (args.Length != 2)
+                    {
+                        Console.WriteLine($"ERROR - You need to provide a filename from which to load display settings");
+                        SharedLogger.logger.Error($"AMDInfo/Main: ERROR - You need to provide a filename from which to load display settings");
+                        Environment.Exit(1);
+                    }
                     if (!File.Exists(args[1]))
                     {
                         Console.WriteLine($"ERROR - Couldn't find the file {args[1]} to load settings from it");
+                        SharedLogger.logger.Error($"AMDInfo/Main: ERROR - Couldn't find the file {args[1]} to load settings from it");
                         Environment.Exit(1);
                     }
-                    //loadFromFile(args[1]);
+                    loadFromFile(args[1]);
+                }
+                else if (args[0] == "possible")
+                {
+                    SharedLogger.logger.Debug($"AMDInfo/Main: showing if the {args[1]} is a valid display cofig file as possible command was provided");
+                    if (args.Length != 2)
+                    {
+                        Console.WriteLine($"ERROR - You need to provide a filename from which we will check if the display settings are possible");
+                        SharedLogger.logger.Error($"AMDInfo/Main: ERROR - You need to provide a filename from which we will check if the display settings are possible");
+                        Environment.Exit(1);
+                    }
+                    if (!File.Exists(args[1]))
+                    {
+                        Console.WriteLine($"ERROR - Couldn't find the file {args[1]} to check the settings from it");
+                        SharedLogger.logger.Error($"AMDInfo/Main: ERROR - Couldn't find the file {args[1]} to check the settings from it");
+                        Environment.Exit(1);
+                    }
+                    possibleFromFile(args[1]);
+                }
+                else if (args[0] == "currentids")
+                {
+                    SharedLogger.logger.Debug($"AMDInfo/Main: showing currently connected display ids as currentids command was provided");
+                    Console.WriteLine("The current display identifiers are:");
+                    SharedLogger.logger.Info($"AMDInfo/Main: The current display identifiers are:");
+                    foreach (string displayId in AMDLibrary.GetLibrary().GetCurrentDisplayIdentifiers())
+                    {
+                        Console.WriteLine(@displayId);
+                        SharedLogger.logger.Info($@"{displayId}");
+                    }
+                }
+                else if (args[0] == "allids")
+                {
+                    SharedLogger.logger.Debug($"AMDInfo/Main: showing all display ids as allids command was provided");
+                    Console.WriteLine("All connected display identifiers are:");
+                    SharedLogger.logger.Info($"AMDInfo/Main: All connected display identifiers are:");
+                    foreach (string displayId in AMDLibrary.GetLibrary().GetAllConnectedDisplayIdentifiers())
+                    {
+                        Console.WriteLine(@displayId);
+                        SharedLogger.logger.Info($@"{displayId}");
+                    }
                 }
                 else if (args[0] == "help" || args[0] == "--help" || args[0] == "-h" || args[0] == "/?" || args[0] == "-?")
                 {
-                    Console.WriteLine($"AMDInfo is a little program to help test setting display layout and HDR settings using the AMD ADL driver.\n");
-                    Console.WriteLine($"You can run it without any command line parameters, and it will print all the information it can find from the \nWindows Display CCD interface.\n");
-                    Console.WriteLine($"You can also run it with 'CCDInfo save myfilename.cfg' and it will save the current display configuration into\nthe myfilename.cfg file.\n");
-                    Console.WriteLine($"This is most useful when you subsequently use the 'CCDInfo load myfilename.cfg' command, as it will load the\ndisplay configuration from the myfilename.cfg file and make it live.");
-                    Console.WriteLine($"In this way, you can make yourself a library of different cfg files with different display layouts, then use\nthe CCDInfo load command to swap between them.");
+                    SharedLogger.logger.Debug($"AMDInfo/Main: Showing help as help command was provided");
+                    showHelp();
                     Environment.Exit(1);
-                }
-            }
-
-            // Set up some variables
-            ADL_STATUS ADLRet;
-            IntPtr _adlContextHandle = IntPtr.Zero;
-            bool _initialised = false;
-
-            try
-            {
-                // Second parameter is 1: Get only the present adapters
-                ADLRet = ADLImport.ADL2_Main_Control_Create(ADLImport.ADL_Main_Memory_Alloc, (int)1, out _adlContextHandle);
-                if (ADLRet == ADL_STATUS.ADL_OK)
-                {
-                    _initialised = true;
-                    Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2 library was initialised successfully");
                 }
                 else
                 {
-                    Console.WriteLine($"AMDLibrary/AMDLibrary: Error intialising ADL2 library. ADL2_Main_Control_Create() returned error code {ADLRet}");
+                    SharedLogger.logger.Debug($"AMDInfo/Main: Showing help as an invalid command was provided");
+                    showHelp();
+                    Console.WriteLine("*** ERROR - Invalid command line parameter provided! ***\n");
                     Environment.Exit(1);
                 }
-
-                if (_initialised)
-                {
-
-                    int[] gpuBusIndexes = new int[4];
-                    int numAdapters = 0;
-                    int busNumber;
-                    bool gpuFound = false;
-                    IntPtr adapterInfoBuffer = IntPtr.Zero;
-                    //ADLImport.ADL2_Adapter_NumberOfAdapters_Get(_adlContextHandle, ref NumberOfAdapters);
-                    ADLRet = ADLImport.ADL2_Adapter_AdapterInfoX3_Get(_adlContextHandle, ADLImport.ADL_ADAPTER_INDEX_ALL, out numAdapters, out adapterInfoBuffer);
-                    if (ADLRet == ADL_STATUS.ADL_OK)
-                    {
-                        Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Adapter_AdapterInfoX3_Get worked!");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Adapter_AdapterInfoX3_Get() returned error code {ADLRet}");
-                        Environment.Exit(1);
-                    }
-
-                    ADL_ADAPTER_INFO oneAdapter = new ADL_ADAPTER_INFO();
-                    List<ADL_ADAPTER_INFO> adapterInfoList = new List<ADL_ADAPTER_INFO>();
-                    for (int adapter = 0; adapter < numAdapters; adapter++)
-                    {
-                        oneAdapter = (ADL_ADAPTER_INFO)Marshal.PtrToStructure(new IntPtr(adapterInfoBuffer.ToInt64() + (adapter * Marshal.SizeOf(oneAdapter))), oneAdapter.GetType());
-                        adapterInfoList.Add(oneAdapter);
-
-                        if (oneAdapter.Exist != 1 || oneAdapter.Present != 1)
-                        {
-                            Console.WriteLine($"AMDLibrary/AMDLibrary: The Adapter {oneAdapter.DisplayName} does not exist or is not present.");
-                            continue;
-                        }
-
-                        Console.WriteLine($"AMDLibrary/AMDLibrary: The Adapter {oneAdapter.DisplayName} exists and is present.");
-
-
-                        // Get whiether this adapter is active
-                        int isActive = ADLImport.ADL_FALSE;
-                        ADLRet = ADLImport.ADL2_Adapter_Active_Get(_adlContextHandle, oneAdapter.AdapterIndex, ref isActive);
-                        if (ADLRet == ADL_STATUS.ADL_OK)
-                        {
-                            Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Adapter_Active_Get on adapter {oneAdapter.AdapterIndex} worked!");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Adapter_Active_Get() returned error code {ADLRet}");
-                            Environment.Exit(1);
-                        }
-
-                        if (isActive != ADLImport.ADL_TRUE)
-                        {
-                            Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} is NOT active! Skipping");
-                            continue;
-                        }
-
-                        if (isActive != ADLImport.ADL_TRUE)
-                        {
-                            Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} is NOT active! Skipping");
-                            continue;
-                        }
-
-                        if (oneAdapter.AdapterIndex < 0)
-                        {
-                            Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} has an index less than 0. Skipping");
-                            continue;
-                        }
-
-                        Console.WriteLine($"AMDLibrary/AMDLibrary: Adapter {oneAdapter.AdapterIndex} really exists!");
-
-                        IntPtr DisplayBuffer = IntPtr.Zero;
-                        int numDisplays = 0;
-                        // Force the display detection and get the Display Info. Use 0 as last parameter to NOT force detection
-                        ADLRet = ADLImport.ADL2_Display_DisplayInfo_Get(_adlContextHandle, oneAdapter.AdapterIndex, ref numDisplays, out DisplayBuffer, 1);
-                        if (ADLRet != ADL_STATUS.ADL_OK)
-                        {
-                            Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Display_DisplayInfo_Get() returned an error code {ADLRet}");
-                            continue;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"AMDLibrary/AMDLibrary: ADL2_Display_DisplayInfo_Get on adapter {oneAdapter.AdapterIndex} worked!");
-                        }
-
-                        for (int displayLoop = 0; displayLoop < numDisplays; displayLoop++)
-                        {
-                            ADL_DISPLAY_INFO oneDisplayInfo = new ADL_DISPLAY_INFO();
-                            oneDisplayInfo = (ADL_DISPLAY_INFO)Marshal.PtrToStructure(new IntPtr(DisplayBuffer.ToInt64() + (displayLoop * Marshal.SizeOf(oneDisplayInfo))), oneDisplayInfo.GetType());
-
-                            // Is the display mapped to this adapter? If not we skip it!
-                            if (oneDisplayInfo.DisplayID.DisplayLogicalAdapterIndex != oneAdapter.AdapterIndex)
-                            {
-                                Console.WriteLine($"AMDLibrary/SetActiveProfile: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} ({oneAdapter.AdapterName}) AdapterID display ID#{oneDisplayInfo.DisplayID.DisplayLogicalIndex} is not a real display as its DisplayID.DisplayLogicalAdapterIndex is -1");
-                                continue;
-                            }
-
-                            Console.WriteLine($"AMDLibrary/SetActiveProfile: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} ({oneAdapter.AdapterName}) AdapterID display ID#{oneDisplayInfo.DisplayID.DisplayLogicalIndex} is a real display");
-
-                            // At this point we know we have a real display, so we can begin to interrogate it.
-                            
-                        }
-
-
-                        Console.WriteLine($"AMDLibrary/GenerateProfileDisplayIdentifiers: Number Of Adapters: {numAdapters.ToString()} ");
-
-                    }
-
-                    // Destroy the context handle and memory
-                    ADLImport.ADL2_Main_Control_Destroy(_adlContextHandle);
-                }
-                else
-                {
-                    Console.WriteLine($"ERROR - Couldn't initialise the AMD ADL library.");
-                }
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"ERROR - Exception while trying to access ADL2_Main_Control_Create");
+                SharedLogger.logger.Debug($"AMDInfo/Main: Attempting to show information about the current display settings as no command was provided");
+                // We're in display current config mode
+                Console.WriteLine(AMDLibrary.GetLibrary().PrintActiveConfig());
             }
-            
+            Console.WriteLine();
+            Environment.Exit(0);
+        }
 
+        static void showHelp()
+        {
+            Console.WriteLine($"AMDInfo is a little program to help test setting display layout and HDR settings in Windows 10 64-bit and later.\n");
+            Console.WriteLine($"You need to have AMD Radeon™ Software Adrenalin 2020 Edition 21.2.1 or later installed and an AMD video card.\n");
+            Console.WriteLine($"You can run it without any command line parameters, and it will print all the information it can find from the \nWindows Display CCD interface.\n");
+            Console.WriteLine($"You can also run it with 'AMDInfo save myfilename.cfg' and it will save the current display configuration into\nthe myfilename.cfg file.\n");
+            Console.WriteLine($"This is most useful when you subsequently use the 'AMDInfo load myfilename.cfg' command, as it will load the\ndisplay configuration from the myfilename.cfg file and make it live. In this way, you can make yourself a library\nof different cfg files with different display layouts, then use the AMDInfo load command to swap between them.\n\n");
+            Console.WriteLine($"Valid commands:\n");
+            Console.WriteLine($"\t'AMDInfo' will print information about your current display setting.");
+            Console.WriteLine($"\t'AMDInfo save myfilename.cfg' will save your current display setting to the myfilename.cfg file.");
+            Console.WriteLine($"\t'AMDInfo load myfilename.cfg' will load and apply the display setting in the myfilename.cfg file.");
+            Console.WriteLine($"\t'AMDInfo possible myfilename.cfg' will test the display setting in the myfilename.cfg file to see\n\t\tif it is possible.");
+            Console.WriteLine($"\nUse DisplayMagician to store display settings for each game you have. https://github.com/terrymacdonald/DisplayMagician\n");
         }
 
         static void saveToFile(string filename)
         {
-            Console.WriteLine($"ProfileRepository/SaveProfiles: Attempting to save the profiles repository to the {filename}.");
+            SharedLogger.logger.Trace($"AMDInfo/saveToFile: Attempting to save the current display configuration to the {filename}.");
 
-            // Overview: 
-            // We want to first see if any of the displays are Eyefinity Displays
-            // If there are some Eyefinity Displays then we need to record the SLS configuration for them
-            // We then need to record the AMD HDR settings for any of the displays in use (even if they are part of the Eyefinity)
-            // Then we use the Windows CCD library to get all the layout information and Windows HDR settings
-            // And then we store it all in an AMD config file.
+            SharedLogger.logger.Trace($"AMDInfo/saveToFile: Getting the current Active Config");
+            // Get the current configuration
+            myDisplayConfig = AMDLibrary.GetLibrary().GetActiveConfig();
 
-            // get the primary display
-
-            // Get the DisplayMapConfig
-            // ADL2_Display_DisplayMapConfig_Get
-
-            // Get the DisplaySLS Map index
-            // ADL2_Display_SLSMapIndex_Get
-
-            iCurrentSLSTarget = 0;
-            for (i = 0; i < iRows; i++)
-            {
-                for (j = 0; j < iColumns; j++)
-                {
-
-                    pSLSTargets[iCurrentSLSTarget].iAdapterIndex = iAdapterIndex;
-                    memset(&(pSLSTargets[iCurrentSLSTarget].displayTarget), 0, sizeof(ADLDisplayTarget));
-
-                    pSLSTargets[iCurrentSLSTarget].displayTarget.displayID.iDisplayLogicalIndex = iDisplayMapIndexes[iCurrentSLSTarget];
-                    pSLSTargets[iCurrentSLSTarget].displayTarget.displayID.iDisplayPhysicalIndex = iDisplayMapIndexes[iCurrentSLSTarget];
-                    pSLSTargets[iCurrentSLSTarget].displayTarget.displayID.iDisplayLogicalAdapterIndex = iAdapterIndex;
-                    pSLSTargets[iCurrentSLSTarget].displayTarget.displayID.iDisplayPhysicalAdapterIndex = iAdapterIndex;
-
-                    pSLSTargets[iCurrentSLSTarget].iSLSMapIndex = iSLSMapIndex;
-
-                    memset(&(pSLSTargets[iCurrentSLSTarget].viewSize), 0, sizeof(ADLMode));
-
-                    pSLSTargets[iCurrentSLSTarget].viewSize.iAdapterIndex = iAdapterIndex;
-                    pSLSTargets[iCurrentSLSTarget].viewSize.iModeFlag = pModes[0].iModeFlag;
-                    pSLSTargets[iCurrentSLSTarget].viewSize.iOrientation = pModes[0].iOrientation;
-                    pSLSTargets[iCurrentSLSTarget].viewSize.fRefreshRate = pModes[0].fRefreshRate;
-                    pSLSTargets[iCurrentSLSTarget].viewSize.iColourDepth = pModes[0].iColourDepth;
-                    pSLSTargets[iCurrentSLSTarget].viewSize.iXPos = pModes[0].iXPos;
-                    pSLSTargets[iCurrentSLSTarget].viewSize.iYPos = pModes[0].iYPos;
-                    pSLSTargets[iCurrentSLSTarget].viewSize.iXRes = pModes[0].iXRes;
-                    pSLSTargets[iCurrentSLSTarget].viewSize.iYRes = pModes[0].iYRes;
-
-
-                    pSLSTargets[iCurrentSLSTarget].iSLSGridPositionX = j;
-                    pSLSTargets[iCurrentSLSTarget].iSLSGridPositionY = i;
-
-                    // this is used only for SLS builder; set "Enabled" in all other cases
-                    pSLSTargets[iCurrentSLSTarget].iSLSTargetValue = 0x0001;
-                    pSLSTargets[iCurrentSLSTarget].iSLSTargetMask = 0x0001;
-
-                    iCurrentSLSTarget++;
-                }
-            }
-
-            // Get the SLS MapConfig
-            // 
-
-
-
-            // Get the size of the largest Active Paths and Modes arrays
-            WIN32STATUS err = CCDImport.GetDisplayConfigBufferSizes(QDC.QDC_ONLY_ACTIVE_PATHS, out var pathCount, out var modeCount);
-            if (err != WIN32STATUS.ERROR_SUCCESS)
-                throw new Win32Exception((int)err);
-
-            // Get the Active Paths and Modes in use now
-            var paths = new DISPLAYCONFIG_PATH_INFO[pathCount];
-            var modes = new DISPLAYCONFIG_MODE_INFO[modeCount];
-            err = CCDImport.QueryDisplayConfig(QDC.QDC_ONLY_ACTIVE_PATHS, ref pathCount, paths, ref modeCount, modes, IntPtr.Zero);
-            if (err != WIN32STATUS.ERROR_SUCCESS)
-                throw new Win32Exception((int)err);
-
-            // Now cycle through the paths and grab the HDR state information
-            var hdrInfos = new ADVANCED_HDR_INFO_PER_PATH[pathCount];
-            int hdrInfoCount = 0;
-            foreach (var path in paths)
-            {
-                // Get advanced HDR info
-                var colorInfo = new DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO();
-                colorInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO;
-                colorInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO>();
-                colorInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                colorInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref colorInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-                // get SDR white levels
-                var whiteLevelInfo = new DISPLAYCONFIG_SDR_WHITE_LEVEL();
-                whiteLevelInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL;
-                whiteLevelInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_SDR_WHITE_LEVEL>();
-                whiteLevelInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                whiteLevelInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref whiteLevelInfo);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
-                    throw new Win32Exception((int)err);
-
-
-                hdrInfos[hdrInfoCount] = new ADVANCED_HDR_INFO_PER_PATH();
-                hdrInfos[hdrInfoCount].AdapterId = path.TargetInfo.AdapterId;
-                hdrInfos[hdrInfoCount].Id = path.TargetInfo.Id;
-                hdrInfos[hdrInfoCount].AdvancedColorInfo = colorInfo;
-                hdrInfos[hdrInfoCount].SDRWhiteLevel = whiteLevelInfo;
-                hdrInfoCount++;
-            }
-
-
-            // Store the active paths and modes in our display config object
-            myDisplayConfig.displayConfigPaths = paths;
-            myDisplayConfig.displayConfigModes = modes;
-            myDisplayConfig.displayHDRStates = hdrInfos;
-
-
+            SharedLogger.logger.Trace($"AMDInfo/saveToFile: Attempting to convert the current Active Config objects to JSON format");
             // Save the object to file!
             try
             {
-                Console.WriteLine($"ProfileRepository/SaveProfiles: Converting the objects to JSON format.");
+                SharedLogger.logger.Trace($"AMDInfo/saveToFile: Attempting to convert the current Active Config objects to JSON format");
 
                 var json = JsonConvert.SerializeObject(myDisplayConfig, Formatting.Indented, new JsonSerializerSettings
                 {
@@ -342,39 +190,42 @@ namespace AMDInfo
 
                 if (!string.IsNullOrWhiteSpace(json))
                 {
-                    Console.WriteLine($"ProfileRepository/SaveProfiles: Saving the profile repository to the {filename}.");
+                    SharedLogger.logger.Error($"AMDInfo/saveToFile: Saving the display settings to {filename}.");
 
                     File.WriteAllText(filename, json, Encoding.Unicode);
+
+                    SharedLogger.logger.Error($"AMDInfo/saveToFile: Display settings successfully saved to {filename}.");
+                    Console.WriteLine($"Display settings successfully saved to {filename}.");
+                }
+                else
+                {
+                    SharedLogger.logger.Error($"AMDInfo/saveToFile: The JSON string is empty after attempting to convert the current Active Config objects to JSON format");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ProfileRepository/SaveProfiles: Unable to save the profile repository to the {filename}.");
+                Console.WriteLine($"AMDInfo/saveToFile: ERROR - Unable to save the profile repository to the {filename}.");
+                SharedLogger.logger.Error(ex, $"AMDInfo/saveToFile: Saving the display settings to the {filename}.");
             }
         }
 
         static void loadFromFile(string filename)
         {
-            // Overview: 
-            // We first load the AMD config file into the C# structures
-            // We next figure out the AMD HDR settings, and enable them or disable them as needed
-            // We next see if any of the settings use Eyefinity Displays
-            // If there are some Eyefinity Displays then we need to restore the SLS configuration for them, fierst checking that the displays are there
-            // Then we use the Windows CCD library to apply all the layout information and Windows HDR settings that we saved last time
-            // And then we're done!
-
             string json = "";
             try
             {
+                SharedLogger.logger.Trace($"AMDInfo/loadFromFile: Attempting to load the display configuration from {filename} to use it.");
                 json = File.ReadAllText(filename, Encoding.Unicode);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ProfileRepository/LoadProfiles: Tried to read the JSON file {filename} to memory but File.ReadAllTextthrew an exception.");
+                Console.WriteLine($"AMDInfo/loadFromFile: ERROR - Tried to read the JSON file {filename} to memory but File.ReadAllTextthrew an exception.");
+                SharedLogger.logger.Error(ex, $"AMDInfo/loadFromFile: Tried to read the JSON file {filename} to memory but File.ReadAllTextthrew an exception.");
             }
 
             if (!string.IsNullOrWhiteSpace(json))
             {
+                SharedLogger.logger.Trace($"AMDInfo/loadFromFile: Contents exist within {filename} so trying to read them as JSON.");
                 try
                 {
                     myDisplayConfig = JsonConvert.DeserializeObject<AMD_DISPLAY_CONFIG>(json, new JsonSerializerSettings
@@ -385,101 +236,98 @@ namespace AMDInfo
                         TypeNameHandling = TypeNameHandling.Auto,
                         ObjectCreationHandling = ObjectCreationHandling.Replace
                     });
+                    SharedLogger.logger.Trace($"AMDInfo/loadFromFile: Successfully parsed {filename} as JSON.");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"ProfileRepository/LoadProfiles: Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
+                    Console.WriteLine($"AMDInfo/loadFromFile: ERROR - Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
+                    SharedLogger.logger.Error(ex, $"AMDInfo/loadFromFile: Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
                 }
 
-
-                // Get the size of the largest Active Paths and Modes arrays
-                WIN32STATUS err = CCDImport.GetDisplayConfigBufferSizes(QDC.QDC_ALL_PATHS, out var pathCount, out var modeCount);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
+                if (!AMDLibrary.GetLibrary().IsActiveConfig(myDisplayConfig))
                 {
-                    Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR while trying to get the largest active paths and modes");
-                    throw new Win32Exception((int)err);
-                }
-
-
-                // Now we want to validate the config is ok
-                if (myDisplayConfig.displayConfigPaths.Length <= pathCount - 1 &&
-                    myDisplayConfig.displayConfigModes.Length <= pathCount - 1)
-                {
-                    uint myPathsCount = (uint)myDisplayConfig.displayConfigPaths.Length;
-                    uint myModesCount = (uint)myDisplayConfig.displayConfigModes.Length;
-
-                    Console.WriteLine($"ProfileRepository/LoadProfiles: Testing whether the display configuration is valid.");
-                    // Test whether a specified display configuration is supported on the computer                    
-                    err = CCDImport.SetDisplayConfig(myPathsCount, myDisplayConfig.displayConfigPaths, myModesCount, myDisplayConfig.displayConfigModes, SDC.TEST_IF_VALID_DISPLAYCONFIG);
-                    if (err != WIN32STATUS.ERROR_SUCCESS)
+                    if (AMDLibrary.GetLibrary().IsPossibleConfig(myDisplayConfig))
                     {
-                        Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR white testing that the Display COnfiguration is valid");
-                        throw new Win32Exception((int)err);
+                        SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The display settings within {filename} are possible to use right now, so we'll use attempt to use them.");
+                        Console.WriteLine($"Attempting to apply display config from {filename}");
+                        AMDLibrary.GetLibrary().SetActiveConfig(myDisplayConfig);
+                        SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The display settings within {filename} were successfully applied.");
+                        Console.WriteLine($"Display config successfully applied");
                     }
-
-                    Console.WriteLine($"ProfileRepository/LoadProfiles: Yay! The display configuration is valid!");
-                    // Now set the specified display configuration for this computer                    
-                    err = CCDImport.SetDisplayConfig(myPathsCount, myDisplayConfig.displayConfigPaths, myModesCount, myDisplayConfig.displayConfigModes, SDC.SET_DISPLAYCONFIG_AND_SAVE);
-                    if (err != WIN32STATUS.ERROR_SUCCESS)
+                    else
                     {
-                        Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR while trying to set the display configuration.");
-                        throw new Win32Exception((int)err);
-                    }
-
-                    Console.WriteLine($"ProfileRepository/LoadProfiles: The display configuration has been successfully applied");
-
-                    foreach (ADVANCED_HDR_INFO_PER_PATH myHDRstate in myDisplayConfig.displayHDRStates)
-                    {
-                        Console.WriteLine($"ProfileRepository/LoadProfiles: Trying to get information whether HDR color is in use now on Display {myHDRstate.Id}.");
-                        // Get advanced HDR info
-                        var colorInfo = new DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO();
-                        colorInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO;
-                        colorInfo.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO>();
-                        colorInfo.Header.AdapterId = myHDRstate.AdapterId;
-                        colorInfo.Header.Id = myHDRstate.Id;
-                        err = CCDImport.DisplayConfigGetDeviceInfo(ref colorInfo);
-                        if (err != WIN32STATUS.ERROR_SUCCESS)
-                        {
-                            Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR while trying to get the display's current HDR configuration.");
-                            throw new Win32Exception((int)err);
-                        }
-
-                        if (myHDRstate.AdvancedColorInfo.AdvancedColorSupported && colorInfo.AdvancedColorEnabled != myHDRstate.AdvancedColorInfo.AdvancedColorEnabled)
-                        {
-                            Console.WriteLine($"ProfileRepository/LoadProfiles: HDR is available for use on Display {myHDRstate.Id}, and we want it set to {myHDRstate.AdvancedColorInfo.AdvancedColorEnabled} but is currently {colorInfo.AdvancedColorEnabled}.");
-
-                            var setColorState = new DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE();
-                            setColorState.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE;
-                            setColorState.Header.Size = Marshal.SizeOf<DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE>();
-                            setColorState.Header.AdapterId = myHDRstate.AdapterId;
-                            setColorState.Header.Id = myHDRstate.Id;
-                            setColorState.EnableAdvancedColor = myHDRstate.AdvancedColorInfo.AdvancedColorEnabled;
-
-                            err = CCDImport.DisplayConfigSetDeviceInfo(ref setColorState);
-                            if (err != WIN32STATUS.ERROR_SUCCESS)
-                            {
-                                Console.WriteLine($"ProfileRepository/LoadProfiles: ERROR while trying to set the display's HDR configuration to {myHDRstate.AdvancedColorInfo.AdvancedColorEnabled}.");
-                                throw new Win32Exception((int)err);
-                            }
-
-                            Console.WriteLine($"ProfileRepository/LoadProfiles: HDR successfully set to {myHDRstate.AdvancedColorInfo.AdvancedColorEnabled} on Display {myHDRstate.Id}");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"ProfileRepository/LoadProfiles: Skipping setting HDR on Display {myHDRstate.Id} as it does not support HDR");
-                        }
-
+                        Console.WriteLine($"AMDInfo/loadFromFile: ERROR - Cannot apply the display config in {filename} as it is not currently possible to use it.");
+                        SharedLogger.logger.Error($"AMDInfo/loadFromFile: ERROR - Cannot apply the display config in {filename} as it is not currently possible to use it.");
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"ProfileRepository/LoadProfiles: The number of Display Paths or Display Modes is higher than the max count allowed ({pathCount} for Paths and {modeCount} for Modes).");
+                    Console.WriteLine($"The display settings in {filename} are already installed. No need to install them again. Exiting.");
+                    SharedLogger.logger.Info($"AMDInfo/loadFromFile: The display settings in {filename} are already installed. No need to install them again. Exiting.");
                 }
 
             }
             else
             {
-                Console.WriteLine($"ProfileRepository/LoadProfiles: The {filename} profile JSON file exists but is empty! So we're going to treat it as if it didn't exist.");
+                Console.WriteLine($"AMDInfo/loadFromFile: ERROR - The {filename} profile JSON file exists but is empty! So we're going to treat it as if it didn't exist.");
+                SharedLogger.logger.Error($"AMDInfo/loadFromFile: The {filename} profile JSON file exists but is empty! So we're going to treat it as if it didn't exist.");
+            }
+        }
+
+        static void possibleFromFile(string filename)
+        {
+            string json = "";
+            try
+            {
+                SharedLogger.logger.Trace($"AMDInfo/possibleFromFile: Attempting to load the display configuration from {filename} to see if it's possible.");
+                json = File.ReadAllText(filename, Encoding.Unicode);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"AMDInfo/possibleFromFile: ERROR - Tried to read the JSON file {filename} to memory but File.ReadAllTextthrew an exception.");
+                SharedLogger.logger.Error(ex, $"AMDInfo/possibleFromFile: Tried to read the JSON file {filename} to memory but File.ReadAllTextthrew an exception.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                try
+                {
+                    SharedLogger.logger.Trace($"AMDInfo/possibleFromFile: Contents exist within {filename} so trying to read them as JSON.");
+                    myDisplayConfig = JsonConvert.DeserializeObject<AMD_DISPLAY_CONFIG>(json, new JsonSerializerSettings
+                    {
+                        MissingMemberHandling = MissingMemberHandling.Ignore,
+                        NullValueHandling = NullValueHandling.Ignore,
+                        DefaultValueHandling = DefaultValueHandling.Include,
+                        TypeNameHandling = TypeNameHandling.Auto,
+                        ObjectCreationHandling = ObjectCreationHandling.Replace
+                    });
+                    SharedLogger.logger.Trace($"AMDInfo/possibleFromFile: Successfully parsed {filename} as JSON.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"AMDInfo/possibleFromFile: ERROR - Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
+                    SharedLogger.logger.Error(ex, $"AMDInfo/possibleFromFile: Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
+                }
+
+                if (AMDLibrary.GetLibrary().IsPossibleConfig(myDisplayConfig))
+                {
+                    SharedLogger.logger.Trace($"AMDInfo/possibleFromFile: The display settings in {filename} are able to be applied on this computer if you'd like to apply them.");
+                    Console.WriteLine($"The display settings in {filename} are able to be applied on this computer if you'd like to apply them.");
+                    Console.WriteLine($"You can apply them with the command 'AMDInfo load {filename}'");
+                }
+                else
+                {
+                    SharedLogger.logger.Trace($"AMDInfo/possibleFromFile: The {filename} file contains a display setting that will NOT work on this computer right now.");
+                    SharedLogger.logger.Trace($"AMDInfo/possibleFromFile: This may be because the required screens are turned off, or some other change has occurred on the PC.");
+                    Console.WriteLine($"The {filename} file contains a display setting that will NOT work on this computer right now.");
+                    Console.WriteLine($"This may be because the required screens are turned off, or some other change has occurred on the PC.");
+                }
+
+            }
+            else
+            {
+                SharedLogger.logger.Error($"AMDInfo/possibleFromFile: The {filename} profile JSON file exists but is empty! So we're going to treat it as if it didn't exist.");
+                Console.WriteLine($"AMDInfo/possibleFromFile: The {filename} profile JSON file exists but is empty! So we're going to treat it as if it didn't exist.");
             }
         }
     }

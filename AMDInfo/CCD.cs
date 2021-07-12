@@ -5,9 +5,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AMDInfo
+namespace DisplayMagicianShared.Windows
 {
-    public enum WIN32STATUS
+
+    public enum WIN32STATUS : uint
     {
         ERROR_SUCCESS = 0,
         ERROR_ACCESS_DENIED = 5,
@@ -15,10 +16,12 @@ namespace AMDInfo
         ERROR_GEN_FAILURE = 31,
         ERROR_INVALID_PARAMETER = 87,
         ERROR_INSUFFICIENT_BUFFER = 122,
+        ERROR_BAD_CONFIGURATION = 1610,
     }
 
-    public enum DISPLAYCONFIG_DEVICE_INFO_TYPE
+    public enum DISPLAYCONFIG_DEVICE_INFO_TYPE : uint
     {
+        Zero = 0,
         DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1,
         DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME = 2,
         DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE = 3,
@@ -32,7 +35,8 @@ namespace AMDInfo
         DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
     }
 
-    public enum DISPLAYCONFIG_COLOR_ENCODING
+    [Flags]
+    public enum DISPLAYCONFIG_COLOR_ENCODING : uint
     {
         DISPLAYCONFIG_COLOR_ENCODING_RGB = 0,
         DISPLAYCONFIG_COLOR_ENCODING_YCBCR444 = 1,
@@ -41,26 +45,34 @@ namespace AMDInfo
         DISPLAYCONFIG_COLOR_ENCODING_INTENSITY = 4,
     }
 
-    public enum DISPLAYCONFIG_SCALING
+    [Flags]
+    public enum DISPLAYCONFIG_SCALING : uint
     {
+        Zero = 0,
         DISPLAYCONFIG_SCALING_IDENTITY = 1,
         DISPLAYCONFIG_SCALING_CENTERED = 2,
         DISPLAYCONFIG_SCALING_STRETCHED = 3,
         DISPLAYCONFIG_SCALING_ASPECTRATIOCENTEREDMAX = 4,
         DISPLAYCONFIG_SCALING_CUSTOM = 5,
         DISPLAYCONFIG_SCALING_PREFERRED = 128,
+        DISPLAYCONFIG_SCALING_FORCEUINT32 = 0xFFFFFFFF,
     }
 
-    public enum DISPLAYCONFIG_ROTATION
+    [Flags]
+    public enum DISPLAYCONFIG_ROTATION : uint
     {
+        Zero = 0,
         DISPLAYCONFIG_ROTATION_IDENTITY = 1,
         DISPLAYCONFIG_ROTATION_ROTATE90 = 2,
         DISPLAYCONFIG_ROTATION_ROTATE180 = 3,
+        DISPLAYCONFIG_ROTATION_ROTATE270 = 4,
+        DISPLAYCONFIG_ROTATION_FORCEUINT32 = 0xFFFFFFFF,
     }
 
-    public enum DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY
+    [Flags]
+    public enum DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY : uint
     {
-        DISPLAYCONFIG_OUTPUT_TECHNOLOGY_OTHER = -1,
+        DISPLAYCONFIG_OUTPUT_TECHNOLOGY_OTHER = 4294967295, // - 1
         DISPLAYCONFIG_OUTPUT_TECHNOLOGY_HD15 = 0,
         DISPLAYCONFIG_OUTPUT_TECHNOLOGY_SVIDEO = 1,
         DISPLAYCONFIG_OUTPUT_TECHNOLOGY_COMPOSITE_VIDEO = 2,
@@ -78,31 +90,41 @@ namespace AMDInfo
         DISPLAYCONFIG_OUTPUT_TECHNOLOGY_MIRACAST = 15,
         DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INDIRECT_WIRED = 16,
         DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INDIRECT_VIRTUAL = 17,
-        DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INTERNAL = unchecked((int)0x80000000),
+        DISPLAYCONFIG_OUTPUT_TECHNOLOGY_public = 0x80000000,
+        DISPLAYCONFIG_OUTPUT_TECHNOLOGY_FORCEUINT32 = 0xFFFFFFFF,
     }
 
-    public enum DISPLAYCONFIG_TOPOLOGY_ID
+    [Flags]
+    public enum DISPLAYCONFIG_TOPOLOGY_ID : uint
     {
-        DISPLAYCONFIG_TOPOLOGY_INTERNAL = 0x00000001,
+        Zero = 0x0,
+        DISPLAYCONFIG_TOPOLOGY_public = 0x00000001,
         DISPLAYCONFIG_TOPOLOGY_CLONE = 0x00000002,
         DISPLAYCONFIG_TOPOLOGY_EXTEND = 0x00000004,
         DISPLAYCONFIG_TOPOLOGY_EXTERNAL = 0x00000008,
+        DISPLAYCONFIG_TOPOLOGY_FORCEUINT32 = 0xFFFFFFFF,
     }
 
-    public enum DISPLAYCONFIG_PATH
+    [Flags]
+    public enum DISPLAYCONFIG_PATH : uint
     {
+        Zero = 0x0,
         DISPLAYCONFIG_PATH_ACTIVE = 0x00000001,
         DISPLAYCONFIG_PATH_PREFERRED_UNSCALED = 0x00000004,
         DISPLAYCONFIG_PATH_SUPPORT_VIRTUAL_MODE = 0x00000008,
     }
 
-    public enum DISPLAYCONFIG_SOURCE_FLAGS
+    [Flags]
+    public enum DISPLAYCONFIG_SOURCE_FLAGS : uint
     {
+        Zero = 0x0,
         DISPLAYCONFIG_SOURCE_IN_USE = 0x00000001,
     }
 
-    public enum DISPLAYCONFIG_TARGET_FLAGS
+    [Flags]
+    public enum DISPLAYCONFIG_TARGET_FLAGS : uint
     {
+        Zero = 0x0,
         DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
         DISPLAYCONFIG_TARGET_FORCIBLE = 0x00000002,
         DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_BOOT = 0x00000004,
@@ -111,8 +133,10 @@ namespace AMDInfo
         DISPLAYCONFIG_TARGET_IS_HMD = 0x00000020,
     }
 
-    public enum QDC
+    [Flags]
+    public enum QDC : uint
     {
+        Zero = 0x0,
         QDC_ALL_PATHS = 0x00000001, // Get all paths
         QDC_ONLY_ACTIVE_PATHS = 0x00000002, // Get only the active paths currently in use
         QDC_DATABASE_CURRENT = 0x00000004, // Get the currently active paths as stored in the display database
@@ -120,14 +144,16 @@ namespace AMDInfo
         QDC_INCLUDE_HMD = 0x00000020,
     }
 
-    public enum SDC
+    [Flags]
+    public enum SDC : uint
     {
-        SDC_TOPOLOGY_INTERNAL = 0x00000001,
+        Zero = 0x0,
+        SDC_TOPOLOGY_public = 0x00000001,
         SDC_TOPOLOGY_CLONE = 0x00000002,
         SDC_TOPOLOGY_EXTEND = 0x00000004,
         SDC_TOPOLOGY_EXTERNAL = 0x00000008,
         SDC_TOPOLOGY_SUPPLIED = 0x00000010,
-        SDC_USE_DATABASE_CURRENT = (SDC_TOPOLOGY_INTERNAL | SDC_TOPOLOGY_CLONE | SDC_TOPOLOGY_EXTEND | SDC_TOPOLOGY_EXTERNAL),
+        SDC_USE_DATABASE_CURRENT = (SDC_TOPOLOGY_public | SDC_TOPOLOGY_CLONE | SDC_TOPOLOGY_EXTEND | SDC_TOPOLOGY_EXTERNAL),
         SDC_USE_SUPPLIED_DISPLAY_CONFIG = 0x00000020,
         SDC_VALIDATE = 0x00000040,
         SDC_APPLY = 0x00000080,
@@ -141,7 +167,14 @@ namespace AMDInfo
 
         // Special common combinations (only set in this library)
         TEST_IF_VALID_DISPLAYCONFIG = (SDC_VALIDATE | SDC_USE_SUPPLIED_DISPLAY_CONFIG),
+        TEST_IF_VALID_DISPLAYCONFIG_WITH_TWEAKS = (SDC_VALIDATE | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_ALLOW_CHANGES),
         SET_DISPLAYCONFIG_AND_SAVE = (SDC_APPLY | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_SAVE_TO_DATABASE),
+        SET_DISPLAYCONFIG_WITH_TWEAKS_AND_SAVE = (SDC_APPLY | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_ALLOW_CHANGES | SDC_SAVE_TO_DATABASE),
+        DISPLAYMAGICIAN_SET = (SDC_APPLY | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_ALLOW_CHANGES | SDC_SAVE_TO_DATABASE),
+        DISPLAYMAGICIAN_VALIDATE = (SDC_VALIDATE | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_ALLOW_CHANGES | SDC_SAVE_TO_DATABASE),
+        //DISPLAYMAGICIAN_SET = (SDC_APPLY | SDC_TOPOLOGY_SUPPLIED | SDC_ALLOW_CHANGES | SDC_ALLOW_PATH_ORDER_CHANGES ),
+        //DISPLAYMAGICIAN_VALIDATE = (SDC_VALIDATE | SDC_TOPOLOGY_SUPPLIED | SDC_ALLOW_CHANGES | SDC_ALLOW_PATH_ORDER_CHANGES ),
+
         SET_DISPLAYCONFIG_BUT_NOT_SAVE = (SDC_APPLY | SDC_USE_SUPPLIED_DISPLAY_CONFIG),
         TEST_IF_CLONE_VALID = (SDC_VALIDATE | SDC_TOPOLOGY_CLONE),
         SET_CLONE_TOPOLOGY = (SDC_APPLY | SDC_TOPOLOGY_CLONE),
@@ -150,43 +183,89 @@ namespace AMDInfo
         SET_DISPLAYCONFIG_USING_PATHS_ONLY_AND_SAVE = (SDC_APPLY | SDC_TOPOLOGY_SUPPLIED | SDC_ALLOW_PATH_ORDER_CHANGES),
     }
 
-    public enum DISPLAYCONFIG_SCANLINE_ORDERING
+    [Flags]
+    public enum DISPLAYCONFIG_SCANLINE_ORDERING : uint
     {
         DISPLAYCONFIG_SCANLINE_ORDERING_UNSPECIFIED = 0,
         DISPLAYCONFIG_SCANLINE_ORDERING_PROGRESSIVE = 1,
         DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED = 2,
         DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED_UPPERFIELDFIRST = DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED,
         DISPLAYCONFIG_SCANLINE_ORDERING_INTERLACED_LOWERFIELDFIRST = 3,
+        DISPLAYCONFIG_SCANLINE_ORDERING_FORCEUINT32 = 0xFFFFFFFF,
     }
 
-    public enum DISPLAYCONFIG_PIXELFORMAT
+    [Flags]
+    public enum DISPLAYCONFIG_PIXELFORMAT : uint
     {
+        Zero = 0x0,
         DISPLAYCONFIG_PIXELFORMAT_8BPP = 1,
         DISPLAYCONFIG_PIXELFORMAT_16BPP = 2,
         DISPLAYCONFIG_PIXELFORMAT_24BPP = 3,
         DISPLAYCONFIG_PIXELFORMAT_32BPP = 4,
         DISPLAYCONFIG_PIXELFORMAT_NONGDI = 5,
+        DISPLAYCONFIG_PIXELFORMAT_FORCEUINT32 = 0xFFFFFFFF,
     }
 
-    public enum DISPLAYCONFIG_MODE_INFO_TYPE
+    [Flags]
+    public enum DISPLAYCONFIG_MODE_INFO_TYPE : uint
     {
+        Zero = 0x0,
         DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE = 1,
         DISPLAYCONFIG_MODE_INFO_TYPE_TARGET = 2,
         DISPLAYCONFIG_MODE_INFO_TYPE_DESKTOP_IMAGE = 3,
+        DISPLAYCONFIG_MODE_INFO_TYPE_FORCEUINT32 = 0xFFFFFFFF,
+    }
+
+    [Flags]
+    public enum D3D_VIDEO_SIGNAL_STANDARD : uint
+    {
+        Uninitialized = 0,
+        VesaDmt = 1,
+        VesaGtf = 2,
+        VesaCvt = 3,
+        Ibm = 4,
+        Apple = 5,
+        NtscM = 6,
+        NtscJ = 7,
+        Ntsc443 = 8,
+        PalB = 9,
+        PalB1 = 10,
+        PalG = 11,
+        PalH = 12,
+        PalI = 13,
+        PalD = 14,
+        PalN = 15,
+        PalNc = 16,
+        SecamB = 17,
+        SecamD = 18,
+        SecamG = 19,
+        SecamH = 20,
+        SecamK = 21,
+        SecamK1 = 22,
+        SecamL = 23,
+        SecamL1 = 24,
+        Eia861 = 25,
+        Eia861A = 26,
+        Eia861B = 27,
+        PalK = 28,
+        PalK1 = 29,
+        PalL = 30,
+        PalM = 31,
+        Other = 255
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct DISPLAYCONFIG_DEVICE_INFO_HEADER : IEquatable<DISPLAYCONFIG_DEVICE_INFO_HEADER>
     {
         public DISPLAYCONFIG_DEVICE_INFO_TYPE Type;
-        public int Size;
+        public uint Size;
         public LUID AdapterId;
         public uint Id;
 
         public bool Equals(DISPLAYCONFIG_DEVICE_INFO_HEADER other)
             => Type == other.Type &&
                 Size == other.Size &&
-                AdapterId.Equals(other.AdapterId) &&
+                // AdapterId.Equals(other.AdapterId) && // Removed the AdapterId from the Equals, as it changes after reboot.
                 Id == other.Id;
 
         public override int GetHashCode()
@@ -201,11 +280,11 @@ namespace AMDInfo
     public struct DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO : IEquatable<DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
-        [MarshalAs(UnmanagedType.U4)]
+        //[MarshalAs(UnmanagedType.U4)]
         public uint Value;
         public DISPLAYCONFIG_COLOR_ENCODING ColorEncoding;
-        [MarshalAs(UnmanagedType.U4)]
-        public int BitsPerColorChannel;
+        //[MarshalAs(UnmanagedType.U4)]
+        public uint BitsPerColorChannel;
 
         public bool AdvancedColorSupported => (Value & 0x1) == 0x1;
         public bool AdvancedColorEnabled => (Value & 0x2) == 0x2;
@@ -248,16 +327,17 @@ namespace AMDInfo
     public struct LUID : IEquatable<LUID>
     {
         public uint LowPart;
-        public int HighPart;
+        public uint HighPart;
 
-        public long Value => ((long)HighPart << 32) | LowPart;
+        public ulong Value => ((ulong)HighPart << 32) | LowPart;
 
         public bool Equals(LUID other)
-            => Value == other.Value;
+            => LowPart == other.LowPart &&
+                HighPart == other.HighPart;
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return (LowPart, HighPart).GetHashCode();
         }
 
         public override string ToString() => Value.ToString();
@@ -324,8 +404,8 @@ namespace AMDInfo
     public struct DISPLAYCONFIG_DESKTOP_IMAGE_INFO : IEquatable<DISPLAYCONFIG_DESKTOP_IMAGE_INFO>
     {
         public POINTL PathSourceSize;
-        public RECT DesktopImageRegion;
-        public RECT DesktopImageClip;
+        public RECTL DesktopImageRegion;
+        public RECTL DesktopImageClip;
 
         public bool Equals(DISPLAYCONFIG_DESKTOP_IMAGE_INFO other)
             => PathSourceSize.Equals(other.PathSourceSize) &&
@@ -348,7 +428,7 @@ namespace AMDInfo
         public DISPLAYCONFIG_RATIONAL VSyncFreq;
         public DISPLAYCONFIG_2DREGION ActiveSize;
         public DISPLAYCONFIG_2DREGION TotalSize;
-        public uint VideoStandard;
+        public D3D_VIDEO_SIGNAL_STANDARD VideoStandard;
         public DISPLAYCONFIG_SCANLINE_ORDERING ScanLineOrdering;
 
         public bool Equals(DISPLAYCONFIG_VIDEO_SIGNAL_INFO other)
@@ -385,47 +465,31 @@ namespace AMDInfo
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    public struct DISPLAYCONFIG_MODE_INFO_union : IEquatable<DISPLAYCONFIG_MODE_INFO_union>
-    {
-        [FieldOffset(0)]
-        public DISPLAYCONFIG_TARGET_MODE TargetMode;
-
-        [FieldOffset(0)]
-        public DISPLAYCONFIG_SOURCE_MODE SourceMode;
-
-        [FieldOffset(0)]
-        public DISPLAYCONFIG_DESKTOP_IMAGE_INFO DesktopImageInfo;
-
-        public bool Equals(DISPLAYCONFIG_MODE_INFO_union other)
-            => TargetMode.Equals(other.TargetMode) &&
-                SourceMode.Equals(other.SourceMode) &&
-                DesktopImageInfo.Equals(other.DesktopImageInfo);
-
-        public override int GetHashCode()
-        {
-            return (TargetMode, SourceMode, DesktopImageInfo).GetHashCode();
-        }
-
-        //public override string ToString() => $"{type.ToString("G")}";
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
     public struct DISPLAYCONFIG_PATH_SOURCE_INFO : IEquatable<DISPLAYCONFIG_PATH_SOURCE_INFO>
     {
+        [FieldOffset(0)]
         public LUID AdapterId;
+        [FieldOffset(8)]
         public uint Id;
+        [FieldOffset(12)]
         public uint ModeInfoIdx;
+        [FieldOffset(12)]
+        public ushort cloneGroupId;
+        [FieldOffset(14)]
+        public ushort sourceModeInfoIdx;
+        [FieldOffset(16)]
         public DISPLAYCONFIG_SOURCE_FLAGS StatusFlags;
 
         public bool Equals(DISPLAYCONFIG_PATH_SOURCE_INFO other)
-            => AdapterId.Equals(other.AdapterId) &&
+            => // AdapterId.Equals(other.AdapterId) && // Removed the AdapterId from the Equals, as it changes after a reboot.
                 Id == other.Id &&
                 ModeInfoIdx == other.ModeInfoIdx &&
                 StatusFlags.Equals(other.StatusFlags);
 
         public override int GetHashCode()
         {
-            return (AdapterId, ModeInfoIdx, StatusFlags).GetHashCode();
+            //return (AdapterId, Id, ModeInfoIdx, StatusFlags).GetHashCode();
+            return (ModeInfoIdx, Id, StatusFlags).GetHashCode();
         }
 
         //public override string ToString() => $"{type.ToString("G")}";
@@ -443,10 +507,25 @@ namespace AMDInfo
         public DISPLAYCONFIG_RATIONAL RefreshRate;
         public DISPLAYCONFIG_SCANLINE_ORDERING ScanLineOrdering;
         public bool TargetAvailable;
-        public DISPLAYCONFIG_TARGET_FLAGS StatusFlags;
+        public uint StatusFlags;
+
+        public bool TargetInUse => (StatusFlags & 0x1) == 0x1;
+        public bool TargetForcible => (StatusFlags & 0x2) == 0x2;
+        public bool ForcedAvailabilityBoot => (StatusFlags & 0x4) == 0x4;
+        public bool ForcedAvailabilityPath => (StatusFlags & 0x8) == 0x8;
+        public bool ForcedAvailabilitySystem => (StatusFlags & 0x10) == 0x10;
+        public bool IsHMD => (StatusFlags & 0x20) == 0x20;
+
+
+        /* DISPLAYCONFIG_TARGET_IN_USE = 0x00000001,
+        DISPLAYCONFIG_TARGET_FORCIBLE = 0x00000002,
+        DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_BOOT = 0x00000004,
+        DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_PATH = 0x00000008,
+        DISPLAYCONFIG_TARGET_FORCED_AVAILABILITY_SYSTEM = 0x00000010,
+        DISPLAYCONFIG_TARGET_IS_HMD = 0x00000020,*/
 
         public bool Equals(DISPLAYCONFIG_PATH_TARGET_INFO other)
-            => AdapterId.Equals(other.AdapterId) &&
+            => // AdapterId.Equals(other.AdapterId) && // Removed the AdapterId from the Equals, as it changes after reboot.
                 Id == other.Id &&
                 ModeInfoIdx == other.ModeInfoIdx &&
                 OutputTechnology.Equals(other.OutputTechnology) &&
@@ -470,7 +549,7 @@ namespace AMDInfo
     {
         public DISPLAYCONFIG_PATH_SOURCE_INFO SourceInfo;
         public DISPLAYCONFIG_PATH_TARGET_INFO TargetInfo;
-        public DISPLAYCONFIG_PATH Flags;
+        public uint Flags;
 
         public bool Equals(DISPLAYCONFIG_PATH_INFO other)
             => SourceInfo.Equals(other.SourceInfo) &&
@@ -485,36 +564,78 @@ namespace AMDInfo
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit)]
     public struct DISPLAYCONFIG_MODE_INFO : IEquatable<DISPLAYCONFIG_MODE_INFO>
     {
+        [FieldOffset((0))]
         public DISPLAYCONFIG_MODE_INFO_TYPE InfoType;
+
+        [FieldOffset(4)]
         public uint Id;
+
+        [FieldOffset(8)]
         public LUID AdapterId;
-        public DISPLAYCONFIG_MODE_INFO_union Info;
+
+        // These 3 fields are all a C union in wingdi.dll
+        [FieldOffset(16)]
+        public DISPLAYCONFIG_TARGET_MODE TargetMode;
+
+        [FieldOffset(16)]
+        public DISPLAYCONFIG_SOURCE_MODE SourceMode;
+
+        [FieldOffset(16)]
+        public DISPLAYCONFIG_DESKTOP_IMAGE_INFO DesktopImageInfo;
 
         public bool Equals(DISPLAYCONFIG_MODE_INFO other)
-            => InfoType == other.InfoType &&
-               Id == other.Id &&
-               AdapterId.Equals(other.AdapterId) &&
-               Info.Equals(other.Info);
+        {
+            if (InfoType != other.InfoType)
+                return false;
+
+            if (InfoType == DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_TARGET &&
+                Id == other.Id &&
+                TargetMode.Equals(other.TargetMode))
+                return true;
+
+            if (InfoType == DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE &&
+                Id == other.Id &&
+                SourceMode.Equals(other.SourceMode))
+                return true;
+
+            if (InfoType == DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_DESKTOP_IMAGE &&
+                Id == other.Id &&
+                DesktopImageInfo.Equals(other.DesktopImageInfo))
+                return true;
+
+            return false;
+        }
+
 
         public override int GetHashCode()
         {
-            return (InfoType, Id, AdapterId, Info).GetHashCode();
+            if (InfoType == DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_TARGET)
+                return (InfoType, Id, TargetMode).GetHashCode();
+
+            if (InfoType == DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)
+                return (InfoType, Id, SourceMode).GetHashCode();
+
+            if (InfoType == DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_DESKTOP_IMAGE)
+                return (InfoType, Id, DesktopImageInfo).GetHashCode();
+
+            // otherwise we return everything
+            return (InfoType, Id, TargetMode, SourceMode, DesktopImageInfo).GetHashCode();
         }
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    public struct DISPLAYCONFIG_GET_SOURCE_NAME : IEquatable<DISPLAYCONFIG_GET_SOURCE_NAME>
+    public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME : IEquatable<DISPLAYCONFIG_SOURCE_DEVICE_NAME>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
         public string ViewGdiDeviceName;
 
-        public bool Equals(DISPLAYCONFIG_GET_SOURCE_NAME other)
+        public bool Equals(DISPLAYCONFIG_SOURCE_DEVICE_NAME other)
             => Header.Equals(other.Header) &&
                ViewGdiDeviceName == other.ViewGdiDeviceName;
 
@@ -534,7 +655,7 @@ namespace AMDInfo
         public bool Equals(DISPLAYCONFIG_TARGET_DEVICE_NAME_FLAGS other)
             => Value == other.Value;
 
-        public bool FriendlyNameFromEdid => (Value & 0x1) == 0x1;
+        public bool FriendlyNameFromEdid => (Value & 0x1) == 0x1; // Might be this broken?
         public bool FriendlyNameForced => (Value & 0x2) == 0x2;
         public bool EdidIdsValid => (Value & 0x4) == 0x4;
 
@@ -547,7 +668,7 @@ namespace AMDInfo
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    public struct DISPLAYCONFIG_GET_TARGET_NAME : IEquatable<DISPLAYCONFIG_GET_TARGET_NAME>
+    public struct DISPLAYCONFIG_TARGET_DEVICE_NAME : IEquatable<DISPLAYCONFIG_TARGET_DEVICE_NAME>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
         public DISPLAYCONFIG_TARGET_DEVICE_NAME_FLAGS Flags;
@@ -560,7 +681,7 @@ namespace AMDInfo
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
         public string MonitorDevicePath;
 
-        public bool Equals(DISPLAYCONFIG_GET_TARGET_NAME other)
+        public bool Equals(DISPLAYCONFIG_TARGET_DEVICE_NAME other)
             => Header.Equals(other.Header) &&
                Flags.Equals(other.Flags) &&
                OutputTechnology.Equals(other.OutputTechnology) &&
@@ -580,14 +701,14 @@ namespace AMDInfo
 
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct DISPLAYCONFIG_GET_TARGET_PREFERRED_NAME : IEquatable<DISPLAYCONFIG_GET_TARGET_PREFERRED_NAME>
+    public struct DISPLAYCONFIG_TARGET_PREFERRED_MODE : IEquatable<DISPLAYCONFIG_TARGET_PREFERRED_MODE>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
         public uint Width;
         public uint Height;
         public DISPLAYCONFIG_TARGET_MODE TargetMode;
 
-        public bool Equals(DISPLAYCONFIG_GET_TARGET_PREFERRED_NAME other)
+        public bool Equals(DISPLAYCONFIG_TARGET_PREFERRED_MODE other)
             => Header.Equals(other.Header) &&
                Width == other.Width &&
                Height == other.Height &&
@@ -602,13 +723,13 @@ namespace AMDInfo
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    internal struct DISPLAYCONFIG_GET_ADAPTER_NAME : IEquatable<DISPLAYCONFIG_GET_ADAPTER_NAME>
+    public struct DISPLAYCONFIG_ADAPTER_NAME : IEquatable<DISPLAYCONFIG_ADAPTER_NAME>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
         public string AdapterDevicePath;
 
-        public bool Equals(DISPLAYCONFIG_GET_ADAPTER_NAME other)
+        public bool Equals(DISPLAYCONFIG_ADAPTER_NAME other)
             => Header.Equals(other.Header) &&
                AdapterDevicePath == other.AdapterDevicePath;
 
@@ -621,24 +742,23 @@ namespace AMDInfo
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    internal struct DISPLAYCONFIG_SUPPORT_VIRTUAL_RESOLUTION : IEquatable<DISPLAYCONFIG_SUPPORT_VIRTUAL_RESOLUTION>
+    public struct DISPLAYCONFIG_SUPPORT_VIRTUAL_RESOLUTION : IEquatable<DISPLAYCONFIG_SUPPORT_VIRTUAL_RESOLUTION>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
-        [MarshalAs(UnmanagedType.U4)]
-        public uint DisableMonitorVirtualResolution;
+        public uint Value;
 
         public bool IsMonitorVirtualResolutionDisabled
         {
-            get => (DisableMonitorVirtualResolution & 0x1) == 0x1;
+            get => (Value & 0x1) == 0x1;
         }
 
         public bool Equals(DISPLAYCONFIG_SUPPORT_VIRTUAL_RESOLUTION other)
             => Header.Equals(other.Header) &&
-               DisableMonitorVirtualResolution == other.DisableMonitorVirtualResolution;
+               Value == other.Value;
 
         public override int GetHashCode()
         {
-            return (Header, DisableMonitorVirtualResolution).GetHashCode();
+            return (Header, Value).GetHashCode();
         }
 
         //public override string ToString() => $"{type.ToString("G")}";
@@ -646,24 +766,23 @@ namespace AMDInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct DISPLAYCONFIG_SET_TARGET_PERSISTENCE : IEquatable<DISPLAYCONFIG_SET_TARGET_PERSISTENCE>
+    public struct DISPLAYCONFIG_SET_TARGET_PERSISTENCE : IEquatable<DISPLAYCONFIG_SET_TARGET_PERSISTENCE>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
-        [MarshalAs(UnmanagedType.U4)]
-        public uint BootPersistenceOn;
+        public uint Value;
 
         public bool IsBootPersistenceOn
         {
-            get => (BootPersistenceOn & 0x1) == 0x1;
+            get => (Value & 0x1) == 0x1;
         }
 
         public bool Equals(DISPLAYCONFIG_SET_TARGET_PERSISTENCE other)
             => Header.Equals(other.Header) &&
-               BootPersistenceOn == other.BootPersistenceOn;
+               Value == other.Value;
 
         public override int GetHashCode()
         {
-            return (Header, BootPersistenceOn).GetHashCode();
+            return (Header, Value).GetHashCode();
         }
 
         //public override string ToString() => $"{type.ToString("G")}";
@@ -671,13 +790,13 @@ namespace AMDInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct DISPLAYCONFIG_GET_TARGET_BASE_TYPE : IEquatable<DISPLAYCONFIG_GET_TARGET_BASE_TYPE>
+    public struct DISPLAYCONFIG_TARGET_BASE_TYPE : IEquatable<DISPLAYCONFIG_TARGET_BASE_TYPE>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
-        [MarshalAs(UnmanagedType.U4)]
+        //[MarshalAs(UnmanagedType.U4)]
         public DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY BaseOutputTechnology;
 
-        public bool Equals(DISPLAYCONFIG_GET_TARGET_BASE_TYPE other)
+        public bool Equals(DISPLAYCONFIG_TARGET_BASE_TYPE other)
             => Header.Equals(other.Header) &&
                BaseOutputTechnology == other.BaseOutputTechnology;
 
@@ -691,10 +810,9 @@ namespace AMDInfo
 
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE : IEquatable<DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE>
+    public struct DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE : IEquatable<DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
-        [MarshalAs(UnmanagedType.U4)]
         public uint Value;
 
         public bool EnableAdvancedColor
@@ -726,13 +844,15 @@ namespace AMDInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct DISPLAYCONFIG_SDR_WHITE_LEVEL : IEquatable<DISPLAYCONFIG_SDR_WHITE_LEVEL>
+    public struct DISPLAYCONFIG_SDR_WHITE_LEVEL : IEquatable<DISPLAYCONFIG_SDR_WHITE_LEVEL>
     {
         public DISPLAYCONFIG_DEVICE_INFO_HEADER Header;
         // SDRWhiteLevel represents a multiplier for standard SDR white
         // peak value i.e. 80 nits represented as fixed point.
         // To get value in nits use the following conversion
         // SDRWhiteLevel in nits = (SDRWhiteLevel / 1000 ) * 80
+        // NOTE! Weirdly this is supposed to be a ulong, but there is an error in Win10 64-bit
+        // where it actually returns a uint! So had to engineer in a bug :(
         public uint SDRWhiteLevel;
 
         public bool Equals(DISPLAYCONFIG_SDR_WHITE_LEVEL other)
@@ -749,14 +869,14 @@ namespace AMDInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct RECT : IEquatable<RECT>
+    public struct RECTL : IEquatable<RECTL>
     {
         public int Left;
         public int Top;
         public int Right;
         public int Bottom;
 
-        public bool Equals(RECT other)
+        public bool Equals(RECTL other)
             => Left == other.Left &&
                Top == other.Top &&
                Right == other.Right &&
@@ -790,22 +910,22 @@ namespace AMDInfo
 
         // DisplayConfigGetDeviceInfo
         [DllImport("user32")]
-        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_SOURCE_NAME requestPacket);
+        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
 
         [DllImport("user32")]
-        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_TARGET_NAME requestPacket);
+        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_TARGET_DEVICE_NAME requestPacket);
 
         [DllImport("user32")]
-        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_TARGET_PREFERRED_NAME requestPacket);
+        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_TARGET_PREFERRED_MODE requestPacket);
 
         [DllImport("user32")]
-        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_ADAPTER_NAME requestPacket);
+        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_ADAPTER_NAME requestPacket);
 
         [DllImport("user32")]
         public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SET_TARGET_PERSISTENCE requestPacket);
 
         [DllImport("user32")]
-        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_TARGET_BASE_TYPE requestPacket);
+        public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_TARGET_BASE_TYPE requestPacket);
 
         [DllImport("user32")]
         public static extern WIN32STATUS DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SUPPORT_VIRTUAL_RESOLUTION requestPacket);
