@@ -161,42 +161,88 @@ namespace DisplayMagicianShared.AMD
             AMD_DISPLAY_CONFIG myDisplayConfig = new AMD_DISPLAY_CONFIG();
             if (_initialised)
             {
+                // Get the list of AMD adapters that the OS knows about
+                // Note - this returns past and presenta adapters, so we need to filter for the active ones.               
+                // Get the Adapter info and put it in the AdapterBuffer
+                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Running ADL2_Adapter_AdapterInfoX4_Get to find all known AMD adapters.");
+                //ADLRet = ADL.ADL2_Adapter_AdapterInfoX4_Get(_adlContextHandle, AdapterBuffer, size);
                 int numAdapters = 0;
-                ADL_STATUS ADLRet = ADLImport.ADL2_Adapter_NumberOfAdapters_Get(_adlContextHandle, ref numAdapters);
+                IntPtr adapterBuffer = IntPtr.Zero;
+                ADL_STATUS ADLRet = ADLImport.ADL2_Adapter_AdapterInfoX4_Get(_adlContextHandle, ADLImport.ADL_ADAPTER_INDEX_ALL, out numAdapters, out adapterBuffer);
                 if (ADLRet == ADL_STATUS.ADL_OK)
                 {
-                    SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Found {numAdapters} AMD adapters.");
+                    SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Adapter_AdapterInfoX4_Get returned information about all adapters the OS knows about.");
                 }
                 else
                 {
-                    SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Adapter_NumberOfAdapters_Get returned ADL_STATUS {ADLRet} when trying to get the number of AMD adapters in the computer.");
-                    throw new AMDLibraryException($"ADL2_Adapter_NumberOfAdapters_Get returned ADL_STATUS {ADLRet} when trying to get the number of AMD adapters in the computer");
+                    SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Adapter_AdapterInfoX4_Get returned ADL_STATUS {ADLRet} when trying to get the adapter info from all the AMD adapters in the computer.");
+                    throw new AMDLibraryException($"ADL2_Adapter_AdapterInfoX4_Get returned ADL_STATUS {ADLRet} when trying to get the adapter info from all the AMD adapters in the computer");
                 }
+
+                int IsActive = ADLImport.ADL_TRUE; // We only want to search for active adapters
+
+                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Successfully run ADL2_Adapter_AdapterInfoX4_Get to find information about all known AMD adapters.");
+
+                ADL_ADAPTER_INFOX2 oneAdapter = new ADL_ADAPTER_INFOX2();
 
                 // Now go through each adapter and get the information we need from it
                 for (int adapterNum = 0; adapterNum < numAdapters; adapterNum++)
                 {
-                    // Check that the adapter supports SLS
-                    int desktopCapsValue = 0;
-                    int desktopCapsMask = 0;
-                    ADLRet = ADLImport.ADL2_Adapter_Desktop_Caps(_adlContextHandle, adapterNum, ref desktopCapsValue, ref desktopCapsMask);
+                    oneAdapter = (ADL_ADAPTER_INFOX2)Marshal.PtrToStructure(new IntPtr(adapterBuffer.ToInt64() + (adapterNum * Marshal.SizeOf(oneAdapter))), oneAdapter.GetType());
+
+                    if (oneAdapter.Exist != 1)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} doesn't exist at present so skipping detection for this adapter.");
+                        continue;
+                    }
+
+                    if (oneAdapter.Present != 1)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} isn't enabled at present so skipping detection for this adapter.");
+                        continue;
+                    }
+
+
+
+
+
+                    // TODO Check if SLS is enabled on this adapter
+
+                    // Get the SLS Map Index List for this GPU
+                    int numSLSMapIndexList = 0;
+                    IntPtr SLSMapIndexListBuffer = IntPtr.Zero;
+                    // The option MUST be 1 as this function only returns the active displays attached to the GPU
+                    ADLRet = ADLImport.ADL2_Display_SLSMapIndexList_Get(_adlContextHandle, adapterNum, out numSLSMapIndexList, SLSMapIndexListBuffer, 1);
                     if (ADLRet == ADL_STATUS.ADL_OK)
                     {
-                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Grabbed Adapter desktop capabilities from adapter #{adapterNum+1}.");
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Grabbed SLSMapIndexList from adapter #{adapterNum + 1}.");
                     }
                     else
                     {
-                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Adapter_Desktop_Caps returned ADL_STATUS {ADLRet} when trying to get the capabilities from AMD adapter #{adapterNum + 1} in the computer.");
-                        throw new AMDLibraryException($"ADL2_Adapter_Desktop_Caps returned ADL_STATUS {ADLRet} when trying to get the capabilities from AMD adapter #{adapterNum + 1} in the computer");
+                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_SLSMapIndexList_Get returned ADL_STATUS {ADLRet} when trying to get the SLSMapIndexList from AMD adapter #{adapterNum} in the computer.");
+                        throw new AMDLibraryException($"ADL2_Display_SLSMapIndexList_Get returned ADL_STATUS {ADLRet} when trying to get the SLSMapIndexList from AMD adapter #{adapterNum} in the computer");
                     }
 
-                    // We want to get the AMD Eyefinity (SLS) config and store it for later
-                    //ADL2_Display_SLSMapConfigX2_Get(ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex, ADLSLSMap * lpSLSMap, int * lpNumSLSTarget, ADLSLSTarget * *lppSLSTarget, int * lpNumNativeMode, ADLSLSMode * *lppNativeMode, int * lpNumNativeModeOffsets, ADLSLSOffset * *lppNativeModeOffsets, int * lpNumBezelMode, ADLBezelTransientMode * *lppBezelMode, int * lpNumTransientMode, ADLBezelTransientMode * *lppTransientMode, int * lpNumSLSOffset, ADLSLSOffset * *lppSLSOffset, int iOption)
+                    // Check if we have any SLS Maps erturned. If not then there aren't any SLS options enabled
+                    if (numSLSMapIndexList > 0)
+                    {
+                        // At this point we have the SLSMapIndexList. We then need to cycle through 
+
+
+                        // We want to get the AMD Eyefinity (SLS) config and store it for later
+                        //ADL2_Display_SLSMapConfigX2_Get(ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex, ADLSLSMap * lpSLSMap, int * lpNumSLSTarget, ADLSLSTarget * *lppSLSTarget, int * lpNumNativeMode, ADLSLSMode * *lppNativeMode, int * lpNumNativeModeOffsets, ADLSLSOffset * *lppNativeModeOffsets, int * lpNumBezelMode, ADLBezelTransientMode * *lppBezelMode, int * lpNumTransientMode, ADLBezelTransientMode * *lppTransientMode, int * lpNumSLSOffset, ADLSLSOffset * *lppSLSOffset, int iOption)
+                    }
+                    else
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_SLSMapIndexList_Get said that no SLSMapIndexes were found. This means that there aren't any SLS configurations active at present. So skipping grabbing the SLS configuration");
+                    }
 
                     // We want to get the AMD HDR information and store it for later
                     //ADL2_Display_HDRState_Get(ADL_CONTEXT_HANDLE context, int iAdapterIndex, ADLDisplayID displayID, int * iSupport, int * iEnable)
                 }
+
                 
+
 
                 // We want to get the Windows CCD information and store it for later
             }

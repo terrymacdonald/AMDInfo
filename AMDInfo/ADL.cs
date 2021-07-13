@@ -216,6 +216,68 @@ namespace DisplayMagicianShared.AMD
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
+    /// <summary> ADLAdapterDisplayCap </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ADL_ADAPTER_DISPLAY_CAP : IEquatable<ADL_ADAPTER_DISPLAY_CAP>
+    {
+        /// <summary> The Persistent logical Adapter Index </summary>
+        public int AdapterIndex;
+        /// <summary> The bit mask identifies the number of bits AdapterDisplayCap is currently using. Sum all the bits defined in ADL_ADAPTER_DISPLAYCAP_XXX </summary>
+        public int AdapterDisplayCapMask;
+        /// <summary> The bit mask identifies the status. Refer to ADL_ADAPTER_DISPLAYCAP_XXX </summary>
+        public int AdapterDisplayCapValue;
+
+        // AdapterDisplayCap Mask settings
+        public bool NotActiveSupported => (AdapterDisplayCapMask & 0x1) == 0x1;
+        public bool SingleSupported => (AdapterDisplayCapMask & 0x1) == 0x2;
+        public bool CloneSupported => (AdapterDisplayCapMask & 0x1) == 0x4;
+        public bool NStretch1GPUSupported => (AdapterDisplayCapMask & 0x1) == 0x8;
+        public bool NStretchNGPUSupported => (AdapterDisplayCapMask & 0x1) == 0x10;
+        public bool TwoVStretchSupported => (AdapterDisplayCapMask & 0x1) == 0x20;
+        public bool TwoHStretchSupported => (AdapterDisplayCapMask & 0x1) == 0x40;
+        public bool ExtendedSupported => (AdapterDisplayCapMask & 0x1) == 0x80;
+        public bool PreferDisplaySupported => (AdapterDisplayCapMask & 0x1) == 0x100;
+        public bool BezelSupported => (AdapterDisplayCapMask & 0x1) == 0x200;
+
+
+        // AdapterDisplayCap Value settings
+        public bool NotActiveSet => (AdapterDisplayCapValue & 0x1) == 0x1;
+        public bool SingleSet => (AdapterDisplayCapValue & 0x1) == 0x2;
+        public bool CloneSet => (AdapterDisplayCapValue & 0x1) == 0x4;
+        public bool NStretch1GPUSet => (AdapterDisplayCapValue & 0x1) == 0x8;
+        public bool NStretchNGPUSet => (AdapterDisplayCapValue & 0x1) == 0x10;
+        public bool TwoVStretchSet => (AdapterDisplayCapValue & 0x1) == 0x20;
+        public bool TwoHStretchSet => (AdapterDisplayCapValue & 0x1) == 0x40;
+        public bool ExtendedSet => (AdapterDisplayCapValue & 0x1) == 0x80;
+        public bool PreferDisplaySet => (AdapterDisplayCapValue & 0x1) == 0x100;
+        public bool BezelSet => (AdapterDisplayCapValue & 0x1) == 0x200;
+
+        /*        #define ADL_ADAPTER_DISPLAYCAP_MANNER_SUPPORTED_NOTACTIVE        0x00000001
+                #define ADL_ADAPTER_DISPLAYCAP_MANNER_SUPPORTED_SINGLE            0x00000002
+                #define ADL_ADAPTER_DISPLAYCAP_MANNER_SUPPORTED_CLONE            0x00000004
+                #define ADL_ADAPTER_DISPLAYCAP_MANNER_SUPPORTED_NSTRETCH1GPU    0x00000008
+                #define ADL_ADAPTER_DISPLAYCAP_MANNER_SUPPORTED_NSTRETCHNGPU    0x00000010
+
+                        /// Legacy support for XP
+                #define ADL_ADAPTER_DISPLAYCAP_MANNER_SUPPORTED_2VSTRETCH        0x00000020
+                #define ADL_ADAPTER_DISPLAYCAP_MANNER_SUPPORTED_2HSTRETCH        0x00000040
+                #define ADL_ADAPTER_DISPLAYCAP_MANNER_SUPPORTED_EXTENDED        0x00000080
+
+                #define ADL_ADAPTER_DISPLAYCAP_PREFERDISPLAY_SUPPORTED            0x00000100
+                #define ADL_ADAPTER_DISPLAYCAP_BEZEL_SUPPORTED                    0x00000200*/
+        public bool Equals(ADL_ADAPTER_DISPLAY_CAP other)
+            =>  AdapterIndex == other.AdapterIndex &&
+                AdapterDisplayCapMask == other.AdapterDisplayCapMask&&
+                AdapterDisplayCapValue== other.AdapterDisplayCapValue;
+
+        public override int GetHashCode()
+        {
+            return (AdapterIndex, AdapterDisplayCapMask, AdapterDisplayCapValue).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
+    }
+
     /// <summary> ADLAdapterInfo Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_ADAPTER_INFO : IEquatable<ADL_ADAPTER_INFO>
@@ -1435,6 +1497,8 @@ namespace DisplayMagicianShared.AMD
 
         /// <summary> Selects all adapters instead of aparticular single adapter</summary>
         public const int ADL_ADAPTER_INDEX_ALL = -1;
+        ///    Defines APIs with iOption none
+        public const int ADL_MAIN_API_OPTION_NONE = 0;
         /// <summary> Define the maximum char</summary>
         public const int ADL_MAX_CHAR = 4096;
         /// <summary> Define the maximum path</summary>
