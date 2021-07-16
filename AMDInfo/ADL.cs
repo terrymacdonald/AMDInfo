@@ -1753,6 +1753,18 @@ namespace DisplayMagicianShared.AMD
         public const int ADL_DISPLAY_POSSIBLEMAPRESULT_OVERLAPSUPPORTED = 0x00000004;
 
 
+        // ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_LANDSCAPE Definitions
+        // for ADL_SLS_MAP.iOption
+        // (bit-vector)
+        // Bit vector, specifies the layout type of SLS grid data and portrait flag.
+        // There are two types of SLS layouts: relative to landscape (ref \ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_LANDSCAPE) and relative to current angle(ref \ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_CURRENTANGLE).
+        // If the current desktop associated with the input adapter is rotated to 90 or 270 degree, set bit ref \ADL_DISPLAY_SLSGRID_PORTAIT_MODE to 1
+        public const int ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_LANDSCAPE = 0x00000001;
+        public const int ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_CURRENTANGLE = 0x00000002;
+        public const int ADL_DISPLAY_SLSGRID_PORTAIT_MODE = 0x00000004;
+        public const int ADL_DISPLAY_SLSGRID_KEEPTARGETROTATION = 0x00000080;
+
+
         #region Internal Constant
         /// <summary> Atiadlxx_FileName </summary>
         public const string ATI_ADL_DLL = "atiadlxx.dll";
@@ -1860,7 +1872,7 @@ namespace DisplayMagicianShared.AMD
         //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_VALID) (ADL_CONTEXT_HANDLE context, int iAdapterIndex, ADLSLSMap slsMap, int iNumDisplayTarget, ADLSLSTarget* lpSLSTarget, int* lpSupportedSLSLayoutImageMode, int* lpReasonForNotSupportSLS, int iOption);
         // Function to Set SLS configuration for each display index the controller and the adapter is being mapped to.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_Valid(IntPtr ADLContextHandle, int adapterIndex, ADL_SLS_MAP[] SLSMap, int numDisplayTarget, ADL_DISPLAY_TARGET[] displayTarget, out int supportedSLSLayoutImageMode, out int reasonForNotSupportingSLS, int option);
+        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_Valid(IntPtr ADLContextHandle, int adapterIndex, ADL_SLS_MAP SLSMap, int numDisplayTarget, ADL_DISPLAY_TARGET[] displayTarget, out int supportedSLSLayoutImageMode, out int reasonForNotSupportingSLS, int option);
 
         //typedef int (* ADL2_DISPLAY_SLSMAPINDEX_GET) (ADL_CONTEXT_HANDLE, int, int, ADLDisplayTarget*, int*);
         // Function to get a SLS map index based on a group of displays that are connected in the given adapter. The driver only searches the active SLS grid database.
@@ -1928,11 +1940,11 @@ namespace DisplayMagicianShared.AMD
         // If clone mode is desired and the current display configuration is extended desktop mode, the function disables extended desktop mode in order to enable clone mode.
         // If extended display mode is desired and the current display configuration is single mode, this function enables extended desktop.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_Set(IntPtr ADLContextHandle, int adapterIndex, int numDisplayMap, ref ADL_DISPLAY_MAP displayMap, int numDisplayTarget, ref ADL_DISPLAY_TARGET displayTarget);
+        public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_Set(IntPtr ADLContextHandle, int adapterIndex, int numDisplayMap, ADL_DISPLAY_MAP[] displayMap, int numDisplayTarget, ADL_DISPLAY_TARGET[] displayTarget);
 
         // This function validate the list of the display configurations for a specified input adapter. This function is applicable to all OS platforms.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_Validate(IntPtr ADLContextHandle, int adapterIndex, int numPossibleMap, ref ADL_POSSIBLE_MAP possibleMaps, out int numPossibleMapResult, ref IntPtr possibleMapResult);
+        public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_Validate(IntPtr ADLContextHandle, int adapterIndex, int numPossibleMap, ref ADL_POSSIBLE_MAP possibleMaps, out int numPossibleMapResult, out IntPtr possibleMapResult);
 
 
         // ======================================
