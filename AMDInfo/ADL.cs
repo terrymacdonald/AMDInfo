@@ -429,7 +429,7 @@ namespace DisplayMagicianShared.AMD
         public bool MannerReserved2Set => (InfoValue & 0x40000) == 0x40000;
         public bool MannerReserved3Set => (InfoValue & 0x80000) == 0x80000;
         public bool ShowTypeProjectorSet => (InfoValue & 0x100000) == 0x100000;
-
+        
         public bool Equals(ADL_ADAPTER_INFOX2 other)
             => Size == other.Size &&
                 AdapterIndex == other.AdapterIndex &&
@@ -1430,6 +1430,37 @@ namespace DisplayMagicianShared.AMD
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
+    /// <summary> ADLPossibleSLSMap Structure</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ADL_POSSIBLE_SLS_MAP : IEquatable<ADL_POSSIBLE_SLS_MAP>
+    {
+        /// <summary> SLS Map Index. </summary>
+        public int SLSMapIndex;
+        /// <summary> Num SLS Map. </summary>
+        public int NumSLSMap;
+        /// <summary> The SLS Map List.  </summary>
+        public ADL_SLS_MAP[] SLSMaps;  // Not quite sure this is right
+        /// <summary> The number of SLS Targets</summary>
+        public int NumSLSTarget; 
+        /// <summary> The SLS Target List. </summary>
+        public ADL_SLS_TARGET[] SLSTargets; // Not quite sure this is right
+
+        public bool Equals(ADL_POSSIBLE_SLS_MAP other)
+            =>  SLSMapIndex == other.SLSMapIndex &&
+                NumSLSMap == other.NumSLSMap &&
+                SLSMaps.Equals(other.SLSMaps) &&
+                NumSLSTarget == other.NumSLSTarget &&
+                SLSTargets.Equals(other.SLSTargets);
+
+        public override int GetHashCode()
+        {
+            return (SLSMapIndex, NumSLSMap, SLSMaps, NumSLSTarget, SLSTargets).GetHashCode();
+        }
+
+        //public override string ToString() => $"{type.ToString("G")}";
+    }
+
+
     /// <summary> ADLSLSOffset Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_SLS_OFFSET : IEquatable<ADL_SLS_OFFSET>
@@ -1890,11 +1921,11 @@ namespace DisplayMagicianShared.AMD
         //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_GET) (ADL_CONTEXT_HANDLE, int, int, ADLSLSMap*, int*, ADLSLSTarget**, int*, ADLSLSMode**, int*, ADLBezelTransientMode**, int*, ADLBezelTransientMode**, int*, ADLSLSOffset**, int);
         // This function retrieves an SLS configuration, which includes the, SLS map, SLS targets, SLS standard modes, bezel modes or a transient mode, and offsets.           
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out IntPtr SLSMap, out int NumSLSTarget, out IntPtr SLSTargetArray, out int lpNumNativeMode, out IntPtr NativeMode, out int NumBezelMode, out IntPtr BezelMode, out int NumTransientMode, out IntPtr TransientMode, out int NumSLSOffset, out IntPtr SLSOffset, int iOption);
+        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out ADL_SLS_MAP SLSMap, out int NumSLSTarget, out IntPtr SLSTargetArray, out int lpNumNativeMode, out IntPtr NativeMode, out int NumBezelMode, out IntPtr BezelMode, out int NumTransientMode, out IntPtr TransientMode, out int NumSLSOffset, out IntPtr SLSOffset, int iOption);
 
         // typedef int ADL2_Display_SLSMapConfigX2_Get(ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex, ADLSLSMap* lpSLSMap, int* lpNumSLSTarget, ADLSLSTarget** lppSLSTarget, int* lpNumNativeMode, ADLSLSMode** lppNativeMode, int* lpNumNativeModeOffsets, ADLSLSOffset** lppNativeModeOffsets, int* lpNumBezelMode, ADLBezelTransientMode** lppBezelMode, int* lpNumTransientMode, ADLBezelTransientMode** lppTransientMode, int* lpNumSLSOffset, ADLSLSOffset** lppSLSOffset, int iOption)
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out IntPtr SLSMap, out int NumSLSTarget, out IntPtr SLSTargetArray, out int lpNumNativeMode, out IntPtr NativeMode, out int NumNativeModeOffsets, out IntPtr NativeModeOffsets, out int NumBezelMode, out IntPtr BezelMode, out int NumTransientMode, out IntPtr TransientMode, out int NumSLSOffset, out IntPtr SLSOffset, int option);
+        public static extern ADL_STATUS ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out ADL_SLS_MAP SLSMap, out int NumSLSTarget, out IntPtr SLSTargetArray, out int lpNumNativeMode, out IntPtr NativeMode, out int NumNativeModeOffsets, out IntPtr NativeModeOffsets, out int NumBezelMode, out IntPtr BezelMode, out int NumTransientMode, out IntPtr TransientMode, out int NumSLSOffset, out IntPtr SLSOffset, int option);
 
         //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_DELETE) (ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex);
         // This function deletes an SLS map from the driver database based on the input SLS map index.

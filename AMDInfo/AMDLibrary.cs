@@ -267,8 +267,8 @@ namespace DisplayMagicianShared.AMD
                     int numDisplayMaps = 0;
                     IntPtr displayTargetBuffer = IntPtr.Zero;
                     IntPtr displayMapBuffer = IntPtr.Zero;
-                    ADL_DISPLAY_MAP[] displayMapArray;
-                    ADL_DISPLAY_TARGET[] displayTargetArray;
+                    //ADL_DISPLAY_MAP[] displayMapArray;
+                    //ADL_DISPLAY_TARGET[] displayTargetArray;
                     ADLRet = ADLImport.ADL2_Display_DisplayMapConfig_Get(_adlContextHandle, adapterNum, out numDisplayMaps, out displayMapBuffer, out numDisplayTargets, out displayTargetBuffer, ADLImport.ADL_DISPLAY_DISPLAYMAP_OPTION_GPUINFO);
                     if (ADLRet == ADL_STATUS.ADL_OK)
                     {
@@ -332,10 +332,10 @@ namespace DisplayMagicianShared.AMD
                     if (numDisplayTargets > 1)
                     {
                         int SLSMapIndex = -1;
-                        int numSLSMapIDs = -1;
-                        IntPtr SLSMapIDBuffer = IntPtr.Zero;
+                        //int numSLSMapIDs = -1;
+                        //IntPtr SLSMapIDBuffer = IntPtr.Zero;
                         ADL_DISPLAY_TARGET[] displayTargets = savedAdapterConfig.DisplayTargets;
-                        ADLRet = ADLImport.ADL2_Display_SLSMapIndex_Get(_adlContextHandle, adapterNum, numDisplayTargets, displayTargets, out SLSMapIndex);
+                        ADLRet = ADLImport.ADL2_Display_SLSMapIndex_Get(_adlContextHandle, oneAdapter.AdapterIndex, numDisplayTargets, displayTargets, out SLSMapIndex);
                         //ADLRet = ADLImport.ADL2_Display_SLSMapIndexList_Get(_adlContextHandle, adapterNum, ref numSLSMapIDs, out SLSMapIDBuffer, ADLImport.ADL_DISPLAY_SLSMAPINDEXLIST_OPTION_ACTIVE);
                         if (ADLRet == ADL_STATUS.ADL_OK)
                         {
@@ -383,12 +383,27 @@ namespace DisplayMagicianShared.AMD
                             int numSLSOffset = 0;
                             IntPtr SLSOffsetBuffer = IntPtr.Zero;
                             //ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, ref ADL_SLS_MAP[] SLSMap, ref int NumSLSTarget, out IntPtr SLSTargetArray, ref int lpNumNativeMode, out IntPtr NativeMode, ref int NumNativeModeOffsets, out IntPtr NativeModeOffsets, ref int NumBezelMode, out IntPtr BezelMode, ref int NumTransientMode, out IntPtr TransientMode, ref int NumSLSOffset, out IntPtr SLSOffset, int option);
-                            IntPtr SLSMap = IntPtr.Zero;                            
+                            ADL_SLS_MAP SLSMap;                            
                             //int SLSMapIndex = SLSMapIDArray[slsMapIdx];
-                            //ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(_adlContextHandle, adapterNum, SLSMapIndex, out SLSMap, out numSLSTargets, out SLSTargetBuffer, out numNativeMode, out nativeModeBuffer, out numNativeModeOffsets, 
-                            //    out nativeModeOffsetsBuffer, out numBezelMode, out bezelModeBuffer, out numTransientMode, out TransientModeBuffer, out numSLSOffset, out SLSOffsetBuffer, ADLImport.ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_CURRENTANGLE);
-                            ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(_adlContextHandle, adapterNum, SLSMapIndex, out SLSMap, out numSLSTargets, out SLSTargetBuffer, out numNativeMode, out nativeModeBuffer, out numNativeModeOffsets,
-                                out nativeModeOffsetsBuffer, out numBezelMode, out bezelModeBuffer, out numTransientMode, out TransientModeBuffer, out numSLSOffset, out SLSOffsetBuffer, ADLImport.ADL_DISPLAY_SLSMAPCONFIG_GET_OPTION_RELATIVETO_CURRENTANGLE);
+                            //ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(_adlContextHandle, adapterNum, SLSMapIndex, out SLSMap, out numSLSTargets, out SLSTargetBuffer, out numNativeMode, out nativeModeBuffer, out numNativeModeOffsets,
+                            //    out nativeModeOffsetsBuffer, out numBezelMode, out bezelModeBuffer, out numTransientMode, out TransientModeBuffer, out numSLSOffset, out SLSOffsetBuffer, (int)2);
+                            ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(_adlContextHandle,
+                                                                             oneAdapter.AdapterIndex,
+                                                                             SLSMapIndex,
+                                                                             out SLSMap,
+                                                                             out numSLSTargets,
+                                                                             out SLSTargetBuffer,
+                                                                             out numNativeMode,
+                                                                             out nativeModeBuffer,
+                                                                             out numNativeModeOffsets,
+                                                                             out nativeModeOffsetsBuffer, 
+                                                                             out numBezelMode,
+                                                                             out bezelModeBuffer,
+                                                                             out numTransientMode,
+                                                                             out TransientModeBuffer,
+                                                                             out numSLSOffset,
+                                                                             out SLSOffsetBuffer,
+                                                                             ADLImport.ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_CURRENTANGLE);
                             if (ADLRet == ADL_STATUS.ADL_OK)
                             {
                                 SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_SLSMapConfigX2_Get returned information about the SLS Info connected to AMD adapter {adapterNum}.");
@@ -398,7 +413,6 @@ namespace DisplayMagicianShared.AMD
                                 SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_SLSMapConfigX2_Get returned ADL_STATUS {ADLRet} when trying to get the SLS Info from AMD adapter {adapterNum} in the computer.");
                                 //throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterNum} in the computer");
                             }
-                            //}
                         }
                         else
                         {
@@ -759,8 +773,8 @@ namespace DisplayMagicianShared.AMD
                     {
                         // Do the non-SLS based display setup
                         AMD_ADAPTER_CONFIG amdAdapterConfig = adapter;
-                        int numPossibleMapResult = 0;
-                        IntPtr possibleMapResultBuffer = IntPtr.Zero;
+                        //int numPossibleMapResult = 0;
+                        //IntPtr possibleMapResultBuffer = IntPtr.Zero;
                         ADLRet = ADLImport.ADL2_Display_DisplayMapConfig_Set(_adlContextHandle, amdAdapterConfig.AdapterIndex, amdAdapterConfig.DisplayMaps.Length, amdAdapterConfig.DisplayMaps, amdAdapterConfig.DisplayTargets.Length, amdAdapterConfig.DisplayTargets);
                         if (ADLRet == ADL_STATUS.ADL_OK)
                         {
