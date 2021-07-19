@@ -1243,15 +1243,15 @@ namespace DisplayMagicianShared.AMD
         public int SLSMapValue;
 
         // SLS Orientation settings
-        public bool Orientation000 => (Orientation & 0x1) == 0x1;
+        /*public bool Orientation000 => (Orientation & 0x1) == 0x1;
         public bool Orientation090 => (Orientation & 0x2) == 0x2;
         public bool Orientation180 => (Orientation & 0x4) == 0x4;
         public bool Orientation270 => (Orientation & 0x8) == 0x8;
 
-        /*#define ADL_DISPLAY_SLSGRID_ORIENTATION_000        0x00000001
+        *//*#define ADL_DISPLAY_SLSGRID_ORIENTATION_000        0x00000001
         #define ADL_DISPLAY_SLSGRID_ORIENTATION_090        0x00000002
         #define ADL_DISPLAY_SLSGRID_ORIENTATION_180        0x00000004
-        #define ADL_DISPLAY_SLSGRID_ORIENTATION_270        0x00000008*/
+        #define ADL_DISPLAY_SLSGRID_ORIENTATION_270        0x00000008*//*
 
         // SLS Map Mask settings
         public bool SLSMapDisplayArrangedSupported => (SLSMapMask & 0x2) == 0x2;
@@ -1275,7 +1275,7 @@ namespace DisplayMagicianShared.AMD
         public bool SLSMapIsSLSBuilderSet => (SLSMapValue & 0x2000) == 0x2000;
         public bool SLSMapIsCloneVTSet => (SLSMapValue & 0x4000) == 0x4000;
 
-
+*/
         /*#define ADL_DISPLAY_SLSMAP_DISPLAYARRANGED        0x0002
         #define ADL_DISPLAY_SLSMAP_CURRENTCONFIG        0x0004
         #define ADL_DISPLAY_SLSMAP_BEZELMODE            0x0010
@@ -1945,7 +1945,13 @@ namespace DisplayMagicianShared.AMD
         //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_SETSTATE) (ADL_CONTEXT_HANDLE, int, int, int);
         // This is used to set the SLS Grid we want from the SLSMap by selecting the one we want and supplying that as an index.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_SetState(IntPtr ADLContextHandle, int AdapterIndex, int SLSMapIndex, int State);
+        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_SetState(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, int State);
+
+
+        //typedef int 	ADL2_Display_SLSRecords_Get (ADL_CONTEXT_HANDLE context, int iAdapterIndex, ADLDisplayID displayID, int *lpNumOfRecords, int **lppGridIDList)
+        // This is used to set the SLS Grid we want from the SLSMap by selecting the one we want and supplying that as an index.
+        [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ADL_STATUS ADL2_Display_SLSRecords_Get(IntPtr ADLContextHandle, int adapterIndex, ADL_DISPLAY_ID displayID, out int numOfRecords, out IntPtr gridIDList);
 
         //typedef int (* ADL2_DISPLAY_SLSMAPINDEXLIST_GET) (ADL_CONTEXT_HANDLE, int, int*, int**, int);
         // This function retrieves a list of active SLS map indexes for a specified input GPU.
@@ -2032,8 +2038,14 @@ namespace DisplayMagicianShared.AMD
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL_Display_DisplayMapConfig_PossibleAddAndRemove(int adapterIndex, int numDisplayMap, ADL_DISPLAY_MAP displayMap, int numDisplayTarget, ADL_DISPLAY_TARGET displayTarget, out int numPossibleAddTarget, out IntPtr possibleAddTarget, out int numPossibleRemoveTarget, out IntPtr possibleRemoveTarget);
 
+        //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_GET) (ADL_CONTEXT_HANDLE, int, int, ADLSLSMap*, int*, ADLSLSTarget**, int*, ADLSLSMode**, int*, ADLBezelTransientMode**, int*, ADLBezelTransientMode**, int*, ADLSLSOffset**, int);
+        // This function retrieves an SLS configuration, which includes the, SLS map, SLS targets, SLS standard modes, bezel modes or a transient mode, and offsets.           
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL_Display_SLSMapConfig_Get(int adapterIndex, int SLSMapIndex, ref ADL_SLS_MAP SLSMap, ref int NumSLSTarget, out IntPtr SLSTargetArray, ref int lpNumNativeMode, out IntPtr NativeMode, ref int NumBezelMode, out IntPtr BezelMode, ref int NumTransientMode, out IntPtr TransientMode, ref int NumSLSOffset, out IntPtr SLSOffset, int iOption);
+        public static extern ADL_STATUS ADL_Display_SLSMapConfig_Get(int adapterIndex, int SLSMapIndex, out ADL_SLS_MAP SLSMap, out int NumSLSTarget, out IntPtr SLSTargetArray, out int lpNumNativeMode, out IntPtr NativeMode, out int NumBezelMode, out IntPtr BezelMode, out int NumTransientMode, out IntPtr TransientMode, out int NumSLSOffset, out IntPtr SLSOffset, int iOption);
+
+        // typedef int ADL2_Display_SLSMapConfigX2_Get(ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex, ADLSLSMap* lpSLSMap, int* lpNumSLSTarget, ADLSLSTarget** lppSLSTarget, int* lpNumNativeMode, ADLSLSMode** lppNativeMode, int* lpNumNativeModeOffsets, ADLSLSOffset** lppNativeModeOffsets, int* lpNumBezelMode, ADLBezelTransientMode** lppBezelMode, int* lpNumTransientMode, ADLBezelTransientMode** lppTransientMode, int* lpNumSLSOffset, ADLSLSOffset** lppSLSOffset, int iOption)
+        [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ADL_STATUS ADL_Display_SLSMapConfigX2_Get(int adapterIndex, int SLSMapIndex, out ADL_SLS_MAP SLSMap, out int NumSLSTarget, out IntPtr SLSTargetArray, out int lpNumNativeMode, out IntPtr NativeMode, out int NumNativeModeOffsets, out IntPtr NativeModeOffsets, out int NumBezelMode, out IntPtr BezelMode, out int NumTransientMode, out IntPtr TransientMode, out int NumSLSOffset, out IntPtr SLSOffset, int option);
 
         // This is used to set the SLS Grid we want from the SLSMap by selecting the one we want and supplying that as an index.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]

@@ -331,21 +331,13 @@ namespace DisplayMagicianShared.AMD
                     // Only check for SLS if there is more than one displaytarget (screen)
                     if (numDisplayTargets > 1)
                     {
-                        int SLSMapIndex = -1;
-                        //int numSLSMapIDs = -1;
-                        //IntPtr SLSMapIDBuffer = IntPtr.Zero;
-                        ADL_DISPLAY_TARGET[] displayTargets = savedAdapterConfig.DisplayTargets;
-                        ADLRet = ADLImport.ADL2_Display_SLSMapIndex_Get(_adlContextHandle, oneAdapter.AdapterIndex, numDisplayTargets, displayTargets, out SLSMapIndex);
-                        //ADLRet = ADLImport.ADL2_Display_SLSMapIndexList_Get(_adlContextHandle, adapterNum, ref numSLSMapIDs, out SLSMapIDBuffer, ADLImport.ADL_DISPLAY_SLSMAPINDEXLIST_OPTION_ACTIVE);
+                        int numSLSMapIDs = -1;
+                        IntPtr SLSMapIDBuffer = IntPtr.Zero;
+                        int[] SLSMapIDArray;
+                        ADLRet = ADLImport.ADL2_Display_SLSMapIndexList_Get(_adlContextHandle, oneAdapter.AdapterIndex, ref numSLSMapIDs, out SLSMapIDBuffer, ADLImport.ADL_DISPLAY_SLSMAPINDEXLIST_OPTION_ACTIVE);
                         if (ADLRet == ADL_STATUS.ADL_OK)
                         {
-                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: SLS (Eyfinity) is enabled on AMD adapter {adapterNum}.");
-
-                            // Set the SLS Map Index if there is Eyefinity
-                            savedAdapterConfig.IsSLSEnabled = true;
-                            //savedAdapterConfig.SLSMapIndex = SLSMapIndex;
-
-                            /*int[] SLSMapIDArray = new int[numSLSMapIDs];
+                            SLSMapIDArray = new int[numSLSMapIDs];
                             if (numSLSMapIDs > 0)
                             {
                                 IntPtr currentSLSMapsBuffer = SLSMapIDBuffer;
@@ -364,7 +356,49 @@ namespace DisplayMagicianShared.AMD
                                 // Free the memory used by the buffer                        
                                 Marshal.FreeCoTaskMem(SLSMapIDBuffer);
                             }
-                            */
+                        }
+
+                        int numSLSRecords = -1;
+                        IntPtr SLSRecordBuffer = IntPtr.Zero;
+                        int[] SLSRecordArray;
+                        ADLRet = ADLImport.ADL2_Display_SLSRecords_Get(_adlContextHandle, oneAdapter.AdapterIndex, savedAdapterConfig.DisplayTargets[0].DisplayID, out numSLSRecords, out SLSRecordBuffer);
+                        if (ADLRet == ADL_STATUS.ADL_OK)
+                        {
+                            SLSRecordArray = new int[numSLSRecords];
+                            if (numSLSRecords > 0)
+                            {
+                                IntPtr currentSLSBuffer = SLSRecordBuffer;
+                                SLSRecordArray = new int[numSLSRecords];
+                                for (int i = 0; i < numSLSMapIDs; i++)
+                                {
+                                    // build a structure in the array slot
+                                    SLSRecordArray[i] = 0;
+                                    // fill the array slot structure with the data from the buffer
+                                    SLSRecordArray[i] = (int)Marshal.PtrToStructure(currentSLSBuffer, typeof(int));
+                                    // destroy the bit of memory we no longer need
+                                    Marshal.DestroyStructure(currentSLSBuffer, typeof(ADL_SLS_MAP));
+                                    // advance the buffer forwards to the next object
+                                    currentSLSBuffer = (IntPtr)((long)currentSLSBuffer + Marshal.SizeOf(SLSRecordArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(SLSRecordBuffer);
+                            }
+                        }
+
+
+                        int SLSMapIndex = -1;
+                        //int numSLSMapIDs = -1;
+                        //IntPtr SLSMapIDBuffer = IntPtr.Zero;
+                        ADL_DISPLAY_TARGET[] displayTargets = savedAdapterConfig.DisplayTargets;
+                        ADLRet = ADLImport.ADL2_Display_SLSMapIndex_Get(_adlContextHandle, oneAdapter.AdapterIndex, numDisplayTargets, displayTargets, out SLSMapIndex);
+                        //ADLRet = ADLImport.ADL2_Display_SLSMapIndexList_Get(_adlContextHandle, adapterNum, ref numSLSMapIDs, out SLSMapIDBuffer, ADLImport.ADL_DISPLAY_SLSMAPINDEXLIST_OPTION_ACTIVE);
+                        if (ADLRet == ADL_STATUS.ADL_OK)
+                        {
+                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: SLS (Eyfinity) is enabled on AMD adapter {adapterNum}.");
+
+                            // Set the SLS Map Index if there is Eyefinity
+                            savedAdapterConfig.IsSLSEnabled = true;
+                            //savedAdapterConfig.SLSMapIndex = SLSMapIndex;                            
                             /*for (int slsMapIdx = 0; slsMapIdx < SLSMapIndex; slsMapIdx++)
                             {*/
                             //bool isActiveSLS = false;
@@ -383,11 +417,21 @@ namespace DisplayMagicianShared.AMD
                             int numSLSOffset = 0;
                             IntPtr SLSOffsetBuffer = IntPtr.Zero;
                             //ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, ref ADL_SLS_MAP[] SLSMap, ref int NumSLSTarget, out IntPtr SLSTargetArray, ref int lpNumNativeMode, out IntPtr NativeMode, ref int NumNativeModeOffsets, out IntPtr NativeModeOffsets, ref int NumBezelMode, out IntPtr BezelMode, ref int NumTransientMode, out IntPtr TransientMode, ref int NumSLSOffset, out IntPtr SLSOffset, int option);
-                            ADL_SLS_MAP SLSMap;                            
+                            ADL_SLS_MAP SLSMap = new ADL_SLS_MAP() ;
                             //int SLSMapIndex = SLSMapIDArray[slsMapIdx];
                             //ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(_adlContextHandle, adapterNum, SLSMapIndex, out SLSMap, out numSLSTargets, out SLSTargetBuffer, out numNativeMode, out nativeModeBuffer, out numNativeModeOffsets,
                             //    out nativeModeOffsetsBuffer, out numBezelMode, out bezelModeBuffer, out numTransientMode, out TransientModeBuffer, out numSLSOffset, out SLSOffsetBuffer, (int)2);
-                            ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(_adlContextHandle,
+                            ADLRet = ADLImport.ADL_Main_Control_Create(ADLImport.ADL_Main_Memory_Alloc, ADLImport.ADL_TRUE);
+                            if (ADLRet == ADL_STATUS.ADL_OK)
+                            {
+                                _initialised = true;
+                                SharedLogger.logger.Trace($"AMDLibrary/AMDLibrary: AMD ADL2 library was initialised successfully");
+                            }
+                            else
+                            {
+                                SharedLogger.logger.Trace($"AMDLibrary/AMDLibrary: Error intialising AMD ADL2 library. ADL2_Main_Control_Create() returned error code {ADLRet}");
+                            }
+                            ADLRet = ADLImport.ADL_Display_SLSMapConfigX2_Get(
                                                                              oneAdapter.AdapterIndex,
                                                                              SLSMapIndex,
                                                                              out SLSMap,
