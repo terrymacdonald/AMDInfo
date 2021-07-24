@@ -1804,6 +1804,15 @@ namespace DisplayMagicianShared.AMD
         public const int ADL_DISPLAY_SLSMAPCONFIG_GET_OPTION_RELATIVETO_CURRENTANGLE = 0x00000002;
 
 
+        public const int ADL_DISPLAY_SLSMAP_SLSLAYOUTMODE_FIT = 0x0100;
+        public const int ADL_DISPLAY_SLSMAP_SLSLAYOUTMODE_FILL = 0x0200;
+        public const int ADL_DISPLAY_SLSMAP_SLSLAYOUTMODE_EXPAND = 0x0400;
+
+        public const int ADL_DISPLAY_SLSMAP_IS_SLS = 0x1000;
+        public const int ADL_DISPLAY_SLSMAP_IS_SLSBUILDER = 0x2000;
+        public const int ADL_DISPLAY_SLSMAP_IS_CLONEVT = 0x4000;
+
+
         #region Internal Constant
         /// <summary> Atiadlxx_FileName </summary>
         public const string ATI_ADL_DLL = "atiadlxx.dll";
@@ -1852,10 +1861,10 @@ namespace DisplayMagicianShared.AMD
 
 
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Adapter_NumberOfAdapters_Get(IntPtr contextHandle, ref int numAdapters);
+        public static extern ADL_STATUS ADL2_Adapter_NumberOfAdapters_Get(IntPtr contextHandle, out int numAdapters);
 
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Adapter_Active_Get(IntPtr ADLContextHandle, int adapterIndex, ref int status);
+        public static extern ADL_STATUS ADL2_Adapter_Active_Get(IntPtr ADLContextHandle, int adapterIndex, out int status);
 
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_AdapterX2_Caps(IntPtr ADLContextHandle, int adapterIndex, out ADL_ADAPTER_CAPSX2 adapterCapabilities);
@@ -1878,7 +1887,7 @@ namespace DisplayMagicianShared.AMD
 
         //typedef int (* ADL2_DISPLAY_DISPLAYINFO_GET) (ADL_CONTEXT_HANDLE context, int iAdapterIndex, int* lpNumDisplays, ADLDisplayInfo** lppInfo, int iForceDetect);
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_DisplayInfo_Get(IntPtr ADLContextHandle, int adapterIndex, ref int numDisplays, out IntPtr displayInfoArray, int forceDetect);
+        public static extern ADL_STATUS ADL2_Display_DisplayInfo_Get(IntPtr ADLContextHandle, int adapterIndex, out int numDisplays, out IntPtr displayInfoArray, int forceDetect);
 
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_Display_DeviceConfig_Get(IntPtr ADLContextHandle, int adapterIndex, int displayIndex, out ADL_DISPLAY_CONFIG displayConfig);
@@ -1887,10 +1896,10 @@ namespace DisplayMagicianShared.AMD
         public static extern ADL_STATUS ADL2_Display_HDRState_Get(IntPtr ADLContextHandle, int adapterIndex, ADL_DISPLAY_ID displayID, out int support, out int enable);
                                
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_PossibleAddAndRemove(IntPtr ADLContextHandle, int adapterIndex, int numDisplayMap, ref ADL_DISPLAY_MAP displayMap, int numDisplayTarget, ref ADL_DISPLAY_TARGET displayTarget, out int numPossibleAddTarget, out IntPtr possibleAddTarget, out int numPossibleRemoveTarget, out IntPtr possibleRemoveTarget);
+        public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_PossibleAddAndRemove(IntPtr ADLContextHandle, int adapterIndex, int numDisplayMap, in ADL_DISPLAY_MAP displayMap, int numDisplayTarget, in ADL_DISPLAY_TARGET displayTarget, out int numPossibleAddTarget, out IntPtr possibleAddTarget, out int numPossibleRemoveTarget, out IntPtr possibleRemoveTarget);
 
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Adapter_Desktop_Caps(IntPtr ADLContextHandle, int adapterIndex, ref int DesktopCapsValue, ref int DesktopCapsMask);
+        public static extern ADL_STATUS ADL2_Adapter_Desktop_Caps(IntPtr ADLContextHandle, int adapterIndex, out int DesktopCapsValue, out int DesktopCapsMask);
        
         // Function to retrieve active desktop supported SLS grid size.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
