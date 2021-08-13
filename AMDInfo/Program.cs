@@ -63,8 +63,11 @@ namespace AMDInfo
             List<string> videoCardVendors = WinLibrary.GetLibrary().GetCurrentPCIVideoCardVendors();
             if (!AMDLibrary.GetLibrary().PCIVendorIDs.All(value => videoCardVendors.Contains(value)))
             {
-                SharedLogger.logger.Error($"NVIDIAInfo/Main: There are no NVIDIA Video Cards enabled within this computer. NVIDIAInfo requires at least one NVIDIA Video Card to work. Please use DisplayMagician instead.");
-                throw new ApplicationException($"There are no NVIDIA Video Cards enabled within this computer. NVIDIAInfo requires at least one NVIDIA Video Card to work. Please use DisplayMagician instead.");
+                SharedLogger.logger.Error($"NVIDIAInfo/Main: There are no AMD Video Cards enabled within this computer. AMDInfo requires at least one AMD Video Card to work. Please use DisplayMagician instead.");
+                Console.WriteLine($"ERROR - There are no AMD Video Cards enabled within this computer. AMDInfo requires at least one AMD Video Card to work.");
+                Console.WriteLine($"        Please use DisplayMagician instead. See https://displaymagician.littlebitbig.com for more information.");
+                Console.WriteLine();
+                Environment.Exit(1);
             }
 
             if (args.Length > 0)
