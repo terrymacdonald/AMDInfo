@@ -145,6 +145,11 @@ namespace AMDInfo
                         SharedLogger.logger.Info($@"{displayId}");
                     }
                 }
+                else if (args[0] == "print")
+                {
+                    SharedLogger.logger.Debug($"AMDInfo/Main: printing display info as print command was provided");
+                    Console.WriteLine(AMDLibrary.GetLibrary().PrintActiveConfig());
+                }
                 else if (args[0] == "help" || args[0] == "--help" || args[0] == "-h" || args[0] == "/?" || args[0] == "-?")
                 {
                     SharedLogger.logger.Debug($"AMDInfo/Main: Showing help as help command was provided");
@@ -161,9 +166,9 @@ namespace AMDInfo
             }
             else
             {
-                SharedLogger.logger.Debug($"AMDInfo/Main: Attempting to show information about the current display settings as no command was provided");
-                // We're in display current config mode
-                Console.WriteLine(AMDLibrary.GetLibrary().PrintActiveConfig());
+                SharedLogger.logger.Debug($"AMDInfo/Main: Showing help as no command was provided");
+                showHelp();
+                Environment.Exit(1);
             }
             Console.WriteLine();
             Environment.Exit(0);
@@ -172,12 +177,12 @@ namespace AMDInfo
         static void showHelp()
         {
             Console.WriteLine($"AMDInfo is a little program to help test setting display layout and HDR settings in Windows 10 64-bit and later.\n");
-            Console.WriteLine($"You need to have AMD Radeon™ Software Adrenalin 2020 Edition 21.2.1 or later installed and an AMD video card.\n");
+            Console.WriteLine($"You need to have AMD Radeon Software Adrenalin 2020 Edition 21.2.1 or later installed and an AMD video card installed and active.\n");
             Console.WriteLine($"You can run it without any command line parameters, and it will print all the information it can find from the \nWindows Display CCD interface.\n");
             Console.WriteLine($"You can also run it with 'AMDInfo save myfilename.cfg' and it will save the current display configuration into\nthe myfilename.cfg file.\n");
             Console.WriteLine($"This is most useful when you subsequently use the 'AMDInfo load myfilename.cfg' command, as it will load the\ndisplay configuration from the myfilename.cfg file and make it live. In this way, you can make yourself a library\nof different cfg files with different display layouts, then use the AMDInfo load command to swap between them.\n\n");
             Console.WriteLine($"Valid commands:\n");
-            Console.WriteLine($"\t'AMDInfo' will print information about your current display setting.");
+            Console.WriteLine($"\t'AMDInfo print' will print information about your current display setting.");
             Console.WriteLine($"\t'AMDInfo save myfilename.cfg' will save your current display setting to the myfilename.cfg file.");
             Console.WriteLine($"\t'AMDInfo load myfilename.cfg' will load and apply the display setting in the myfilename.cfg file.");
             Console.WriteLine($"\t'AMDInfo possible myfilename.cfg' will test the display setting in the myfilename.cfg file to see\n\t\tif it is possible.");
@@ -270,23 +275,32 @@ namespace AMDInfo
                     {
                         SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The AMD display settings within {filename} are possible to use right now, so we'll use attempt to use them.");
                         Console.WriteLine($"Attempting to apply AMD display config from {filename}");
-                        AMDLibrary.GetLibrary().SetActiveConfig(myDisplayConfig.AMDConfig);
-                        SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The AMD display settings within {filename} were successfully applied.");
-                        Console.WriteLine($"AMD Display config successfully applied");
 
-                        // If the AMD profile is applied properly, then we try to do the sme for the Windows CCD display config
-                        if (WinLibrary.GetLibrary().IsPossibleConfig(myDisplayConfig.WindowsConfig))
+                        bool itWorkedforAMD = AMDLibrary.GetLibrary().SetActiveConfig(myDisplayConfig.AMDConfig);
+
+                        if (itWorkedforAMD)
                         {
-                            SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The Windows CCD display settings within {filename} are possible to use right now, so we'll use attempt to use them.");
-                            Console.WriteLine($"Attempting to apply Windows CCD display config from {filename}");
-                            WinLibrary.GetLibrary().SetActiveConfig(myDisplayConfig.WindowsConfig);
-                            SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The Windows CCD display settings within {filename} were successfully applied.");
-                            Console.WriteLine($"Windows CCD Display config successfully applied");
+                            SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The AMD display settings within {filename} were successfully applied.");
+                            // Then let's try to also apply the windows changes
+                            // Note: we are unable to check if the Windows CCD display config is possible, as it won't match if either the current display config is a Eyefinity config,
+                            // or if the display config we want to change to is a Eyefinity config. So we just have to assume that it will work!
+                            bool itWorkedforWindows = WinLibrary.GetLibrary().SetActiveConfig(myDisplayConfig.WindowsConfig);
+                            if (itWorkedforWindows)
+                            {
+                                SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The Windows CCD display settings within {filename} were successfully applied.");
+                                Console.WriteLine($"AMDInfo Display config successfully applied");
+                            }
+                            else
+                            {
+                                SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The Windows CCD display settings within {filename} were NOT applied correctly.");
+                                Console.WriteLine($"ERROR - AMDInfo Windows CCD settings were not applied correctly.");
+                            }
+
                         }
                         else
                         {
-                            Console.WriteLine($"AMDInfo/loadFromFile: ERROR - AMD display configuration is possible, but cannot apply the Windows CCD display config in {filename} as it is not currently possible to use it.");
-                            SharedLogger.logger.Error($"AMDInfo/loadFromFile: ERROR - AMD display configuration is possible, but cannot apply the Windows CCD display config in {filename} as it is not currently possible to use it.");
+                            SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The AMD display settings within {filename} were NOT applied correctly.");
+                            Console.WriteLine($"ERROR - AMDInfo AMD display settings were not applied correctly.");
                         }
 
                     }
@@ -351,18 +365,7 @@ namespace AMDInfo
                 {
                     SharedLogger.logger.Trace($"AMDInfo/possibleFromFile: The AMD display settings in {filename} are able to be applied on this computer if you'd like to apply them.");
                     Console.WriteLine($"The AMD display settings in {filename} are able to be applied on this computer if you'd like to apply them.");
-                    
-                    // If the AMD profile is possible, then we try to check if the Windows CCD display config is possible
-                    if (WinLibrary.GetLibrary().IsPossibleConfig(myDisplayConfig.WindowsConfig))
-                    {
-                        SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The Windows CCD display settings within {filename} are possible to use right now, so we'll use attempt to use them.");
-                        Console.WriteLine($"You can apply them with the command 'AMDInfo load {filename}'");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"AMDInfo/loadFromFile: ERROR - AMD display configuration is possible, but cannot apply the Windows CCD display config in {filename} as it is not currently possible to use it.");
-                        SharedLogger.logger.Error($"AMDInfo/loadFromFile: ERROR - AMD display configuration is possible, but cannot apply the Windows CCD display config in {filename} as it is not currently possible to use it.");
-                    }
+                    Console.WriteLine($"You can apply them with the command 'AMDInfo load {filename}'");                    
                 }
                 else
                 {
