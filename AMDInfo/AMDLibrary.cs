@@ -52,20 +52,20 @@ namespace DisplayMagicianShared.AMD
         public List<AMD_ADAPTER_CONFIG> AdapterConfigs;
         //public DISPLAYCONFIG_MODE_INFO[] DisplayConfigModes;
         //public ADVANCED_HDR_INFO_PER_PATH[] DisplayHDRStates;
-        public WINDOWS_DISPLAY_CONFIG WindowsDisplayConfig;
+        //public WINDOWS_DISPLAY_CONFIG WindowsDisplayConfig;
 
         public override bool Equals(object obj) => obj is AMD_DISPLAY_CONFIG other && this.Equals(other);
 
         public bool Equals(AMD_DISPLAY_CONFIG other)
-        => AdapterConfigs.SequenceEqual(other.AdapterConfigs) &&
+        => AdapterConfigs.SequenceEqual(other.AdapterConfigs);
            //DisplayConfigPaths.SequenceEqual(other.DisplayConfigPaths) &&
            //DisplayConfigModes.SequenceEqual(other.DisplayConfigModes) &&
            //DisplayHDRStates.SequenceEqual(other.DisplayHDRStates) && 
-           WindowsDisplayConfig.Equals(other.WindowsDisplayConfig);
+           
 
         public override int GetHashCode()
         {
-            return (AdapterConfigs, WindowsDisplayConfig).GetHashCode();
+            return (AdapterConfigs).GetHashCode();
         }
 
         public static bool operator ==(AMD_DISPLAY_CONFIG lhs, AMD_DISPLAY_CONFIG rhs) => lhs.Equals(rhs);
@@ -574,11 +574,7 @@ namespace DisplayMagicianShared.AMD
                     {
                         // Save the new adapter config only if we haven't already
                         myDisplayConfig.AdapterConfigs.Add(savedAdapterConfig);
-                    }                   
-                    
-                    // We want to get the Windows CCD information and store it for later so that we record
-                    // display sizes, and screen positions and the like.
-                    myDisplayConfig.WindowsDisplayConfig = _winLibrary.GetActiveConfig();
+                    }                                      
 
                 }                
             }
@@ -1078,7 +1074,7 @@ namespace DisplayMagicianShared.AMD
 
         }
 
-        public bool IsValidConfig(NVIDIA_DISPLAY_CONFIG displayConfig)
+        public bool IsValidConfig(AMD_DISPLAY_CONFIG displayConfig)
         {
             // We want to check the NVIDIA Surround (Mosaic) config is valid
             SharedLogger.logger.Trace($"NVIDIALibrary/IsValidConfig: Testing whether the display configuration is valid");
