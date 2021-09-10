@@ -161,6 +161,7 @@ namespace DisplayMagicianShared.AMD
         public bool ProgressiveSet => ModeValue == 0x0;
         public bool InterlacedSet => ModeValue == 0x2;
 
+        public override bool Equals(object obj) => obj is ADL_MODE other && this.Equals(other);
         public bool Equals(ADL_MODE other)
             => AdapterIndex == other.AdapterIndex &&
                 DisplayID.Equals(other.DisplayID) &&
@@ -179,6 +180,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (AdapterIndex, DisplayID, XPos, YPos, XRes, YRes, ColourDepth, RefreshRate, Orientation, ModeFlag, ModeMask, ModeValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_MODE lhs, ADL_MODE rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_MODE lhs, ADL_MODE rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -202,6 +207,7 @@ namespace DisplayMagicianShared.AMD
         // DisplayTarget Value settings
         public bool DisplayTargetPreferredSet => (DisplayTargetValue & 0x1) == 0x1;
 
+        public override bool Equals(object obj) => obj is ADL_DISPLAY_TARGET other && this.Equals(other);
         public bool Equals(ADL_DISPLAY_TARGET other)
             => DisplayID.Equals(other.DisplayID) &&
                 DisplayMapIndex == other.DisplayMapIndex&&
@@ -212,6 +218,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (DisplayID, DisplayMapIndex, DisplayTargetMask, DisplayTargetValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_DISPLAY_TARGET lhs, ADL_DISPLAY_TARGET rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_DISPLAY_TARGET lhs, ADL_DISPLAY_TARGET rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -265,6 +275,8 @@ namespace DisplayMagicianShared.AMD
 
                 #define ADL_ADAPTER_DISPLAYCAP_PREFERDISPLAY_SUPPORTED            0x00000100
                 #define ADL_ADAPTER_DISPLAYCAP_BEZEL_SUPPORTED                    0x00000200*/
+
+        public override bool Equals(object obj) => obj is ADL_ADAPTER_DISPLAY_CAP other && this.Equals(other);
         public bool Equals(ADL_ADAPTER_DISPLAY_CAP other)
             =>  AdapterIndex == other.AdapterIndex &&
                 AdapterDisplayCapMask == other.AdapterDisplayCapMask&&
@@ -274,6 +286,9 @@ namespace DisplayMagicianShared.AMD
         {
             return (AdapterIndex, AdapterDisplayCapMask, AdapterDisplayCapValue).GetHashCode();
         }
+        public static bool operator ==(ADL_ADAPTER_DISPLAY_CAP lhs, ADL_ADAPTER_DISPLAY_CAP rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_ADAPTER_DISPLAY_CAP lhs, ADL_ADAPTER_DISPLAY_CAP rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -319,6 +334,7 @@ namespace DisplayMagicianShared.AMD
         /// <summary> OS Display Index</summary>
         public int OSDisplayIndex;
 
+        public override bool Equals(object obj) => obj is ADL_ADAPTER_INFO other && this.Equals(other);
         public bool Equals(ADL_ADAPTER_INFO other)
             => Size == other.Size &&
                 AdapterIndex == other.AdapterIndex &&
@@ -341,6 +357,9 @@ namespace DisplayMagicianShared.AMD
             return (Size, AdapterIndex, UDID, BusNumber, DriverNumber, FunctionNumber, VendorID, AdapterName, DisplayName, Present, Exist, DriverPath, DriverPathExt, PNPString, OSDisplayIndex).GetHashCode();
         }
 
+        public static bool operator ==(ADL_ADAPTER_INFO lhs, ADL_ADAPTER_INFO rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_ADAPTER_INFO lhs, ADL_ADAPTER_INFO rhs) => !(lhs == rhs);
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
@@ -429,7 +448,8 @@ namespace DisplayMagicianShared.AMD
         public bool MannerReserved2Set => (InfoValue & 0x40000) == 0x40000;
         public bool MannerReserved3Set => (InfoValue & 0x80000) == 0x80000;
         public bool ShowTypeProjectorSet => (InfoValue & 0x100000) == 0x100000;
-        
+
+        public override bool Equals(object obj) => obj is ADL_ADAPTER_INFOX2 other && this.Equals(other);
         public bool Equals(ADL_ADAPTER_INFOX2 other)
             => Size == other.Size &&
                 AdapterIndex == other.AdapterIndex &&
@@ -454,6 +474,10 @@ namespace DisplayMagicianShared.AMD
             return (Size, AdapterIndex, UDID, BusNumber, DeviceNumber, FunctionNumber, VendorID, AdapterName, DisplayName, Present, Exist, DriverPath, DriverPathExt, PNPString, OSDisplayIndex).GetHashCode();
         }
 
+        public static bool operator ==(ADL_ADAPTER_INFOX2 lhs, ADL_ADAPTER_INFOX2 rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_ADAPTER_INFOX2 lhs, ADL_ADAPTER_INFOX2 rhs) => !(lhs == rhs);
+
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
@@ -475,6 +499,7 @@ namespace DisplayMagicianShared.AMD
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public int[] Reserved;
 
+        public override bool Equals(object obj) => obj is ADL_DISPLAY_EDID_DATA other && this.Equals(other);
         public bool Equals(ADL_DISPLAY_EDID_DATA other)
             => Size == other.Size &&
                 Flag == other.Flag &&
@@ -486,6 +511,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (Size, Flag, EDIDSize, BlockIndex, EDIDData).GetHashCode();
         }
+
+        public static bool operator ==(ADL_DISPLAY_EDID_DATA lhs, ADL_DISPLAY_EDID_DATA rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_DISPLAY_EDID_DATA lhs, ADL_DISPLAY_EDID_DATA rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
 
@@ -625,6 +654,7 @@ namespace DisplayMagicianShared.AMD
         public bool FreeSyncHDRBacklightSupported => (SupportedHDR & 0x1) == 0x1;
         public bool FreeSyncHDRLocalDimmingSupported => (SupportedHDR & 0x2) == 0x2;
 
+        public override bool Equals(object obj) => obj is ADL_DDC_INFO2 other && this.Equals(other);
         public bool Equals(ADL_DDC_INFO2 other)
             => Size == other.Size &&
             SupportsDDC == other.SupportsDDC &&
@@ -674,6 +704,10 @@ namespace DisplayMagicianShared.AMD
                 MinBacklightMaxLuminanceData, MaxBacklightMinLuminanceData, MinBacklightMinLuminanceData).GetHashCode();
         }
 
+        public static bool operator ==(ADL_DDC_INFO2 lhs, ADL_DDC_INFO2 rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_DDC_INFO2 lhs, ADL_DDC_INFO2 rhs) => !(lhs == rhs);
+
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
@@ -690,6 +724,7 @@ namespace DisplayMagicianShared.AMD
         /// <summary> Adapter Physical Index </summary>
         public int DisplayPhysicalAdapterIndex;
 
+        public override bool Equals(object obj) => obj is ADL_DISPLAY_ID other && this.Equals(other);
         public bool Equals(ADL_DISPLAY_ID other)
             => DisplayLogicalIndex == other.DisplayLogicalIndex &&
                 DisplayPhysicalIndex == other.DisplayPhysicalIndex &&
@@ -700,6 +735,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (DisplayLogicalIndex, DisplayPhysicalIndex, DisplayLogicalAdapterIndex, DisplayPhysicalAdapterIndex).GetHashCode();
         }
+
+        public static bool operator ==(ADL_DISPLAY_ID lhs, ADL_DISPLAY_ID rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_DISPLAY_ID lhs, ADL_DISPLAY_ID rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -844,6 +883,7 @@ namespace DisplayMagicianShared.AMD
         public bool MannerReserved3Set => (DisplayInfoValue & 0x80000) == 0x80000;
         public bool ShowTypeProjectorSet => (DisplayInfoValue & 0x100000) == 0x100000;
 
+        public override bool Equals(object obj) => obj is ADL_DISPLAY_INFO other && this.Equals(other);
         public bool Equals(ADL_DISPLAY_INFO other)
             => DisplayID.Equals(other.DisplayID) &&
                 DisplayControllerIndex == other.DisplayControllerIndex &&
@@ -860,6 +900,9 @@ namespace DisplayMagicianShared.AMD
             return (DisplayID, DisplayControllerIndex, DisplayName, DisplayID, DisplayType, DisplayOutputType, DisplayConnector, DisplayInfoMask, DisplayInfoValue).GetHashCode();
         }
 
+        public static bool operator ==(ADL_DISPLAY_INFO lhs, ADL_DISPLAY_INFO rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_DISPLAY_INFO lhs, ADL_DISPLAY_INFO rhs) => !(lhs == rhs);
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
@@ -892,6 +935,7 @@ namespace DisplayMagicianShared.AMD
         public bool ConnectorTypeIsHDMITypeB => ConnectorType == 9;
         public bool ConnectorTypeIsDisplayPort => ConnectorType == 10;
 
+        public override bool Equals(object obj) => obj is ADL_DISPLAY_CONFIG other && this.Equals(other);
         public bool Equals(ADL_DISPLAY_CONFIG other)
             => Size == other.Size &&
                 ConnectorType == other.ConnectorType &&
@@ -902,6 +946,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (Size, ConnectorType, DeviceData, OverriddedDeviceData).GetHashCode();
         }
+
+        public static bool operator ==(ADL_DISPLAY_CONFIG lhs, ADL_DISPLAY_CONFIG rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_DISPLAY_CONFIG lhs, ADL_DISPLAY_CONFIG rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -943,6 +991,7 @@ namespace DisplayMagicianShared.AMD
         public bool DisplayMapVStretchSet => (DisplayMapValue & 0x40) == 0x40;
         public bool DisplayMapVLDSet => (DisplayMapValue & 0x80) == 0x80;
 
+        public override bool Equals(object obj) => obj is ADL_DISPLAY_MAP other && this.Equals(other);
         public bool Equals(ADL_DISPLAY_MAP other)
             => DisplayMapIndex == other.DisplayMapIndex &&
                 DisplayMode.Equals(other.DisplayMode) &&
@@ -955,6 +1004,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (DisplayMapIndex, DisplayMode, NumDisplayTarget, FirstDisplayTargetArrayIndex, DisplayMapMask, DisplayMapValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_DISPLAY_MAP lhs, ADL_DISPLAY_MAP rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_DISPLAY_MAP lhs, ADL_DISPLAY_MAP rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1004,6 +1057,7 @@ namespace DisplayMagicianShared.AMD
         public bool CapPreferredDisplaySet => (CapsValue & 0x100) == 0x100;
         public bool CapBezelSet => (CapsValue & 0x200) == 0x200;
 
+        public override bool Equals(object obj) => obj is ADL_ADAPTER_CAPSX2 other && this.Equals(other);
         public bool Equals(ADL_ADAPTER_CAPSX2 other)
             => AdapterID == other.AdapterID &&
                 NumControllers == other.NumControllers &&
@@ -1018,6 +1072,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (AdapterID, NumControllers, NumDisplays, NumOverlays, NumOfGLSyncConnectors, CapsMask, CapsValue, NumConnectors).GetHashCode();
         }
+
+        public static bool operator ==(ADL_ADAPTER_CAPSX2 lhs, ADL_ADAPTER_CAPSX2 rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_ADAPTER_CAPSX2 lhs, ADL_ADAPTER_CAPSX2 rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1039,6 +1097,7 @@ namespace DisplayMagicianShared.AMD
         /// <summary> The DisplayTargets being tested </summary>
         public ADL_DISPLAY_TARGET DisplayTargets;
 
+        public override bool Equals(object obj) => obj is ADL_POSSIBLE_MAP other && this.Equals(other);
         public bool Equals(ADL_POSSIBLE_MAP other)
             => Index == other.Index &&
                 AdapterIndex == other.AdapterIndex &&
@@ -1051,6 +1110,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (Index, AdapterIndex, NumDisplayMap, DisplayMaps, NumDisplayTarget, DisplayTargets).GetHashCode();
         }
+
+        public static bool operator ==(ADL_POSSIBLE_MAP lhs, ADL_POSSIBLE_MAP rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_POSSIBLE_MAP lhs, ADL_POSSIBLE_MAP rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1075,7 +1138,7 @@ namespace DisplayMagicianShared.AMD
         public bool MapHStretchSupported => (DisplayMannerSupported & 0x20) == 0x20;
         public bool MapVStretchSupported => (DisplayMannerSupported & 0x40) == 0x40;
         public bool MapVLDSupported => (DisplayMannerSupported & 0x80) == 0x80;
-        
+
         // ADL_DISPLAY_DISPLAYMAP_MANNER_ Definitions
         // for ADLDisplayMap.iDisplayMapMask and ADLDisplayMap.iDisplayMapValue
         // (bit-vector)
@@ -1088,6 +1151,7 @@ namespace DisplayMagicianShared.AMD
         #define ADL_DISPLAY_DISPLAYMAP_MANNER_VSTRETCH            0x00000040
         #define ADL_DISPLAY_DISPLAYMAP_MANNER_VLD                0x00000080*/
 
+        public override bool Equals(object obj) => obj is ADL_POSSIBLE_MAPPING other && this.Equals(other);
         public bool Equals(ADL_POSSIBLE_MAPPING other)
             => DisplayIndex == other.DisplayIndex &&
                 DisplayControllerIndex == other.DisplayControllerIndex &&
@@ -1097,6 +1161,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (DisplayIndex, DisplayControllerIndex, DisplayMannerSupported).GetHashCode();
         }
+
+        public static bool operator ==(ADL_POSSIBLE_MAPPING lhs, ADL_POSSIBLE_MAPPING rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_POSSIBLE_MAPPING lhs, ADL_POSSIBLE_MAPPING rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1131,6 +1199,7 @@ namespace DisplayMagicianShared.AMD
         #define ADL_DISPLAY_POSSIBLEMAPRESULT_BEZELSUPPORTED    0x00000002
         #define ADL_DISPLAY_POSSIBLEMAPRESULT_OVERLAPSUPPORTED    0x00000004*/
 
+        public override bool Equals(object obj) => obj is ADL_POSSIBLE_MAP_RESULT other && this.Equals(other);
         public bool Equals(ADL_POSSIBLE_MAP_RESULT other)
             => Index == other.Index &&
                 PossibleMapResultMask == other.PossibleMapResultMask &&
@@ -1140,6 +1209,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (Index, PossibleMapResultMask, PossibleMapResultValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_POSSIBLE_MAP_RESULT lhs, ADL_POSSIBLE_MAP_RESULT rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_POSSIBLE_MAP_RESULT lhs, ADL_POSSIBLE_MAP_RESULT rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1191,6 +1264,7 @@ namespace DisplayMagicianShared.AMD
         #define ADL_DISPLAY_SLSGRID_DISPLAYROTATION_SUPPORT    0x00000040
         #define ADL_DISPLAY_SLSGRID_DESKTOPROTATION_SUPPORT    0x00000080*/
 
+        public override bool Equals(object obj) => obj is ADL_SLS_GRID other && this.Equals(other);
         public bool Equals(ADL_SLS_GRID other)
             => AdapterIndex == other.AdapterIndex &&
                 SLSGridIndex == other.SLSGridIndex &&
@@ -1203,6 +1277,9 @@ namespace DisplayMagicianShared.AMD
         {
             return (AdapterIndex, SLSGridIndex, SLSGridRow, SLSGridColumn, SLSGridMask, SLSGridValue).GetHashCode();
         }
+        public static bool operator ==(ADL_SLS_GRID lhs, ADL_SLS_GRID rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_SLS_GRID lhs, ADL_SLS_GRID rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1286,6 +1363,7 @@ namespace DisplayMagicianShared.AMD
         #define ADL_DISPLAY_SLSMAP_IS_SLSBUILDER 0x2000
         #define ADL_DISPLAY_SLSMAP_IS_CLONEVT     0x4000*/
 
+        public override bool Equals(object obj) => obj is ADL_SLS_MAP other && this.Equals(other);
         public bool Equals(ADL_SLS_MAP other)
             => AdapterIndex == other.AdapterIndex &&
                 SLSMapIndex == other.SLSMapIndex &&
@@ -1308,6 +1386,10 @@ namespace DisplayMagicianShared.AMD
             return (AdapterIndex, SLSMapIndex, Grid, SurfaceMapIndex, Orientation, NumSLSTarget, FirstSLSTargetArrayIndex, NumNativeMode, FirstNativeModeArrayIndex, NumBezelMode, FirstBezelModeArrayIndex,
                 NumBezelOffset, FirstBezelOffsetArrayIndex, SLSMapMask, SLSMapValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_SLS_MAP lhs, ADL_SLS_MAP rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_SLS_MAP lhs, ADL_SLS_MAP rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1338,8 +1420,9 @@ namespace DisplayMagicianShared.AMD
         public bool SLSTargetNotSLSBuilderSupported => (SLSTargetMask & 0x1) == 0x1;
 
         // SLSTargetValue settings
-        public bool SLSTargetNotSLSBuilderSet => (SLSTargetValue & 0x1) == 0x1;        
+        public bool SLSTargetNotSLSBuilderSet => (SLSTargetValue & 0x1) == 0x1;
 
+        public override bool Equals(object obj) => obj is ADL_SLS_TARGET other && this.Equals(other);
         public bool Equals(ADL_SLS_TARGET other)
             => AdapterIndex == other.AdapterIndex &&
                 SLSMapIndex == other.SLSMapIndex &&
@@ -1354,6 +1437,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (AdapterIndex, SLSMapIndex, DisplayTarget, SLSGridPositionX, SLSGridPositionY, ViewSize, SLSTargetMask, SLSTargetValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_SLS_TARGET lhs, ADL_SLS_TARGET rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_SLS_TARGET lhs, ADL_SLS_TARGET rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1375,6 +1462,7 @@ namespace DisplayMagicianShared.AMD
         /// <summary> The bit mask identifies the display status. </summary>
         public int SLSNativeModeValue;
 
+        public override bool Equals(object obj) => obj is ADL_SLS_MODE other && this.Equals(other);
         public bool Equals(ADL_SLS_MODE other)
             => AdapterIndex == other.AdapterIndex &&
                 SLSMapIndex == other.SLSMapIndex &&
@@ -1387,6 +1475,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (AdapterIndex, SLSMapIndex, SLSModeIndex, DisplayMode, SLSNativeModeMask, SLSNativeModeValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_SLS_MODE lhs, ADL_SLS_MODE rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_SLS_MODE lhs, ADL_SLS_MODE rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1412,6 +1504,7 @@ namespace DisplayMagicianShared.AMD
         /// <summary> The bit mask identifies the display status.  </summary>
         public int SLSBezelTransientModeValue;
 
+        public override bool Equals(object obj) => obj is ADL_BEZEL_TRANSIENT_MODE other && this.Equals(other);
         public bool Equals(ADL_BEZEL_TRANSIENT_MODE other)
             => AdapterIndex == other.AdapterIndex &&
                 SLSMapIndex == other.SLSMapIndex &&
@@ -1426,6 +1519,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (AdapterIndex, SLSMapIndex, SLSModeIndex, DisplayMode, NumBezelOffset, FirstBezelOffsetArrayIndex, SLSBezelTransientModeMask, SLSBezelTransientModeValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_BEZEL_TRANSIENT_MODE lhs, ADL_BEZEL_TRANSIENT_MODE rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_BEZEL_TRANSIENT_MODE lhs, ADL_BEZEL_TRANSIENT_MODE rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1445,6 +1542,7 @@ namespace DisplayMagicianShared.AMD
         /// <summary> The SLS Target List. </summary>
         public ADL_SLS_TARGET[] SLSTargets; // Not quite sure this is right
 
+        public override bool Equals(object obj) => obj is ADL_POSSIBLE_SLS_MAP other && this.Equals(other);
         public bool Equals(ADL_POSSIBLE_SLS_MAP other)
             =>  SLSMapIndex == other.SLSMapIndex &&
                 NumSLSMap == other.NumSLSMap &&
@@ -1456,6 +1554,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (SLSMapIndex, NumSLSMap, SLSMaps, NumSLSTarget, SLSTargets).GetHashCode();
         }
+
+        public static bool operator ==(ADL_POSSIBLE_SLS_MAP lhs, ADL_POSSIBLE_SLS_MAP rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_POSSIBLE_SLS_MAP lhs, ADL_POSSIBLE_SLS_MAP rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
@@ -1497,6 +1599,7 @@ namespace DisplayMagicianShared.AMD
         /*#define ADL_DISPLAY_BEZELOFFSET_STEPBYSTEPSET            0x00000004
         #define ADL_DISPLAY_BEZELOFFSET_COMMIT                    0x00000008*/
 
+        public override bool Equals(object obj) => obj is ADL_SLS_OFFSET other && this.Equals(other);
         public bool Equals(ADL_SLS_OFFSET other)
             => AdapterIndex == other.AdapterIndex &&
                 SLSMapIndex == other.SLSMapIndex &&
@@ -1513,6 +1616,10 @@ namespace DisplayMagicianShared.AMD
         {
             return (AdapterIndex, SLSMapIndex, DisplayID, BezelModeIndex, BezelOffsetX, BezelOffsetY, DisplayWidth, DisplayHeight, BezelOffsetMask, BezelOffsetValue).GetHashCode();
         }
+
+        public static bool operator ==(ADL_SLS_OFFSET lhs, ADL_SLS_OFFSET rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(ADL_SLS_OFFSET lhs, ADL_SLS_OFFSET rhs) => !(lhs == rhs);
 
         //public override string ToString() => $"{type.ToString("G")}";
     }
