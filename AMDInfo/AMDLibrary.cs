@@ -424,8 +424,8 @@ namespace DisplayMagicianShared.AMD
                             IntPtr transientModeBuffer = IntPtr.Zero;
                             int numSLSOffset = 0;
                             IntPtr slsOffsetBuffer = IntPtr.Zero;
-                            ADL_SLS_MAP SLSMap = new ADL_SLS_MAP();
-                            IntPtr slsMapBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(SLSMap));
+                            ADL_SLS_MAP slsMap = new ADL_SLS_MAP();
+                            IntPtr slsMapBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(slsMap));
                             Marshal.StructureToPtr(SLSMap, slsMapBuffer, false);
                             ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(
                                                                             _adlContextHandle,
@@ -454,6 +454,78 @@ namespace DisplayMagicianShared.AMD
                                 SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_SLSMapConfigX2_Get returned ADL_STATUS {ADLRet} when trying to get the SLS Info from AMD adapter {adapterIndex} in the computer.");
                                 continue;
                             }
+
+                            // Process the slsMapBuffer
+                            Marshal.PtrToStructure(slsMapBuffer, slsMap);
+                            // Free the memory we reserved
+                            Marshal.FreeHGlobal(slsMapBuffer);
+
+                            // Process the slsTargetBuffer
+                            ADL_SLS_TARGET[] slsTargetArray = new ADL_SLS_TARGET[numSLSTargets];
+                            if (numSLSTargets > 0)
+                            {
+                                IntPtr currentSLSTargetBuffer = slsTargetBuffer;
+                                for (int i = 0; i < numSLSTargets; i++)
+                                {
+                                    // build a structure in the array slot
+                                    slsTargetArray[i] = new ADL_SLS_TARGET();
+                                    // fill the array slot structure with the data from the buffer
+                                    slsTargetArray[i] = (ADL_SLS_TARGET)Marshal.PtrToStructure(currentSLSTargetBuffer, typeof(ADL_SLS_TARGET));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentSLSTargetBuffer = (IntPtr)((long)currentSLSTargetBuffer + Marshal.SizeOf(slsTargetArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(slsTargetBuffer);
+                            }
+
+                            // Process the nativeModeBuffer
+                            ADL_SLS_MODE[] nativeModeArray = new ADL_SLS_MODE[numNativeMode];
+                            if (numNativeMode > 0)
+                            {
+                                IntPtr currentNativeModeBuffer = nativeModeBuffer;
+                                for (int i = 0; i < numNativeMode; i++)
+                                {
+                                    // build a structure in the array slot
+                                    nativeModeArray[i] = new ADL_SLS_MODE();
+                                    // fill the array slot structure with the data from the buffer
+                                    nativeModeArray[i] = (ADL_SLS_MODE)Marshal.PtrToStructure(currentNativeModeBuffer, typeof(ADL_SLS_MODE));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentNativeModeBuffer = (IntPtr)((long)currentNativeModeBuffer + Marshal.SizeOf(nativeModeArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(nativeModeBuffer);
+                            }
+
+                            // Process the nativeModeOffsetsBuffer
+                            ADL_SLS_OFFSET[] nativeModeOffsetArray = new ADL_SLS_OFFSET[numNativeModeOffsets];
+                            if (numNativeModeOffsets > 0)
+                            {
+                                IntPtr currentNativeModeOffsetsBuffer = nativeModeOffsetsBuffer;
+                                for (int i = 0; i < numNativeModeOffsets; i++)
+                                {
+                                    // build a structure in the array slot
+                                    nativeModeOffsetArray[i] = new ADL_SLS_OFFSET();
+                                    // fill the array slot structure with the data from the buffer
+                                    nativeModeOffsetArray[i] = (ADL_SLS_OFFSET)Marshal.PtrToStructure(currentNativeModeOffsetsBuffer, typeof(ADL_SLS_OFFSET));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentNativeModeOffsetsBuffer = (IntPtr)((long)currentNativeModeOffsetsBuffer + Marshal.SizeOf(nativeModeOffsetArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(nativeModeOffsetsBuffer);
+                            }                            
+
+                            // Process the bezelModeBuffer
+
+                            // Process the transientModeBuffer
+
+                            // Process the slsOffsetBuffer
+
                         }
                         
                     }
