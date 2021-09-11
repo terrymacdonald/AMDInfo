@@ -2015,12 +2015,12 @@ namespace DisplayMagicianShared.AMD
         // Function to get the current supported SLS grid patterns (MxN) for a GPU.
         // This function gets a list of supported SLS grids for a specified input adapter based on display devices currently connected to the GPU.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSGrid_Caps(IntPtr ADLContextHandle, int adapterIndex, ref int NumSLSGrid, out IntPtr SLSGrid, int option);
+        public static extern ADL_STATUS ADL2_Display_SLSGrid_Caps(IntPtr ADLContextHandle, int adapterIndex, out int NumSLSGrid, out IntPtr SLSGrid, int option);
 
         // Function to get the active SLS map index list for a given GPU.
         // This function retrieves a list of active SLS map indexes for a specified input GPU.            
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapIndexList_Get(IntPtr ADLContextHandle, int adapterIndex, ref int numSLSMapIndexList, out IntPtr SLSMapIndexList, int option);
+        public static extern ADL_STATUS ADL2_Display_SLSMapIndexList_Get(IntPtr ADLContextHandle, int adapterIndex, out int numSLSMapIndexList, out IntPtr SLSMapIndexList, int option);
 
         // Definitions of the used function pointers. Add more if you use other ADL APIs
         // SLS functions
@@ -2037,11 +2037,11 @@ namespace DisplayMagicianShared.AMD
         //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_GET) (ADL_CONTEXT_HANDLE, int, int, ADLSLSMap*, int*, ADLSLSTarget**, int*, ADLSLSMode**, int*, ADLBezelTransientMode**, int*, ADLBezelTransientMode**, int*, ADLSLSOffset**, int);
         // This function retrieves an SLS configuration, which includes the, SLS map, SLS targets, SLS standard modes, bezel modes or a transient mode, and offsets.           
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out ADL_SLS_MAP SLSMap, out int NumSLSTarget, out IntPtr SLSTargetArray, out int lpNumNativeMode, out IntPtr NativeMode, out int NumBezelMode, out IntPtr BezelMode, out int NumTransientMode, out IntPtr TransientMode, out int NumSLSOffset, out IntPtr SLSOffset, int iOption);
+        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out IntPtr slsMapBuffer, out int NumSLSTarget, out IntPtr SLSTargetArrayBuffer, out int lpNumNativeMode, out IntPtr NativeModeBuffer, out int NumBezelMode, out IntPtr BezelModeBuffer, out int NumTransientMode, out IntPtr TransientModeBuffer, out int NumSLSOffset, out IntPtr SLSOffsetBuffer, int iOption);
 
         // typedef int ADL2_Display_SLSMapConfigX2_Get(ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex, ADLSLSMap* lpSLSMap, int* lpNumSLSTarget, ADLSLSTarget** lppSLSTarget, int* lpNumNativeMode, ADLSLSMode** lppNativeMode, int* lpNumNativeModeOffsets, ADLSLSOffset** lppNativeModeOffsets, int* lpNumBezelMode, ADLBezelTransientMode** lppBezelMode, int* lpNumTransientMode, ADLBezelTransientMode** lppTransientMode, int* lpNumSLSOffset, ADLSLSOffset** lppSLSOffset, int iOption)
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out ADL_SLS_MAP SLSMap, out int NumSLSTarget, out IntPtr SLSTargetArray, out int lpNumNativeMode, out IntPtr NativeMode, out int NumNativeModeOffsets, out IntPtr NativeModeOffsets, out int NumBezelMode, out IntPtr BezelMode, out int NumTransientMode, out IntPtr TransientMode, out int NumSLSOffset, out IntPtr SLSOffset, int option);
+        public static extern ADL_STATUS ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out IntPtr slsMapBuffer, out int NumSLSTarget, out IntPtr SLSTargetBuffer, out int lpNumNativeMode, out IntPtr NativeModeBuffer, out int NumNativeModeOffsets, out IntPtr NativeModeOffsetsBuffer, out int NumBezelMode, out IntPtr BezelModeBuffer, out int NumTransientMode, out IntPtr TransientModeBuffer, out int NumSLSOffset, out IntPtr SLSOffsetBuffer, int option);
 
         //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_DELETE) (ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex);
         // This function deletes an SLS map from the driver database based on the input SLS map index.
@@ -2175,7 +2175,7 @@ namespace DisplayMagicianShared.AMD
         // Function to get the active SLS map index list for a given GPU.
         // This function retrieves a list of active SLS map indexes for a specified input GPU.            
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL_Display_SLSMapIndexList_Get(int adapterIndex, ref int numSLSMapIndexList, out IntPtr SLSMapIndexList, int options);
+        public static extern ADL_STATUS ADL_Display_SLSMapIndexList_Get(int adapterIndex, out int numSLSMapIndexList, out IntPtr SLSMapIndexList, int options);
 
         // Function to get the active SLS map index list for a given GPU.
         // This function retrieves a list of active SLS map indexes for a specified input GPU.            
