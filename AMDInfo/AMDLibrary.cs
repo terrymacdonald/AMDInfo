@@ -119,10 +119,6 @@ namespace DisplayMagicianShared.AMD
         public List<ADL_DISPLAY_MAP> DisplayMaps;
         public List<ADL_DISPLAY_TARGET> DisplayTargets;
         public Dictionary<int, AMD_HDR_CONFIG> HdrConfig;
-        // Note: We purposely have left out the DisplayNames from the Equals as it's order keeps changing after each reboot and after each profile swap
-        // and it is informational only and doesn't contribute to the configuration (it's used for generating the Screens structure, and therefore for
-        // generating the profile icon.
-        //public Dictionary<UInt32, string> DisplayNames;
         public List<string> DisplayIdentifiers;
         public override bool Equals(object obj) => obj is AMD_DISPLAY_CONFIG other && this.Equals(other);
 
