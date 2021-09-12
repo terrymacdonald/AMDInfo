@@ -1677,7 +1677,14 @@ namespace DisplayMagicianShared.AMD
                     foreach (var displayInfoItem in displayInfoArray)
                     {
 
+                        // Ignore the display if it isn't connected (note: we still need to see if it's actively mapped to windows!)
                         if (!displayInfoItem.DisplayConnectedSet)
+                        {
+                            continue;
+                        }
+
+                        // If the display is not mapped in windows then we only want to skip this display if all alldisplays is false
+                        if (!displayInfoItem.DisplayMappedSet && !allDisplays)
                         {
                             continue;
                         }
