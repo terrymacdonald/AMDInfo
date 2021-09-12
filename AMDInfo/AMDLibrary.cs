@@ -1262,62 +1262,6 @@ namespace DisplayMagicianShared.AMD
                     }
                 }
 
-
-
-                if (displayConfig.HdrConfig.SlsConfig.IsSlsEnabled)
-                {
-                    // We need to change to an Eyefinity (SLS) profile, so we need to apply the new SLS Topologies
-                    SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: SLS is enabled in the new display configuration, so we need to set it");
-
-                    foreach (AMD_SLSMAP_CONFIG slsMapConfig in displayConfig.SlsConfig.SLSMapConfigs)
-                    {
-                        // Turn on this SLS Map Config
-                        ADLRet = ADLImport.ADL2_Display_SLSMapConfig_SetState(_adlContextHandle, slsMapConfig.SLSMap.AdapterIndex, slsMapConfig.SLSMap.SLSMapIndex, ADLImport.ADL_TRUE);
-                        if (ADLRet == ADL_STATUS.ADL_OK)
-                        {
-                            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: ADL2_Display_SLSMapConfig_SetState successfully set the SLSMAP with index {slsMapConfig.SLSMap.SLSMapIndex} to TRUE for adapter { slsMapConfig.SLSMap.AdapterIndex}.");
-                        }
-                        else
-                        {
-                            SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {slsMapConfig.SLSMap.SLSMapIndex} to TRUE for adapter { slsMapConfig.SLSMap.AdapterIndex}.");
-                            return false;
-                        }
-
-                    }
-
-                }
-                else
-                {
-                    // We need to change to a plain, non-Eyefinity (SLS) profile, so we need to disable any SLS Topologies if they are being used
-                    SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: SLS is not used in the new display configuration, so we need to set it to disabled if it's configured currently");
-
-                    // We want to get the current config
-                    AMD_DISPLAY_CONFIG currentDisplayConfig = GetAMDDisplayConfig();
-
-                    if (currentDisplayConfig.SlsConfig.IsSlsEnabled)
-                    {
-                        // We need to disable the current Eyefinity (SLS) profile to turn it off
-                        SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: SLS is enabled in the current display configuration, so we need to turn it off");
-
-                        foreach (AMD_SLSMAP_CONFIG slsMapConfig in displayConfig.SlsConfig.SLSMapConfigs)
-                        {
-                            // Turn on this SLS Map Config
-                            ADLRet = ADLImport.ADL2_Display_SLSMapConfig_SetState(_adlContextHandle, slsMapConfig.SLSMap.AdapterIndex, slsMapConfig.SLSMap.SLSMapIndex, ADLImport.ADL_FALSE);
-                            if (ADLRet == ADL_STATUS.ADL_OK)
-                            {
-                                SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: ADL2_Display_SLSMapConfig_SetState successfully disabled the SLSMAP with index {slsMapConfig.SLSMap.SLSMapIndex} for adapter { slsMapConfig.SLSMap.AdapterIndex}.");
-                            }
-                            else
-                            {
-                                SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {slsMapConfig.SLSMap.SLSMapIndex} to FALSE for adapter { slsMapConfig.SLSMap.AdapterIndex}.");
-                                return false;
-                            }
-                        }
-                    }
-
-                }
-
-
             }
             else
             {
@@ -1338,12 +1282,12 @@ namespace DisplayMagicianShared.AMD
             SharedLogger.logger.Trace($"AMDLibrary/IsActiveConfig: Checking whether the display configuration is already being used.");
             if (displayConfig.Equals(currentWindowsDisplayConfig))
             {
-                SharedLogger.logger.Trace($"AMDLibrary/IsActiveConfig: The display configuration is already being used (supplied displayConfig Equals currentWindowsDisplayConfig");
+                SharedLogger.logger.Trace($"AMDLibrary/IsActiveConfig: The display configuration is already being used (supplied displayConfig Equals currentWindowsDisplayConfig)");
                 return true;
             }
             else
             {
-                SharedLogger.logger.Trace($"AMDLibrary/IsActiveConfig: The display configuration is NOT currently in use (supplied displayConfig Equals currentWindowsDisplayConfig");
+                SharedLogger.logger.Trace($"AMDLibrary/IsActiveConfig: The display configuration is NOT currently in use (supplied displayConfig Equals currentWindowsDisplayConfig)");
                 return false;
             }
 
