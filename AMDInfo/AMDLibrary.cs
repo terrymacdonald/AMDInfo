@@ -806,8 +806,12 @@ namespace DisplayMagicianShared.AMD
                         hdrConfig.HDRSupported = supported > 0 ? true : false;
                         //hdrConfig.HdrColorDepth = colourDepth;
 
-                        // Now add this to the HDR config list.
-                        myDisplayConfig.HdrConfig.Add(displayTarget.DisplayID.DisplayLogicalIndex, hdrConfig);
+                        // Now add this to the HDR config list.                        
+                        if (!myDisplayConfig.HdrConfig.ContainsKey(displayTarget.DisplayID.DisplayLogicalIndex))
+                        {
+                            // Save the new display config only if we haven't already
+                            myDisplayConfig.HdrConfig.Add(displayTarget.DisplayID.DisplayLogicalIndex, hdrConfig);
+                        }
                     }
 
 
