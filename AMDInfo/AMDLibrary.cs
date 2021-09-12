@@ -17,11 +17,6 @@ namespace DisplayMagicianShared.AMD
         public int AdapterBusNumber;
         public int AdapterIndex;
         public bool IsPrimaryAdapter;
-        public ADL_DISPLAY_MAP[] DisplayMaps;
-        public ADL_DISPLAY_TARGET[] DisplayTargets;
-        public int SLSMapIndex;
-        public bool IsSLSEnabled;
-        //public ADL_SLS_MAP[] SLSMap;
 
         public override bool Equals(object obj) => obj is AMD_ADAPTER_CONFIG other && this.Equals(other);
 
@@ -29,15 +24,11 @@ namespace DisplayMagicianShared.AMD
         => AdapterIndex == other.AdapterIndex &&
            AdapterBusNumber == other.AdapterBusNumber &&
            AdapterDeviceNumber == other.AdapterDeviceNumber &&
-           IsPrimaryAdapter == other.IsPrimaryAdapter &&
-           DisplayMaps.SequenceEqual(other.DisplayMaps) &&
-           DisplayTargets.SequenceEqual(other.DisplayTargets) &&
-           SLSMapIndex == other.SLSMapIndex &&
-           IsSLSEnabled == other.IsSLSEnabled;
+           IsPrimaryAdapter == other.IsPrimaryAdapter;
         
         public override int GetHashCode()
         {
-            return (AdapterIndex, AdapterBusNumber, AdapterDeviceNumber, DisplayMaps, DisplayTargets, IsPrimaryAdapter, SLSMapIndex, IsSLSEnabled).GetHashCode();
+            return (AdapterIndex, AdapterBusNumber, AdapterDeviceNumber, IsPrimaryAdapter).GetHashCode();
         }
 
         public static bool operator ==(AMD_ADAPTER_CONFIG lhs, AMD_ADAPTER_CONFIG rhs) => lhs.Equals(rhs);
@@ -46,20 +37,51 @@ namespace DisplayMagicianShared.AMD
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct AMD_SLSMAP_CONFIG : IEquatable<AMD_SLSMAP_CONFIG>
+    {
+        public ADL_SLS_MAP SLSMap;
+        public List<ADL_SLS_TARGET> SLSTargets;
+        public List<ADL_SLS_MODE> NativeModes;
+        public List<ADL_SLS_OFFSET> NativeModeOffsets;
+        public List<ADL_BEZEL_TRANSIENT_MODE> BezelModes;
+        public List<ADL_BEZEL_TRANSIENT_MODE> TransientModes;
+        public List<ADL_SLS_OFFSET> SLSOffsets;
+
+        public override bool Equals(object obj) => obj is AMD_SLS_CONFIG other && this.Equals(other);
+
+        public bool Equals(AMD_SLSMAP_CONFIG other)
+        => SLSMap == other.SLSMap &&
+           SLSTargets.SequenceEqual(other.SLSTargets) &&
+           NativeModes.SequenceEqual(other.NativeModes) &&
+           NativeModeOffsets.SequenceEqual(other.NativeModeOffsets) &&
+           BezelModes.SequenceEqual(other.BezelModes) &&
+           TransientModes.SequenceEqual(other.TransientModes) &&
+           SLSOffsets.SequenceEqual(other.SLSOffsets);
+
+        public override int GetHashCode()
+        {
+            return (SLSMap, SLSTargets, NativeModes, NativeModeOffsets, BezelModes, TransientModes, SLSOffsets).GetHashCode();
+        }
+        public static bool operator ==(AMD_SLSMAP_CONFIG lhs, AMD_SLSMAP_CONFIG rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(AMD_SLSMAP_CONFIG lhs, AMD_SLSMAP_CONFIG rhs) => !(lhs == rhs);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct AMD_SLS_CONFIG : IEquatable<AMD_SLS_CONFIG>
     {
         public bool IsSlsEnabled;
-        public UInt32 PrimaryDisplayId;
+        public List<AMD_SLSMAP_CONFIG> SLSMapConfigs;
 
         public override bool Equals(object obj) => obj is AMD_SLS_CONFIG other && this.Equals(other);
 
         public bool Equals(AMD_SLS_CONFIG other)
         => IsSlsEnabled == other.IsSlsEnabled &&
-           PrimaryDisplayId == other.PrimaryDisplayId;
+           SLSMapConfigs.SequenceEqual(other.SLSMapConfigs);
 
         public override int GetHashCode()
         {
-            return (IsSlsEnabled, PrimaryDisplayId).GetHashCode();
+            return (IsSlsEnabled, SLSMapConfigs).GetHashCode();
         }
         public static bool operator ==(AMD_SLS_CONFIG lhs, AMD_SLS_CONFIG rhs) => lhs.Equals(rhs);
 
@@ -69,19 +91,19 @@ namespace DisplayMagicianShared.AMD
     [StructLayout(LayoutKind.Sequential)]
     public struct AMD_HDR_CONFIG : IEquatable<AMD_HDR_CONFIG>
     {
-        //public Dictionary<UInt32, NV_HDR_CAPABILITIES_V2> HdrCapabilities;
-        //public Dictionary<UInt32, NV_HDR_COLOR_DATA_V2> HdrColorData;
-        public bool IsAMDHdrEnabled;
+        public int HdrColorDepth;
+        public bool HDRSupported;
+        public bool HDREnabled;
 
         public override bool Equals(object obj) => obj is AMD_HDR_CONFIG other && this.Equals(other);
         public bool Equals(AMD_HDR_CONFIG other)
-        => //HdrCapabilities.SequenceEqual(other.HdrCapabilities) &&
-           //HdrColorData.SequenceEqual(other.HdrColorData) &&
-           IsAMDHdrEnabled == other.IsAMDHdrEnabled;
+        => HdrColorDepth == other.HdrColorDepth &&
+           HDRSupported == other.HDRSupported &&
+           HDREnabled == other.HDREnabled;
 
         public override int GetHashCode()
         {
-            return (IsAMDHdrEnabled).GetHashCode();
+            return (HdrColorDepth, HDRSupported, HDREnabled).GetHashCode();
         }
         public static bool operator ==(AMD_HDR_CONFIG lhs, AMD_HDR_CONFIG rhs) => lhs.Equals(rhs);
 
@@ -92,10 +114,11 @@ namespace DisplayMagicianShared.AMD
     [StructLayout(LayoutKind.Sequential)]
     public struct AMD_DISPLAY_CONFIG : IEquatable<AMD_DISPLAY_CONFIG>
     {
-        //public Dictionary<ulong, string> DisplayAdapters;
         public List<AMD_ADAPTER_CONFIG> AdapterConfigs;
         public AMD_SLS_CONFIG SlsConfig;
-        public AMD_HDR_CONFIG HdrConfig;
+        public List<ADL_DISPLAY_MAP> DisplayMaps;
+        public List<ADL_DISPLAY_TARGET> DisplayTargets;
+        public Dictionary<int, AMD_HDR_CONFIG> HdrConfig;
         // Note: We purposely have left out the DisplayNames from the Equals as it's order keeps changing after each reboot and after each profile swap
         // and it is informational only and doesn't contribute to the configuration (it's used for generating the Screens structure, and therefore for
         // generating the profile icon.
@@ -106,12 +129,14 @@ namespace DisplayMagicianShared.AMD
         public bool Equals(AMD_DISPLAY_CONFIG other)
         => AdapterConfigs.SequenceEqual(other.AdapterConfigs) &&
            SlsConfig.Equals(other.SlsConfig) &&
-           HdrConfig.Equals(other.HdrConfig) &&
+           HdrConfig.SequenceEqual(other.HdrConfig) &&
+           DisplayMaps.SequenceEqual(other.DisplayMaps) &&
+           DisplayTargets.SequenceEqual(other.DisplayTargets) &&
            DisplayIdentifiers.SequenceEqual(other.DisplayIdentifiers);
 
         public override int GetHashCode()
         {
-            return (AdapterConfigs, SlsConfig, HdrConfig, DisplayIdentifiers).GetHashCode();
+            return (AdapterConfigs, SlsConfig, HdrConfig, DisplayMaps, DisplayTargets, DisplayIdentifiers).GetHashCode();
         }
 
         public static bool operator ==(AMD_DISPLAY_CONFIG lhs, AMD_DISPLAY_CONFIG rhs) => lhs.Equals(rhs);
@@ -150,6 +175,11 @@ namespace DisplayMagicianShared.AMD
 
                 SharedLogger.logger.Trace("AMDLibrary/AMDLibrary: Intialising AMD ADL2 library interface");
                 // Second parameter is 1 so that we only the get connected adapters in use now
+
+                // We set the environment variable as a workaround so that ADL2_Display_SLSMapConfigX2_Get works :(
+                // This is a weird thing that AMD even set in their own code! WTF! Who programmed that as a feature?
+                Environment.SetEnvironmentVariable("ADL_4KWORKAROUND_CANCEL", "TRUE");
+
                 try
                 {
                     ADL_STATUS ADLRet;
@@ -374,6 +404,8 @@ namespace DisplayMagicianShared.AMD
                         savedAdapterConfig.IsPrimaryAdapter = false;
                     }
 
+                    myDisplayConfig.SlsConfig.SLSMapConfigs = new List<AMD_SLSMAP_CONFIG>();
+
                     // Check if SLS is enabled for this adapter!
                     int numActiveSLSMapIndexes = -1;
                     IntPtr activeSLSMapIndexesBuffer = IntPtr.Zero;
@@ -384,6 +416,7 @@ namespace DisplayMagicianShared.AMD
                         // We have some SLS enabled!
                         myDisplayConfig.SlsConfig.IsSlsEnabled = true;
                         SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has one or more SLS grids set on it! Eyefinity (SLS) is enabled.");
+
                         activeSLSMapIndexArray = new int[numActiveSLSMapIndexes];
                         if (numActiveSLSMapIndexes > 0)
                         {
@@ -407,9 +440,8 @@ namespace DisplayMagicianShared.AMD
                         // Now we know we have at least one active SLS Grid! We need to go through each activeSLSMap using the ActiveSLSMapIndex, and grab it's details
                         foreach (int activeSlsMapIndex in activeSLSMapIndexArray)
                         {
-                            // We set the environment variable as a workaround so that ADL2_Display_SLSMapConfigX2_Get works :(
-                            // This is a weird thing that AMD even set in their own code! WTF! Who programmed that as a feature?
-                            Environment.SetEnvironmentVariable("ADL_4KWORKAROUND_CANCEL", "TRUE");
+
+                            AMD_SLSMAP_CONFIG mySLSMapConfig = new AMD_SLSMAP_CONFIG();
 
                             // We want to get the SLSMapConfig for this active SLS Map
                             int numSLSTargets = 0;
@@ -426,12 +458,12 @@ namespace DisplayMagicianShared.AMD
                             IntPtr slsOffsetBuffer = IntPtr.Zero;
                             ADL_SLS_MAP slsMap = new ADL_SLS_MAP();
                             IntPtr slsMapBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(slsMap));
-                            Marshal.StructureToPtr(SLSMap, slsMapBuffer, false);
+                            Marshal.StructureToPtr(slsMap, slsMapBuffer, false);
                             ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(
                                                                             _adlContextHandle,
                                                                              oneAdapter.AdapterIndex,
                                                                              activeSlsMapIndex,
-                                                                             out slsMapBuffer,
+                                                                             ref slsMap,
                                                                              out numSLSTargets,
                                                                              out slsTargetBuffer,
                                                                              out numNativeMode,
@@ -456,9 +488,12 @@ namespace DisplayMagicianShared.AMD
                             }
 
                             // Process the slsMapBuffer
-                            Marshal.PtrToStructure(slsMapBuffer, slsMap);
+                            //slsMap = (ADL_SLS_MAP)Marshal.PtrToStructure(slsMapBuffer, slsMap.GetType());
                             // Free the memory we reserved
-                            Marshal.FreeHGlobal(slsMapBuffer);
+                            //Marshal.FreeHGlobal(slsMapBuffer);
+
+                            // Add the slsMap to the config we want to store
+                            mySLSMapConfig.SLSMap = slsMap;
 
                             // Process the slsTargetBuffer
                             ADL_SLS_TARGET[] slsTargetArray = new ADL_SLS_TARGET[numSLSTargets];
@@ -478,6 +513,15 @@ namespace DisplayMagicianShared.AMD
                                 }
                                 // Free the memory used by the buffer                        
                                 Marshal.FreeCoTaskMem(slsTargetBuffer);
+
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.SLSTargets = slsTargetArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.SLSTargets = new List<ADL_SLS_TARGET>();
                             }
 
                             // Process the nativeModeBuffer
@@ -498,6 +542,15 @@ namespace DisplayMagicianShared.AMD
                                 }
                                 // Free the memory used by the buffer                        
                                 Marshal.FreeCoTaskMem(nativeModeBuffer);
+
+                                // Add the nativeMode to the config we want to store
+                                mySLSMapConfig.NativeModes = nativeModeArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.NativeModes = new List<ADL_SLS_MODE>();
                             }
 
                             // Process the nativeModeOffsetsBuffer
@@ -518,16 +571,110 @@ namespace DisplayMagicianShared.AMD
                                 }
                                 // Free the memory used by the buffer                        
                                 Marshal.FreeCoTaskMem(nativeModeOffsetsBuffer);
-                            }                            
+
+                                // Add the nativeModeOffsets to the config we want to store
+                                mySLSMapConfig.NativeModeOffsets = nativeModeOffsetArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the empty list to the config we want to store
+                                mySLSMapConfig.NativeModeOffsets = new List<ADL_SLS_OFFSET>();
+                            }
 
                             // Process the bezelModeBuffer
+                            ADL_BEZEL_TRANSIENT_MODE[] bezelModeArray = new ADL_BEZEL_TRANSIENT_MODE[numBezelMode];
+                            if (numBezelMode > 0)
+                            {
+                                IntPtr currentBezelModeBuffer = bezelModeBuffer;
+                                for (int i = 0; i < numBezelMode; i++)
+                                {
+                                    // build a structure in the array slot
+                                    bezelModeArray[i] = new ADL_BEZEL_TRANSIENT_MODE();
+                                    // fill the array slot structure with the data from the buffer
+                                    bezelModeArray[i] = (ADL_BEZEL_TRANSIENT_MODE)Marshal.PtrToStructure(currentBezelModeBuffer, typeof(ADL_BEZEL_TRANSIENT_MODE));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentBezelModeBuffer = (IntPtr)((long)currentBezelModeBuffer + Marshal.SizeOf(bezelModeArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(bezelModeBuffer);
+
+                                // Add the bezelModes to the config we want to store
+                                mySLSMapConfig.BezelModes = bezelModeArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.BezelModes = new List<ADL_BEZEL_TRANSIENT_MODE>();
+                            }
 
                             // Process the transientModeBuffer
+                            ADL_BEZEL_TRANSIENT_MODE[] transientModeArray = new ADL_BEZEL_TRANSIENT_MODE[numTransientMode];
+                            if (numTransientMode > 0)
+                            {
+                                IntPtr currentTransientModeBuffer = transientModeBuffer;
+                                for (int i = 0; i < numTransientMode; i++)
+                                {
+                                    // build a structure in the array slot
+                                    transientModeArray[i] = new ADL_BEZEL_TRANSIENT_MODE();
+                                    // fill the array slot structure with the data from the buffer
+                                    transientModeArray[i] = (ADL_BEZEL_TRANSIENT_MODE)Marshal.PtrToStructure(currentTransientModeBuffer, typeof(ADL_BEZEL_TRANSIENT_MODE));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentTransientModeBuffer = (IntPtr)((long)currentTransientModeBuffer + Marshal.SizeOf(transientModeArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(transientModeBuffer);
+
+                                // Add the transientModes to the config we want to store
+                                mySLSMapConfig.TransientModes = transientModeArray.ToList();
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.TransientModes = new List<ADL_BEZEL_TRANSIENT_MODE>();
+                            }
 
                             // Process the slsOffsetBuffer
+                            ADL_SLS_OFFSET[] slsOffsetArray = new ADL_SLS_OFFSET[numSLSOffset];
+                            if (numSLSOffset > 0)
+                            {
+                                IntPtr currentSLSOffsetBuffer = slsOffsetBuffer;
+                                for (int i = 0; i < numSLSOffset; i++)
+                                {
+                                    // build a structure in the array slot
+                                    slsOffsetArray[i] = new ADL_SLS_OFFSET();
+                                    // fill the array slot structure with the data from the buffer
+                                    slsOffsetArray[i] = (ADL_SLS_OFFSET)Marshal.PtrToStructure(currentSLSOffsetBuffer, typeof(ADL_SLS_OFFSET));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentSLSOffsetBuffer = (IntPtr)((long)currentSLSOffsetBuffer + Marshal.SizeOf(slsOffsetArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(slsOffsetBuffer);
 
+                                // Add the slsOffsets to the config we want to store
+                                mySLSMapConfig.SLSOffsets = slsOffsetArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.SLSOffsets = new List<ADL_SLS_OFFSET>();
+                            }
+
+                            // Add the mySLSMapConfig to the displayConfig
+                            myDisplayConfig.SlsConfig.SLSMapConfigs.Add(mySLSMapConfig);
                         }
-                        
+
+                        // Get the display identifiers
+                        myDisplayConfig.DisplayIdentifiers = GetCurrentDisplayIdentifiers();
+
                     }
                     else
                     {
@@ -536,6 +683,7 @@ namespace DisplayMagicianShared.AMD
                         SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has no SLS grids set on it! Eyefinity (SLS) is disabled.");
                     }
 
+                    
                     // Go grab the DisplayMaps and DisplayTargets as that is useful infor for creating screens
                     int numDisplayTargets = 0;
                     int numDisplayMaps = 0;
@@ -572,28 +720,28 @@ namespace DisplayMagicianShared.AMD
                         // Free the memory used by the buffer                        
                         Marshal.FreeCoTaskMem(displayMapBuffer);
                         // Save the item
-                        //savedAdapterConfig.DisplayMaps = displayMapArray;
+                        myDisplayConfig.DisplayMaps = displayMapArray.ToList<ADL_DISPLAY_MAP>();
 
                     }
 
-                    ADL_DISPLAY_TARGET[] retrievedDisplayTargets = { };
+                    ADL_DISPLAY_TARGET[] displayTargetArray = { };
                     if (numDisplayTargets > 0)
                     {
                         IntPtr currentDisplayTargetBuffer = displayTargetBuffer;
                         //displayTargetArray = new ADL_DISPLAY_TARGET[numDisplayTargets];
-                        retrievedDisplayTargets = new ADL_DISPLAY_TARGET[numDisplayTargets];
+                        displayTargetArray = new ADL_DISPLAY_TARGET[numDisplayTargets];
                         for (int i = 0; i < numDisplayTargets; i++)
                         {
                             // build a structure in the array slot
-                            retrievedDisplayTargets[i] = new ADL_DISPLAY_TARGET();
+                            displayTargetArray[i] = new ADL_DISPLAY_TARGET();
                             //displayTargetArray[i] = new ADL_DISPLAY_TARGET();
                             // fill the array slot structure with the data from the buffer
-                            retrievedDisplayTargets[i] = (ADL_DISPLAY_TARGET)Marshal.PtrToStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
+                            displayTargetArray[i] = (ADL_DISPLAY_TARGET)Marshal.PtrToStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
                             //displayTargetArray[i] = (ADL_DISPLAY_TARGET)Marshal.PtrToStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
                             // destroy the bit of memory we no longer need
                             Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
                             // advance the buffer forwards to the next object
-                            currentDisplayTargetBuffer = (IntPtr)((long)currentDisplayTargetBuffer + Marshal.SizeOf(retrievedDisplayTargets[i]));
+                            currentDisplayTargetBuffer = (IntPtr)((long)currentDisplayTargetBuffer + Marshal.SizeOf(displayTargetArray[i]));
                             //currentDisplayTargetBuffer = (IntPtr)((long)currentDisplayTargetBuffer + Marshal.SizeOf(displayTargetArray[i]));
 
                         }
@@ -601,14 +749,65 @@ namespace DisplayMagicianShared.AMD
                         Marshal.FreeCoTaskMem(displayTargetBuffer);
                         // Save the item                            
                         //savedAdapterConfig.DisplayTargets = new ADL_DISPLAY_TARGET[numDisplayTargets];
-                        //savedAdapterConfig.DisplayTargets = displayTargetArray;
+                        myDisplayConfig.DisplayTargets = displayTargetArray.ToList<ADL_DISPLAY_TARGET>();
                     }
 
-                    for (int displayMapIndex = 0; displayMapIndex < numDisplayMaps; displayMapIndex++)
+                    // Now we need to get all the displays connected to this adapter so that we can get their HDR state
+                    foreach (var displayTarget in displayTargetArray)
+                    {
+                        // Go through each display and see if HDR is supported
+                        int supported = 0;
+                        int enabled = 0;
+                        ADLRet = ADLImport.ADL2_Display_HDRState_Get(_adlContextHandle, adapterIndex, displayTarget.DisplayID, out supported, out enabled);
+                        if (ADLRet == ADL_STATUS.ADL_OK)
+                        {
+                            if (supported > 0 && enabled > 0)
+                            {
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {} on adapter {adapterIndex} supports HDR and HDR is enabled.");
+                            }
+                            else if (supported > 0 && enabled == 0)
+                            {
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {} on adapter {adapterIndex} supports HDR and HDR is NOT enabled.");
+                            }
+                            else 
+                            {
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {} on adapter {adapterIndex} does NOT support HDR.");
+                            }
+
+                            AMD_HDR_CONFIG
+
+                            myDisplayConfig.HdrConfig.HdrCapabilities.Add()
+
+                        }
+                        else
+                        {
+                            SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_HDRState_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
+                            throw new AMDLibraryException($"ADL2_Display_HDRState_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer");
+                        }
+
+                    }
+
+
+                    ADLRet = ADLImport.ADL2_Display_HDRState_Get(_adlContextHandle, adapterIndex, , out supported, out enabled);
+                    if (ADLRet == ADL_STATUS.ADL_OK)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DisplayMapConfig_Get returned information about all displaytargets connected to AMD adapter {adapterIndex}.");
+                    }
+                    else
+                    {
+                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
+                        throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer");
+                    }
+
+
+
+                    /*for (int displayMapIndex = 0; displayMapIndex < numDisplayMaps; displayMapIndex++)
                     {
                         int foundDisplays = 0;
                         ADL_DISPLAY_MAP oneAdlDesktop = displayMapArray[displayMapIndex];
                         ADL_DISPLAY_ID preferredDisplay;
+
+                        //AMD_SLSMAP_CONFIG myDisplayMapConfig = new AMD_SLSMAP_CONFIG();
 
                         for (int displayTargetIndex = 0; displayTargetIndex < numDisplayTargets; displayTargetIndex++)
                         {
@@ -631,10 +830,10 @@ namespace DisplayMagicianShared.AMD
                                 if (primaryAdapterIndex == oneAdlDisplay.DisplayID.DisplayPhysicalAdapterIndex)
                                 {
                                     //add a display in list. For SLS this info will be updated later
-                                    /*displays.push_back(TopologyDisplay(oneAdlDisplay.displayID, 0,
+                                    *//*displays.push_back(TopologyDisplay(oneAdlDisplay.displayID, 0,
                                         oneAdlDesktop.displayMode.iXRes, oneAdlDesktop.displayMode.iYRes, //size
                                         0, 0,    //offset in desktop
-                                        0, 0)); //grid location (0-based)*/
+                                        0, 0)); //grid location (0-based)*//*
 
                                     // count it and bail out of we found enough
                                     foundDisplays++;
@@ -643,114 +842,14 @@ namespace DisplayMagicianShared.AMD
                                 }
                             }
                         }
-                    }
-
-                    /*// Only check for SLS if there is more than one displaytarget (screen)
-                    if (numDisplayTargets > 1)
-                    {
-
-                        
-                        *//*int numSLSRecords = -1;
-                        IntPtr SLSRecordBuffer = IntPtr.Zero;
-                        int[] SLSRecordArray;
-                        ADLRet = ADLImport.ADL2_Display_SLSRecords_Get(_adlContextHandle, oneAdapter.AdapterIndex, savedAdapterConfig.DisplayTargets[0].DisplayID, out numSLSRecords, out SLSRecordBuffer);
-                        if (ADLRet == ADL_STATUS.ADL_OK)
-                        {
-                            SLSRecordArray = new int[numSLSRecords];
-                            if (numSLSRecords > 0)
-                            {
-                                IntPtr currentSLSBuffer = SLSRecordBuffer;
-                                SLSRecordArray = new int[numSLSRecords];
-                                for (int i = 0; i < numSLSMapIDs; i++)
-                                {
-                                    // build a structure in the array slot
-                                    SLSRecordArray[i] = 0;
-                                    // fill the array slot structure with the data from the buffer
-                                    SLSRecordArray[i] = (int)Marshal.PtrToStructure(currentSLSBuffer, typeof(int));
-                                    // destroy the bit of memory we no longer need
-                                    Marshal.DestroyStructure(currentSLSBuffer, typeof(ADL_SLS_MAP));
-                                    // advance the buffer forwards to the next object
-                                    currentSLSBuffer = (IntPtr)((long)currentSLSBuffer + Marshal.SizeOf(SLSRecordArray[i]));
-                                }
-                                // Free the memory used by the buffer                        
-                                Marshal.FreeCoTaskMem(SLSRecordBuffer);
-                            }
-                        }*//*
-
-
-                        int SLSMapIndex = -1;
-                        //ADLRet = ADLImport.ADL2_Display_SLSMapIndex_Get(_adlContextHandle, oneAdapter.AdapterIndex, numDisplayTargets, retrievedDisplayTargets, out SLSMapIndex);
-                        //ADLRet = ADLImport.ADL2_Display_SLSMapIndexList_Get(_adlContextHandle, oneAdapter.AdapterIndex, out numSLSMapIDs, out SLSMapIDBuffer, ADLImport.ADL_DISPLAY_SLSMAPINDEXLIST_OPTION_ACTIVE);
-                        if (ADLRet == ADL_STATUS.ADL_OK)
-                        {
-                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: SLS (Eyfinity) is enabled on AMD adapter {adapterIndex}.");
-
-                            // Set the SLS Map Index if there is Eyefinity
-                            //savedAdapterConfig.IsSLSPossible = true;
-                            savedAdapterConfig.SLSMapIndex = SLSMapIndex;                            
-                            *//*for (int slsMapIdx = 0; slsMapIdx < SLSMapIndex; slsMapIdx++)
-                            {*//*
-                            //bool isActiveSLS = false;
-                            // TODO Get the SLS Map Config X2??
-
-                            int numSLSTargets = 0;
-                            IntPtr SLSTargetBuffer = IntPtr.Zero;
-                            int numNativeMode = 0;
-                            IntPtr nativeModeBuffer = IntPtr.Zero;
-                            int numNativeModeOffsets = 0;
-                            IntPtr nativeModeOffsetsBuffer = IntPtr.Zero;
-                            int numBezelMode = 0;
-                            IntPtr bezelModeBuffer = IntPtr.Zero;
-                            int numTransientMode = 0;
-                            IntPtr TransientModeBuffer = IntPtr.Zero;
-                            int numSLSOffset = 0;
-                            IntPtr SLSOffsetBuffer = IntPtr.Zero;
-                            //ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, ref ADL_SLS_MAP[] SLSMap, ref int NumSLSTarget, out IntPtr SLSTargetArray, ref int lpNumNativeMode, out IntPtr NativeMode, ref int NumNativeModeOffsets, out IntPtr NativeModeOffsets, ref int NumBezelMode, out IntPtr BezelMode, ref int NumTransientMode, out IntPtr TransientMode, ref int NumSLSOffset, out IntPtr SLSOffset, int option);
-                            //ADL_SLS_MAP SLSMap = new ADL_SLS_MAP() ;
-                            IntPtr slsMapBuffer = IntPtr.Zero;
-                            //int SLSMapIndex = SLSMapIDArray[slsMapIdx];
-                            //ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(_adlContextHandle, adapterNum, SLSMapIndex, out SLSMap, out numSLSTargets, out SLSTargetBuffer, out numNativeMode, out nativeModeBuffer, out numNativeModeOffsets,
-                            //    out nativeModeOffsetsBuffer, out numBezelMode, out bezelModeBuffer, out numTransientMode, out TransientModeBuffer, out numSLSOffset, out SLSOffsetBuffer, (int)2);                            
-                            ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(
-                                                                            _adlContextHandle,
-                                                                             oneAdapter.AdapterIndex,
-                                                                             SLSMapIndex,
-                                                                             out slsMapBuffer,
-                                                                             out numSLSTargets,
-                                                                             out SLSTargetBuffer,
-                                                                             out numNativeMode,
-                                                                             out nativeModeBuffer,
-                                                                             out numNativeModeOffsets,
-                                                                             out nativeModeOffsetsBuffer, 
-                                                                             out numBezelMode,
-                                                                             out bezelModeBuffer,
-                                                                             out numTransientMode,
-                                                                             out TransientModeBuffer,
-                                                                             out numSLSOffset,
-                                                                             out SLSOffsetBuffer,
-                                                                             ADLImport.ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_CURRENTANGLE);
-                            if (ADLRet == ADL_STATUS.ADL_OK)
-                            {
-                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_SLSMapConfigX2_Get returned information about the SLS Info connected to AMD adapter {adapterIndex}.");
-                            }
-                            else
-                            {
-                                SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_SLSMapConfigX2_Get returned ADL_STATUS {ADLRet} when trying to get the SLS Info from AMD adapter {adapterIndex} in the computer.");
-                                //throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterNum} in the computer");
-                            }
-                        }
-                        else
-                        {
-                            SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: SLS (Eyfinity) is NOT enabled on AMD adapter {adapterIndex} (can't be as there is only one display!).");
-                            // Set the SLS Map Index if there is NOT Eyefinity
-                            savedAdapterConfig.IsSLSEnabled = false;
-                            savedAdapterConfig.SLSMapIndex = -1;
-
-                        }
+                        // Add the myDisplayMapConfig to the displayConfig
+                        //myDisplayConfig.DisplayMapConfigs.Add(myDisplayMapConfig);
                     }*/
 
                     // We want to get the AMD HDR information and store it for later
                     //ADL2_Display_HDRState_Get(ADL_CONTEXT_HANDLE context, int iAdapterIndex, ADLDisplayID displayID, int * iSupport, int * iEnable)
+
+
                     // Save the AMD Adapter Config
                     if (!myDisplayConfig.AdapterConfigs.Contains(savedAdapterConfig))
                     {
@@ -1035,110 +1134,63 @@ namespace DisplayMagicianShared.AMD
 
             if (_initialised)
             {
-
+                // Set the initial state of the ADL_STATUS
                 ADL_STATUS ADLRet = 0;
+
                 // We want to get the current config
-                //AMD_DISPLAY_CONFIG currentDisplayConfig = GetAMDDisplayConfig(QDC.QDC_ALL_PATHS);
+                AMD_DISPLAY_CONFIG currentDisplayConfig = GetAMDDisplayConfig();
 
-                // We want to check the AMD Eyefinity (SLS) config is valid
-                SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Testing whether the display configuration is valid");
-                //ADL2_Display_SLSMapConfig_Valid(ADL_CONTEXT_HANDLE context, int iAdapterIndex, ADLSLSMap slsMap, int iNumDisplayTarget, ADLSLSTarget * lpSLSTarget, int * lpSupportedSLSLayoutImageMode, int * lpReasonForNotSupportSLS, int iOption)
-                foreach(var adapter in displayConfig.AdapterConfigs)
+                // set the display locations
+                if (displayConfig.SlsConfig.IsSlsEnabled)
                 {
-                    // set the display locations
-                    if (adapter.IsSLSEnabled)
-                    {
-                        // Turn the SLS based display map on
-                        ADLRet = ADLImport.ADL2_Display_SLSMapConfig_SetState(_adlContextHandle, adapter.AdapterIndex, adapter.SLSMapIndex, ADLImport.ADL_TRUE);
-                        if (ADLRet == ADL_STATUS.ADL_OK)
-                        {
-                            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: ADL2_Display_SLSMapConfig_SetState successfully set the SLSMAP with index {adapter.SLSMapIndex} to TRUE for adapter {adapter.AdapterIndex}.");
-                        }
-                        else
-                        {
-                            SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {adapter.SLSMapIndex} to TRUE for adapter {adapter.AdapterIndex}.");
-                            throw new AMDLibraryException($"ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {adapter.SLSMapIndex} to TRUE for adapter {adapter.AdapterIndex}");
-                        }
-/*
+                    // We need to change to an Eyefinity (SLS) profile, so we need to apply the new SLS Topologies
+                    SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: SLS is enabled in the new display configuration, so we need to set it");
 
-                        foreach (var slsMap in adapter.SLSMap)
-                        {
-                            // Check the SLS config is valid
-                            int numDisplayTargets = 0;
-                            int supportedSLSLayoutImageMode = 0;
-                            int reasonForNotSupportingSLS = 0;
-                            ADL_DISPLAY_TARGET[] displayTargetArray = { new ADL_DISPLAY_TARGET() };
-                            IntPtr displayTargetBuffer = IntPtr.Zero;
-                            int option = ADLImport.ADL_DISPLAY_SLSGRID_CAP_OPTION_RELATIVETO_LANDSCAPE;
-                            ADLRet = ADLImport.ADL2_Display_SLSMapConfig_Valid(_adlContextHandle, adapter.AdapterIndex, slsMap, slsMap.NumSLSTarget, displayTargetArray, out supportedSLSLayoutImageMode, out reasonForNotSupportingSLS, option);
+                    foreach (AMD_SLSMAP_CONFIG slsMapConfig in displayConfig.SlsConfig.SLSMapConfigs)
+                    {
+
+/*                        {
+                            // Turn the SLS based display map on
+                            ADLRet = ADLImport.ADL2_Display_SLSMapConfig_SetState(_adlContextHandle, adapter.AdapterIndex, adapter.SLSMapIndex, ADLImport.ADL_TRUE);
                             if (ADLRet == ADL_STATUS.ADL_OK)
                             {
-                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_SLSMapConfig_Valid confirmed the SLS configuration is valid for AMD adapter {adapter.AdapterIndex}.");
+                                SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: ADL2_Display_SLSMapConfig_SetState successfully set the SLSMAP with index {adapter.SLSMapIndex} to TRUE for adapter {adapter.AdapterIndex}.");
                             }
                             else
                             {
-                                SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_SLSMapConfig_Valid returned ADL_STATUS {ADLRet} when trying to validate the SLS configuration for AMD adapter {adapter.AdapterIndex} in the computer.");
-                                throw new AMDLibraryException($"ADL2_Display_SLSMapConfig_Valid returned ADL_STATUS {ADLRet}when trying to validate the SLS configuration for AMD adapter {adapter.AdapterIndex} in the computer");
+                                SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {adapter.SLSMapIndex} to TRUE for adapter {adapter.AdapterIndex}.");
+                                throw new AMDLibraryException($"ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {adapter.SLSMapIndex} to TRUE for adapter {adapter.AdapterIndex}");
                             }
 
-                            if (numDisplayTargets > 0)
+                        }
+                        else
+                        {
+                            // Turn the SLS based display map off
+                            ADLRet = ADLImport.ADL2_Display_SLSMapConfig_SetState(_adlContextHandle, adapter.AdapterIndex, adapter.SLSMapIndex, ADLImport.ADL_FALSE);
+                            if (ADLRet == ADL_STATUS.ADL_OK)
                             {
-                                IntPtr currentDisplayTargetBuffer = displayTargetBuffer;
-                                displayTargetArray = new ADL_DISPLAY_TARGET[numDisplayTargets];
-                                for (int i = 0; i < numDisplayTargets; i++)
-                                {
-                                    // build a structure in the array slot
-                                    displayTargetArray[i] = new ADL_DISPLAY_TARGET();
-                                    // fill the array slot structure with the data from the buffer
-                                    displayTargetArray[i] = (ADL_DISPLAY_TARGET)Marshal.PtrToStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
-                                    // destroy the bit of memory we no longer need
-                                    Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
-                                    // advance the buffer forwards to the next object
-                                    currentDisplayTargetBuffer = (IntPtr)((long)currentDisplayTargetBuffer + Marshal.SizeOf(displayTargetArray[i]));
-                                }
-                                // Free the memory used by the buffer                        
-                                Marshal.FreeCoTaskMem(displayTargetBuffer);
+                                SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: ADL2_Display_SLSMapConfig_SetState successfully set the SLSMAP with index {adapter.SLSMapIndex} to FALSE for adapter {adapter.AdapterIndex}.");
                             }
-                        }*/
-                        
-                    }
-                    /*else
-                    {
-                        *//*// Do the non-SLS based display setup
-                        AMD_ADAPTER_CONFIG amdAdapterConfig = adapter;
-                        //int numPossibleMapResult = 0;
-                        //IntPtr possibleMapResultBuffer = IntPtr.Zero;
-                        ADLRet = ADLImport.ADL2_Display_DisplayMapConfig_Set(_adlContextHandle, amdAdapterConfig.AdapterIndex, amdAdapterConfig.DisplayMaps.Length, amdAdapterConfig.DisplayMaps, amdAdapterConfig.DisplayTargets.Length, amdAdapterConfig.DisplayTargets);
-                        if (ADLRet == ADL_STATUS.ADL_OK)
-                        {
-                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DisplayMapConfig_Set returned information about all displaytargets connected to AMD adapter {amdAdapterConfig.AdapterIndex}.");
+                            else
+                            {
+                                SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {adapter.SLSMapIndex} to FALSE for adapter {adapter.AdapterIndex}.");
+                                throw new AMDLibraryException($"ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {adapter.SLSMapIndex} to FALSE for adapter {adapter.AdapterIndex}");
+                            }
                         }
-                        else
-                        {
-                            SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {amdAdapterConfig.AdapterIndex} in the computer.");
-                            throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {amdAdapterConfig.AdapterIndex} in the computer");
-                        }*//*
-                    }*/
-                    else
-                    {
-                        // Turn the SLS based display map off
-                        ADLRet = ADLImport.ADL2_Display_SLSMapConfig_SetState(_adlContextHandle, adapter.AdapterIndex, adapter.SLSMapIndex, ADLImport.ADL_FALSE);
-                        if (ADLRet == ADL_STATUS.ADL_OK)
-                        {
-                            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: ADL2_Display_SLSMapConfig_SetState successfully set the SLSMAP with index {adapter.SLSMapIndex} to FALSE for adapter {adapter.AdapterIndex}.");
-                        }
-                        else
-                        {
-                            SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {adapter.SLSMapIndex} to FALSE for adapter {adapter.AdapterIndex}.");
-                            throw new AMDLibraryException($"ADL2_Display_SLSMapConfig_SetState returned ADL_STATUS {ADLRet} when trying to set the SLSMAP with index {adapter.SLSMapIndex} to FALSE for adapter {adapter.AdapterIndex}");
-                        }
+*/
+
                     }
 
-                }                
+                }
+                else
+                {
+                    // We need to change to a plain, non-Eyefinity (SLS) profile, so we need to disable any SLS Topologies if they are being used
+                    SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: SLS is enabled in the new display configuration, so we need to set it");
+
+
+                }
 
                 // We want to set the AMD HDR settings
-
-                // We want to apply the Windows CCD layout info and HDR
             }
             else
             {
@@ -1146,92 +1198,6 @@ namespace DisplayMagicianShared.AMD
                 throw new AMDLibraryException($"Tried to run SetActiveConfig but the AMD ADL library isn't initialised!");
             }
 
-
-/*
-            // Get the all possible windows display configs
-            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Generating a list of all the current display configs");
-            WINDOWS_DISPLAY_CONFIG allWindowsDisplayConfig = GetWindowsDisplayConfig(QDC.QDC_ALL_PATHS);
-
-            // Now we go through the Paths to update the LUIDs as per Soroush's suggestion
-            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Patching the adapter IDs to make the saved config valid");
-            PatchAdapterIDs(ref displayConfig, allWindowsDisplayConfig.displayAdapters);
-
-            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Testing whether the display configuration is valid");
-            // Test whether a specified display configuration is supported on the computer                    
-            uint myPathsCount = (uint)displayConfig.displayConfigPaths.Length;
-            uint myModesCount = (uint)displayConfig.displayConfigModes.Length;
-            WIN32STATUS err = CCDImport.SetDisplayConfig(myPathsCount, displayConfig.displayConfigPaths, myModesCount, displayConfig.displayConfigModes, SDC.DISPLAYMAGICIAN_VALIDATE);
-            if (err == WIN32STATUS.ERROR_SUCCESS)
-            {
-                SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Successfully validated that the display configuration supplied would work!");
-            }
-            else
-            {
-                SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - SetDisplayConfig couldn't validate the display configuration supplied. This display configuration wouldn't work.");
-                return false;
-            }
-
-            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Yay! The display configuration is valid! Attempting to set the Display Config now");
-            // Now set the specified display configuration for this computer                    
-            err = CCDImport.SetDisplayConfig(myPathsCount, displayConfig.displayConfigPaths, myModesCount, displayConfig.displayConfigModes, SDC.DISPLAYMAGICIAN_SET);
-            if (err == WIN32STATUS.ERROR_SUCCESS)
-            {
-                SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Successfully set the display configuration to the settings supplied!");
-            }
-            else
-            {
-                SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - SetDisplayConfig couldn't set the display configuration using the settings supplied. Something is wrong.");
-                throw new AMDLibraryException($"SetDisplayConfig couldn't set the display configuration using the settings supplied. Something is wrong.");
-            }
-
-            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: SUCCESS! The display configuration has been successfully applied");
-
-            foreach (ADVANCED_HDR_INFO_PER_PATH myHDRstate in displayConfig.displayHDRStates)
-            {
-                SharedLogger.logger.Trace($"Trying to get information whether HDR color is in use now on Display {myHDRstate.Id}.");
-                // Get advanced HDR info
-                var colorInfo = new DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO();
-                colorInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO;
-                colorInfo.Header.Size = (uint)Marshal.SizeOf<DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO>();
-                colorInfo.Header.AdapterId = myHDRstate.AdapterId;
-                colorInfo.Header.Id = myHDRstate.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref colorInfo);
-                if (err == WIN32STATUS.ERROR_SUCCESS)
-                {
-                    SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Advanced Color Info gathered from Display {myHDRstate.Id}");
-
-                    if (myHDRstate.AdvancedColorInfo.AdvancedColorSupported && colorInfo.AdvancedColorEnabled != myHDRstate.AdvancedColorInfo.AdvancedColorEnabled)
-                    {
-                        SharedLogger.logger.Trace($"HDR is available for use on Display {myHDRstate.Id}, and we want it set to {myHDRstate.AdvancedColorInfo.AdvancedColorEnabled} but is currently {colorInfo.AdvancedColorEnabled}.");
-
-                        var setColorState = new DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE();
-                        setColorState.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE;
-                        setColorState.Header.Size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE>();
-                        setColorState.Header.AdapterId = myHDRstate.AdapterId;
-                        setColorState.Header.Id = myHDRstate.Id;
-                        setColorState.EnableAdvancedColor = myHDRstate.AdvancedColorInfo.AdvancedColorEnabled;
-                        err = CCDImport.DisplayConfigSetDeviceInfo(ref setColorState);
-                        if (err == WIN32STATUS.ERROR_SUCCESS)
-                        {
-                            SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: SUCCESS! Set HDR successfully to {myHDRstate.AdvancedColorInfo.AdvancedColorEnabled} on Display {myHDRstate.Id}");
-                        }
-                        else
-                        {
-                            SharedLogger.logger.Error($"AMDLibrary/SetActiveConfig: ERROR - DisplayConfigGetDeviceInfo returned WIN32STATUS {err} when trying to set the HDR settings for display #{myHDRstate.Id}");
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: Skipping setting HDR on Display {myHDRstate.Id} as it does not support HDR");
-                    }
-                }
-                else
-                {
-                    SharedLogger.logger.Warn($"AMDLibrary/GetWindowsDisplayConfig: WARNING - DisplayConfigGetDeviceInfo returned WIN32STATUS {err} when trying to find out if HDR is supported for display #{myHDRstate.Id}");
-                }
-
-            }*/
             return true;
         }
 
@@ -1683,6 +1649,7 @@ namespace DisplayMagicianShared.AMD
 
             return displayIdentifiers;
         }
+
 
         /*public static bool ListOfArraysEqual(List<NV_RECT[]> a1, List<NV_RECT[]> a2)
         {

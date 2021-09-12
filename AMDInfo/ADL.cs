@@ -91,6 +91,7 @@ namespace DisplayMagicianShared.AMD
         USBTypeC = 18
     }
 
+    [Flags]
     public enum ADL_DISPLAY_MODE_FLAG
     {
         ColourFormat565 = 1,
@@ -760,9 +761,9 @@ namespace DisplayMagicianShared.AMD
         /// <summary> Display Type : The Display type. CRT, TV,CV,DFP are some of display types,</summary>
         public int DisplayType;
         /// <summary> Display output type </summary>
-        public int DisplayOutputType;
-        /// <summary> Connector type</summary>
-        public int DisplayConnector;
+        public ADL_DISPLAY_CONNECTION_TYPE DisplayOutputType;
+        /// <summary> Connector type</summary        
+        public ADL_CONNECTION_TYPE DisplayConnector;
         ///<summary> Indicating the display info bits' mask.<summary>
         public int DisplayInfoMask;
         ///<summary> Indicating the display info value.<summary>
@@ -771,24 +772,24 @@ namespace DisplayMagicianShared.AMD
         // Display Type - no idea what the settings are
 
         // Display Output Type settings
-        public bool DisplayOutputTypeIsUnknown => DisplayOutputType == 0;
-        public bool DisplayOutputTypeIsVGA => DisplayOutputType == 1;
-        public bool DisplayOutputTypeIsDVI_D => DisplayOutputType == 2;
-        public bool DisplayOutputTypeIsDVI_I => DisplayOutputType == 3;
-        public bool DisplayOutputTypeIsATICVDongleNTSC => DisplayOutputType == 4;
-        public bool DisplayOutputTypeIsATICVDongleJPN => DisplayOutputType == 5;
-        public bool DisplayOutputTypeIsATICVDongleNonI2CJPN => DisplayOutputType == 6;
-        public bool DisplayOutputTypeIsATICVDongleNonI2CNTSC => DisplayOutputType == 7;
-        public bool DisplayOutputTypeIsProprietary => DisplayOutputType == 8;
-        public bool DisplayOutputTypeIsHDMITypeA => DisplayOutputType == 10;
-        public bool DisplayOutputTypeIsHDMITypeB => DisplayOutputType == 11;
-        public bool DisplayOutputTypeIsSVideo => DisplayOutputType == 12;
-        public bool DisplayOutputTypeIsComposite => DisplayOutputType == 13;
-        public bool DisplayOutputTypeIsRCA3Component => DisplayOutputType == 14;
-        public bool DisplayOutputTypeIsDisplayPort => DisplayOutputType == 15;
-        public bool DisplayOutputTypeIsEDP => DisplayOutputType == 16;
-        public bool DisplayOutputTypeIsWirelessDisplay => DisplayOutputType == 17;
-        public bool DisplayOutputTypeIsUSBTypeC => DisplayOutputType == 18;
+        public bool DisplayOutputTypeIsUnknown => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.Unknown;
+        public bool DisplayOutputTypeIsVGA => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.VGA;
+        public bool DisplayOutputTypeIsDVI_D => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.DVI_D;
+        public bool DisplayOutputTypeIsDVI_I => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.DVI_I;
+        public bool DisplayOutputTypeIsATICVDongleNTSC => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NTSC_Dongle;
+        public bool DisplayOutputTypeIsATICVDongleJPN => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.ATICV_JPN_Dongle;
+        public bool DisplayOutputTypeIsATICVDongleNonI2CJPN => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NONI2C_JPN_Dongle;
+        public bool DisplayOutputTypeIsATICVDongleNonI2CNTSC => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NONI2C_NTSC_Dongle;
+        public bool DisplayOutputTypeIsProprietary => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.Proprietary;
+        public bool DisplayOutputTypeIsHDMITypeA => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.HDMITypeA;
+        public bool DisplayOutputTypeIsHDMITypeB => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.HTMITypeB;
+        public bool DisplayOutputTypeIsSVideo => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.SVideo;
+        public bool DisplayOutputTypeIsComposite => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.Composite;
+        public bool DisplayOutputTypeIsRCA3Component => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.RCA_3Component;
+        public bool DisplayOutputTypeIsDisplayPort => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.DisplayPort;
+        public bool DisplayOutputTypeIsEDP => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.EDP;
+        public bool DisplayOutputTypeIsWirelessDisplay => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.WirelessDisplay;
+        public bool DisplayOutputTypeIsUSBTypeC => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.USBTypeC;
 
 
         /*#define ADL_DISPLAY_CONTYPE_UNKNOWN                 0
@@ -812,20 +813,20 @@ namespace DisplayMagicianShared.AMD
 
         // Display Connector
 
-        public bool DisplayConnectorIsVGA => DisplayConnector == 0;
-        public bool DisplayConnectorIsDVI => DisplayConnector == 1;
-        public bool DisplayConnectorIsDVI_SL => DisplayConnector == 2;
-        public bool DisplayConnectorIsHDMI => DisplayConnector == 3;
-        public bool DisplayConnectorIsDisplayPort=> DisplayConnector == 4;
-        public bool DisplayConnectorIsActiveDongleDP_DVI_SL => DisplayConnector == 5;
-        public bool DisplayConnectorIsActiveDongleDP_DVI_DL => DisplayConnector == 6;
-        public bool DisplayConnectorIsActiveDongleDP_HDMI => DisplayConnector == 7;
-        public bool DisplayConnectorIsActiveDongleDP_VGA => DisplayConnector == 8;
-        public bool DisplayConnectorIsPassiveDongleDP_HDMI => DisplayConnector == 9;
-        public bool DisplayConnectorIsPassiveDongleDP_DVI => DisplayConnector == 10;
-        public bool DisplayConnectorIsMST => DisplayConnector == 11;
-        public bool DisplayConnectorIsActiveDongle => DisplayConnector == 12;
-        public bool DisplayConnectorIsVirtual => DisplayConnector == 13;       
+        public bool DisplayConnectorIsVGA => DisplayConnector == ADL_CONNECTION_TYPE.VGA;
+        public bool DisplayConnectorIsDVI => DisplayConnector == ADL_CONNECTION_TYPE.DVI;
+        public bool DisplayConnectorIsDVI_SL => DisplayConnector == ADL_CONNECTION_TYPE.DVI_SL;
+        public bool DisplayConnectorIsHDMI => DisplayConnector == ADL_CONNECTION_TYPE.HDMI;
+        public bool DisplayConnectorIsDisplayPort=> DisplayConnector == ADL_CONNECTION_TYPE.DisplayPort;
+        public bool DisplayConnectorIsActiveDongleDP_DVI_SL => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongleDPToDVI_SL;
+        public bool DisplayConnectorIsActiveDongleDP_DVI_DL => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongleDPToDVI_DL;
+        public bool DisplayConnectorIsActiveDongleDP_HDMI => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongleDPToHDMI;
+        public bool DisplayConnectorIsActiveDongleDP_VGA => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongleDPToVGA;
+        public bool DisplayConnectorIsPassiveDongleDP_HDMI => DisplayConnector == ADL_CONNECTION_TYPE.PassiveDongleDPToHDMI;
+        public bool DisplayConnectorIsPassiveDongleDP_DVI => DisplayConnector == ADL_CONNECTION_TYPE.PassiveDongleDPToDVI;
+        public bool DisplayConnectorIsMST => DisplayConnector == ADL_CONNECTION_TYPE.MST;
+        public bool DisplayConnectorIsActiveDongle => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongle;
+        public bool DisplayConnectorIsVirtual => DisplayConnector == ADL_CONNECTION_TYPE.Virtual;       
 
         /*#define ADL_CONNECTION_TYPE_VGA 0
         #define ADL_CONNECTION_TYPE_DVI 1
@@ -1320,15 +1321,15 @@ namespace DisplayMagicianShared.AMD
         public int SLSMapValue;
 
         // SLS Orientation settings
-        /*public bool Orientation000 => (Orientation & 0x1) == 0x1;
+        public bool Orientation000 => (Orientation & 0x1) == 0x1;
         public bool Orientation090 => (Orientation & 0x2) == 0x2;
         public bool Orientation180 => (Orientation & 0x4) == 0x4;
         public bool Orientation270 => (Orientation & 0x8) == 0x8;
 
-        *//*#define ADL_DISPLAY_SLSGRID_ORIENTATION_000        0x00000001
+        /*#define ADL_DISPLAY_SLSGRID_ORIENTATION_000        0x00000001
         #define ADL_DISPLAY_SLSGRID_ORIENTATION_090        0x00000002
         #define ADL_DISPLAY_SLSGRID_ORIENTATION_180        0x00000004
-        #define ADL_DISPLAY_SLSGRID_ORIENTATION_270        0x00000008*//*
+        #define ADL_DISPLAY_SLSGRID_ORIENTATION_270        0x00000008*/
 
         // SLS Map Mask settings
         public bool SLSMapDisplayArrangedSupported => (SLSMapMask & 0x2) == 0x2;
@@ -1352,7 +1353,7 @@ namespace DisplayMagicianShared.AMD
         public bool SLSMapIsSLSBuilderSet => (SLSMapValue & 0x2000) == 0x2000;
         public bool SLSMapIsCloneVTSet => (SLSMapValue & 0x4000) == 0x4000;
 
-*/
+
         /*#define ADL_DISPLAY_SLSMAP_DISPLAYARRANGED        0x0002
         #define ADL_DISPLAY_SLSMAP_CURRENTCONFIG        0x0004
         #define ADL_DISPLAY_SLSMAP_BEZELMODE            0x0010
@@ -1361,7 +1362,8 @@ namespace DisplayMagicianShared.AMD
         #define ADL_DISPLAY_SLSMAP_SLSLAYOUTMODE_EXPAND     0x0400
         #define ADL_DISPLAY_SLSMAP_IS_SLS        0x1000
         #define ADL_DISPLAY_SLSMAP_IS_SLSBUILDER 0x2000
-        #define ADL_DISPLAY_SLSMAP_IS_CLONEVT     0x4000*/
+        #define ADL_DISPLAY_SLSMAP_IS_CLONEVT     0x4000
+        */
 
         public override bool Equals(object obj) => obj is ADL_SLS_MAP other && this.Equals(other);
         public bool Equals(ADL_SLS_MAP other)
@@ -2037,11 +2039,11 @@ namespace DisplayMagicianShared.AMD
         //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_GET) (ADL_CONTEXT_HANDLE, int, int, ADLSLSMap*, int*, ADLSLSTarget**, int*, ADLSLSMode**, int*, ADLBezelTransientMode**, int*, ADLBezelTransientMode**, int*, ADLSLSOffset**, int);
         // This function retrieves an SLS configuration, which includes the, SLS map, SLS targets, SLS standard modes, bezel modes or a transient mode, and offsets.           
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out IntPtr slsMapBuffer, out int NumSLSTarget, out IntPtr SLSTargetArrayBuffer, out int lpNumNativeMode, out IntPtr NativeModeBuffer, out int NumBezelMode, out IntPtr BezelModeBuffer, out int NumTransientMode, out IntPtr TransientModeBuffer, out int NumSLSOffset, out IntPtr SLSOffsetBuffer, int iOption);
+        public static extern ADL_STATUS ADL2_Display_SLSMapConfig_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out ADL_SLS_MAP slsMap, out int NumSLSTarget, out IntPtr SLSTargetArrayBuffer, out int lpNumNativeMode, out IntPtr NativeModeBuffer, out int NumBezelMode, out IntPtr BezelModeBuffer, out int NumTransientMode, out IntPtr TransientModeBuffer, out int NumSLSOffset, out IntPtr SLSOffsetBuffer, int iOption);
 
         // typedef int ADL2_Display_SLSMapConfigX2_Get(ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex, ADLSLSMap* lpSLSMap, int* lpNumSLSTarget, ADLSLSTarget** lppSLSTarget, int* lpNumNativeMode, ADLSLSMode** lppNativeMode, int* lpNumNativeModeOffsets, ADLSLSOffset** lppNativeModeOffsets, int* lpNumBezelMode, ADLBezelTransientMode** lppBezelMode, int* lpNumTransientMode, ADLBezelTransientMode** lppTransientMode, int* lpNumSLSOffset, ADLSLSOffset** lppSLSOffset, int iOption)
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern ADL_STATUS ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, out IntPtr slsMapBuffer, out int NumSLSTarget, out IntPtr SLSTargetBuffer, out int lpNumNativeMode, out IntPtr NativeModeBuffer, out int NumNativeModeOffsets, out IntPtr NativeModeOffsetsBuffer, out int NumBezelMode, out IntPtr BezelModeBuffer, out int NumTransientMode, out IntPtr TransientModeBuffer, out int NumSLSOffset, out IntPtr SLSOffsetBuffer, int option);
+        public static extern ADL_STATUS ADL2_Display_SLSMapConfigX2_Get(IntPtr ADLContextHandle, int adapterIndex, int SLSMapIndex, ref ADL_SLS_MAP slsMap, out int NumSLSTarget, out IntPtr SLSTargetBuffer, out int lpNumNativeMode, out IntPtr NativeModeBuffer, out int NumNativeModeOffsets, out IntPtr NativeModeOffsetsBuffer, out int NumBezelMode, out IntPtr BezelModeBuffer, out int NumTransientMode, out IntPtr TransientModeBuffer, out int NumSLSOffset, out IntPtr SLSOffsetBuffer, int option);
 
         //typedef int (* ADL2_DISPLAY_SLSMAPCONFIG_DELETE) (ADL_CONTEXT_HANDLE context, int iAdapterIndex, int iSLSMapIndex);
         // This function deletes an SLS map from the driver database based on the input SLS map index.
@@ -2106,6 +2108,11 @@ namespace DisplayMagicianShared.AMD
         // This function validate the list of the display configurations for a specified input adapter. This function is applicable to all OS platforms.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_Validate(IntPtr ADLContextHandle, int adapterIndex, int numPossibleMap, ref ADL_POSSIBLE_MAP possibleMaps, out int numPossibleMapResult, out IntPtr possibleMapResult);
+
+        // Function to indicate whether displays are physically connected to an adapter.
+        // This function indicates whether displays are physically connected to a specified adapter.        
+        [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ADL_STATUS ADL2_Display_ConnectedDisplays_Get(IntPtr context, int adapterIndex, out int connections);
 
 
         // ======================================
