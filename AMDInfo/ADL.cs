@@ -7,7 +7,7 @@ namespace DisplayMagicianShared.AMD
 {
     public delegate IntPtr ADL_Main_Memory_Alloc_Delegate(int size);
 
-    public enum ADL_STATUS
+    public enum ADL_STATUS : int
     {
         // Result Codes
         /// <summary> ADL function completed successfully. </summary>                
@@ -50,7 +50,7 @@ namespace DisplayMagicianShared.AMD
         ADL_OK_WARNING = 1,
     }
 
-    public enum ADL_CONNECTION_TYPE
+    public enum ADL_CONNECTION_TYPE : int
     {
         VGA = 0,
         DVI = 1,
@@ -68,7 +68,7 @@ namespace DisplayMagicianShared.AMD
         Virtual = 13
     }
 
-    public enum ADL_DISPLAY_CONNECTION_TYPE
+    public enum ADL_DISPLAY_CONNECTION_TYPE : int
     {
         Unknown = 0,
         VGA = 1,
@@ -92,7 +92,7 @@ namespace DisplayMagicianShared.AMD
     }
 
     [Flags]
-    public enum ADL_DISPLAY_MODE_FLAG
+    public enum ADL_DISPLAY_MODE_FLAG : int
     {
         ColourFormat565 = 1,
         ColourFormat8888 = 2,
@@ -103,11 +103,23 @@ namespace DisplayMagicianShared.AMD
         ExactRefreshRate = 80,
         RoundedRefreshRate = 40
     }
-    public enum ADL_DISPLAY_MODE_INTERLACING
+    public enum ADL_DISPLAY_MODE_INTERLACING : int
     {
         Progressive = 0,
         Interlaced = 2
     }
+
+    public enum ADL_COLORDEPTH : int
+    {
+        ColorDepth_Unknown = 0,
+        ColorDepth_666 = 1,
+        ColorDepth_888 = 2,
+        ColorDepth_101010 = 3,
+        ColorDepth_121212 = 4,
+        ColorDepth_141414 = 5,
+        ColorDepth_161616 = 6,
+    }
+
 
     /// <summary> ADLAdapterInfo Array</summary>
     [StructLayout(LayoutKind.Sequential)]
@@ -761,9 +773,9 @@ namespace DisplayMagicianShared.AMD
         /// <summary> Display Type : The Display type. CRT, TV,CV,DFP are some of display types,</summary>
         public int DisplayType;
         /// <summary> Display output type </summary>
-        public ADL_DISPLAY_CONNECTION_TYPE DisplayOutputType;
+        public ADL_CONNECTION_TYPE DisplayOutputType;
         /// <summary> Connector type</summary        
-        public ADL_CONNECTION_TYPE DisplayConnector;
+        public ADL_DISPLAY_CONNECTION_TYPE DisplayConnector;
         ///<summary> Indicating the display info bits' mask.<summary>
         public int DisplayInfoMask;
         ///<summary> Indicating the display info value.<summary>
@@ -771,25 +783,25 @@ namespace DisplayMagicianShared.AMD
 
         // Display Type - no idea what the settings are
 
-        // Display Output Type settings
-        public bool DisplayOutputTypeIsUnknown => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.Unknown;
-        public bool DisplayOutputTypeIsVGA => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.VGA;
-        public bool DisplayOutputTypeIsDVI_D => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.DVI_D;
-        public bool DisplayOutputTypeIsDVI_I => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.DVI_I;
-        public bool DisplayOutputTypeIsATICVDongleNTSC => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NTSC_Dongle;
-        public bool DisplayOutputTypeIsATICVDongleJPN => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.ATICV_JPN_Dongle;
-        public bool DisplayOutputTypeIsATICVDongleNonI2CJPN => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NONI2C_JPN_Dongle;
-        public bool DisplayOutputTypeIsATICVDongleNonI2CNTSC => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NONI2C_NTSC_Dongle;
-        public bool DisplayOutputTypeIsProprietary => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.Proprietary;
-        public bool DisplayOutputTypeIsHDMITypeA => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.HDMITypeA;
-        public bool DisplayOutputTypeIsHDMITypeB => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.HTMITypeB;
-        public bool DisplayOutputTypeIsSVideo => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.SVideo;
-        public bool DisplayOutputTypeIsComposite => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.Composite;
-        public bool DisplayOutputTypeIsRCA3Component => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.RCA_3Component;
-        public bool DisplayOutputTypeIsDisplayPort => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.DisplayPort;
-        public bool DisplayOutputTypeIsEDP => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.EDP;
-        public bool DisplayOutputTypeIsWirelessDisplay => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.WirelessDisplay;
-        public bool DisplayOutputTypeIsUSBTypeC => DisplayOutputType == ADL_DISPLAY_CONNECTION_TYPE.USBTypeC;
+        // Display Output Type settings       
+        public bool DisplayConnectorIsUnknown => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.Unknown;
+        public bool DisplayConnectorIsVGA => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.VGA;
+        public bool DisplayConnectorIsDVI_D => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.DVI_D;
+        public bool DisplayConnectorIsDVI_I => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.DVI_I;
+        public bool DisplayConnectorIsATICVDongleNTSC => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NTSC_Dongle;
+        public bool DisplayConnectorIsATICVDongleJPN => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.ATICV_JPN_Dongle;
+        public bool DisplayConnectorIsATICVDongleNonI2CJPN => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NONI2C_JPN_Dongle;
+        public bool DisplayConnectorIsATICVDongleNonI2CNTSC => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.ATICV_NONI2C_NTSC_Dongle;
+        public bool DisplayConnectorIsProprietary => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.Proprietary;
+        public bool DisplayConnectorIsHDMITypeA => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.HDMITypeA;
+        public bool DisplayConnectorIsHDMITypeB => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.HTMITypeB;
+        public bool DisplayConnectorIsSVideo => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.SVideo;
+        public bool DisplayConnectorIsComposite => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.Composite;
+        public bool DisplayConnectorIsRCA3Component => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.RCA_3Component;
+        public bool DisplayConnectorIsDisplayPort => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.DisplayPort;
+        public bool DisplayConnectorIsEDP => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.EDP;
+        public bool DisplayConnectorIsWirelessDisplay => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.WirelessDisplay;
+        public bool DisplayConnectorIsUSBTypeC => DisplayConnector == ADL_DISPLAY_CONNECTION_TYPE.USBTypeC;
 
 
         /*#define ADL_DISPLAY_CONTYPE_UNKNOWN                 0
@@ -813,20 +825,20 @@ namespace DisplayMagicianShared.AMD
 
         // Display Connector
 
-        public bool DisplayConnectorIsVGA => DisplayConnector == ADL_CONNECTION_TYPE.VGA;
-        public bool DisplayConnectorIsDVI => DisplayConnector == ADL_CONNECTION_TYPE.DVI;
-        public bool DisplayConnectorIsDVI_SL => DisplayConnector == ADL_CONNECTION_TYPE.DVI_SL;
-        public bool DisplayConnectorIsHDMI => DisplayConnector == ADL_CONNECTION_TYPE.HDMI;
-        public bool DisplayConnectorIsDisplayPort=> DisplayConnector == ADL_CONNECTION_TYPE.DisplayPort;
-        public bool DisplayConnectorIsActiveDongleDP_DVI_SL => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongleDPToDVI_SL;
-        public bool DisplayConnectorIsActiveDongleDP_DVI_DL => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongleDPToDVI_DL;
-        public bool DisplayConnectorIsActiveDongleDP_HDMI => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongleDPToHDMI;
-        public bool DisplayConnectorIsActiveDongleDP_VGA => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongleDPToVGA;
-        public bool DisplayConnectorIsPassiveDongleDP_HDMI => DisplayConnector == ADL_CONNECTION_TYPE.PassiveDongleDPToHDMI;
-        public bool DisplayConnectorIsPassiveDongleDP_DVI => DisplayConnector == ADL_CONNECTION_TYPE.PassiveDongleDPToDVI;
-        public bool DisplayConnectorIsMST => DisplayConnector == ADL_CONNECTION_TYPE.MST;
-        public bool DisplayConnectorIsActiveDongle => DisplayConnector == ADL_CONNECTION_TYPE.ActiveDongle;
-        public bool DisplayConnectorIsVirtual => DisplayConnector == ADL_CONNECTION_TYPE.Virtual;       
+        public bool DisplayOutputTypeIsVGA => DisplayOutputType == ADL_CONNECTION_TYPE.VGA;
+        public bool DisplayOutputTypeIsDVI => DisplayOutputType == ADL_CONNECTION_TYPE.DVI;
+        public bool DisplayOutputTypeIsDVI_SL => DisplayOutputType == ADL_CONNECTION_TYPE.DVI_SL;
+        public bool DisplayOutputTypeIsHDMI => DisplayOutputType == ADL_CONNECTION_TYPE.HDMI;
+        public bool DisplayOutputTypeIsDisplayPort => DisplayOutputType == ADL_CONNECTION_TYPE.DisplayPort;
+        public bool DisplayOutputTypeIsActiveDongleDP_DVI_SL => DisplayOutputType == ADL_CONNECTION_TYPE.ActiveDongleDPToDVI_SL;
+        public bool DisplayOutputTypeIsActiveDongleDP_DVI_DL => DisplayOutputType == ADL_CONNECTION_TYPE.ActiveDongleDPToDVI_DL;
+        public bool DisplayOutputTypeIsActiveDongleDP_HDMI => DisplayOutputType == ADL_CONNECTION_TYPE.ActiveDongleDPToHDMI;
+        public bool DisplayOutputTypeIsActiveDongleDP_VGA => DisplayOutputType == ADL_CONNECTION_TYPE.ActiveDongleDPToVGA;
+        public bool DisplayOutputTypeIsPassiveDongleDP_HDMI => DisplayOutputType == ADL_CONNECTION_TYPE.PassiveDongleDPToHDMI;
+        public bool DisplayOutputTypeIsPassiveDongleDP_DVI => DisplayOutputType == ADL_CONNECTION_TYPE.PassiveDongleDPToDVI;
+        public bool DisplayOutputTypeIsMST => DisplayOutputType == ADL_CONNECTION_TYPE.MST;
+        public bool DisplayOutputTypeIsActiveDongle => DisplayOutputType == ADL_CONNECTION_TYPE.ActiveDongle;
+        public bool DisplayOutputTypeIsVirtual => DisplayOutputType == ADL_CONNECTION_TYPE.Virtual;       
 
         /*#define ADL_CONNECTION_TYPE_VGA 0
         #define ADL_CONNECTION_TYPE_DVI 1
@@ -2003,7 +2015,11 @@ namespace DisplayMagicianShared.AMD
 
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_Display_HDRState_Get(IntPtr ADLContextHandle, int adapterIndex, ADL_DISPLAY_ID displayID, out int support, out int enable);
-                               
+
+
+        [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ADL_STATUS ADL2_Display_ColorDepth_Get(IntPtr ADLContextHandle, int adapterIndex, ADL_DISPLAY_ID displayID, out ADL_COLORDEPTH colourDepth);
+
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_Display_DisplayMapConfig_PossibleAddAndRemove(IntPtr ADLContextHandle, int adapterIndex, int numDisplayMap, in ADL_DISPLAY_MAP displayMap, int numDisplayTarget, in ADL_DISPLAY_TARGET displayTarget, out int numPossibleAddTarget, out IntPtr possibleAddTarget, out int numPossibleRemoveTarget, out IntPtr possibleRemoveTarget);
 

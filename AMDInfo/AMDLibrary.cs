@@ -91,19 +91,19 @@ namespace DisplayMagicianShared.AMD
     [StructLayout(LayoutKind.Sequential)]
     public struct AMD_HDR_CONFIG : IEquatable<AMD_HDR_CONFIG>
     {
-        public int HdrColorDepth;
+        //public ADL_COLORDEPTH HdrColorDepth;
         public bool HDRSupported;
         public bool HDREnabled;
 
         public override bool Equals(object obj) => obj is AMD_HDR_CONFIG other && this.Equals(other);
         public bool Equals(AMD_HDR_CONFIG other)
-        => HdrColorDepth == other.HdrColorDepth &&
+        => //HdrColorDepth == other.HdrColorDepth &&
            HDRSupported == other.HDRSupported &&
            HDREnabled == other.HDREnabled;
 
         public override int GetHashCode()
         {
-            return (HdrColorDepth, HDRSupported, HDREnabled).GetHashCode();
+            return (HDRSupported, HDREnabled).GetHashCode();
         }
         public static bool operator ==(AMD_HDR_CONFIG lhs, AMD_HDR_CONFIG rhs) => lhs.Equals(rhs);
 
@@ -287,6 +287,7 @@ namespace DisplayMagicianShared.AMD
         {
             AMD_DISPLAY_CONFIG myDisplayConfig = new AMD_DISPLAY_CONFIG();
             myDisplayConfig.AdapterConfigs = new List<AMD_ADAPTER_CONFIG>();
+            myDisplayConfig.HdrConfig = new Dictionary<int, AMD_HDR_CONFIG>();
 
             if (_initialised)
             {
@@ -763,20 +764,17 @@ namespace DisplayMagicianShared.AMD
                         {
                             if (supported > 0 && enabled > 0)
                             {
-                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {} on adapter {adapterIndex} supports HDR and HDR is enabled.");
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {displayTarget.DisplayID.DisplayLogicalIndex} on adapter {adapterIndex} supports HDR and HDR is enabled.");
                             }
                             else if (supported > 0 && enabled == 0)
                             {
-                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {} on adapter {adapterIndex} supports HDR and HDR is NOT enabled.");
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {displayTarget.DisplayID.DisplayLogicalIndex} on adapter {adapterIndex} supports HDR and HDR is NOT enabled.");
                             }
                             else 
                             {
-                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {} on adapter {adapterIndex} does NOT support HDR.");
-                            }
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that diisplay {displayTarget.DisplayID.DisplayLogicalIndex} on adapter {adapterIndex} does NOT support HDR.");
+                            }                            
 
-                            AMD_HDR_CONFIG
-
-                            myDisplayConfig.HdrConfig.HdrCapabilities.Add()
 
                         }
                         else
@@ -785,18 +783,31 @@ namespace DisplayMagicianShared.AMD
                             throw new AMDLibraryException($"ADL2_Display_HDRState_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer");
                         }
 
-                    }
+                        /*ADL_COLORDEPTH colourDepth = ADL_COLORDEPTH.ColorDepth_Unknown;
+                        ADLRet = ADLImport.ADL2_Display_ColorDepth_Get(_adlContextHandle, adapterIndex, displayTarget.DisplayID, out colourDepth);
+                        if (ADLRet == ADL_STATUS.ADL_OK)
+                        {
+                            if (supported > 0 && enabled > 0)
+                            {
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that display {displayTarget.DisplayID.DisplayLogicalIndex} on adapter {adapterIndex} supports HDR and HDR is enabled.");
+                            }
+                            else if (supported > 0 && enabled == 0)
+                            {
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that display {displayTarget.DisplayID.DisplayLogicalIndex} on adapter {adapterIndex} supports HDR and HDR is NOT enabled.");
+                            }
+                            else
+                            {
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that display {displayTarget.DisplayID.DisplayLogicalIndex} on adapter {adapterIndex} does NOT support HDR.");
+                            }
+                        }*/
 
+                        AMD_HDR_CONFIG hdrConfig = new AMD_HDR_CONFIG();
+                        hdrConfig.HDREnabled = enabled > 0 ? true : false;
+                        hdrConfig.HDRSupported = supported > 0 ? true : false;
+                        //hdrConfig.HdrColorDepth = colourDepth;
 
-                    ADLRet = ADLImport.ADL2_Display_HDRState_Get(_adlContextHandle, adapterIndex, , out supported, out enabled);
-                    if (ADLRet == ADL_STATUS.ADL_OK)
-                    {
-                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DisplayMapConfig_Get returned information about all displaytargets connected to AMD adapter {adapterIndex}.");
-                    }
-                    else
-                    {
-                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
-                        throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer");
+                        // Now add this to the HDR config list.
+                        myDisplayConfig.HdrConfig.Add(displayTarget.DisplayID.DisplayLogicalIndex, hdrConfig);
                     }
 
 
@@ -1463,186 +1474,354 @@ namespace DisplayMagicianShared.AMD
         public List<string> GetCurrentDisplayIdentifiers()
         {
             SharedLogger.logger.Error($"AMDLibrary/GetCurrentDisplayIdentifiers: Getting the current display identifiers for the displays in use now");
-            return GetSomeDisplayIdentifiers(QDC.QDC_ONLY_ACTIVE_PATHS);
+            bool allDisplays = false;
+            return GetSomeDisplayIdentifiers(allDisplays);
         }
 
         public List<string> GetAllConnectedDisplayIdentifiers()
         {
             SharedLogger.logger.Error($"AMDLibrary/GetAllConnectedDisplayIdentifiers: Getting all the display identifiers that can possibly be used");
-            return GetSomeDisplayIdentifiers(QDC.QDC_ALL_PATHS);
+            bool allDisplays = true;
+            return GetSomeDisplayIdentifiers(allDisplays);            
         }
 
-        private List<string> GetSomeDisplayIdentifiers(QDC selector = QDC.QDC_ONLY_ACTIVE_PATHS)
+        private List<string> GetSomeDisplayIdentifiers(bool allDisplays = false)
         {
-            SharedLogger.logger.Debug($"AMDLibrary/GetCurrentDisplayIdentifiers: Generating the unique Display Identifiers for the currently active configuration");
+            SharedLogger.logger.Debug($"AMDLibrary/GetSomeDisplayIdentifiers: Generating unique Display Identifiers");
 
             List<string> displayIdentifiers = new List<string>();
 
-            SharedLogger.logger.Trace($"AMDLibrary/GetCurrentDisplayIdentifiers: Testing whether the display configuration is valid (allowing tweaks).");
-            // Get the size of the largest Active Paths and Modes arrays
-            int pathCount = 0;
-            int modeCount = 0;
-            WIN32STATUS err = CCDImport.GetDisplayConfigBufferSizes(QDC.QDC_ONLY_ACTIVE_PATHS, out pathCount, out modeCount);
-            if (err != WIN32STATUS.ERROR_SUCCESS)
+            if (_initialised)
             {
-                SharedLogger.logger.Error($"AMDLibrary/PrintActiveConfig: ERROR - GetDisplayConfigBufferSizes returned WIN32STATUS {err} when trying to get the maximum path and mode sizes");
-                throw new AMDLibraryException($"GetDisplayConfigBufferSizes returned WIN32STATUS {err} when trying to get the maximum path and mode sizes");
-            }
-
-            SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Getting the current Display Config path and mode arrays");
-            var paths = new DISPLAYCONFIG_PATH_INFO[pathCount];
-            var modes = new DISPLAYCONFIG_MODE_INFO[modeCount];
-            err = CCDImport.QueryDisplayConfig(QDC.QDC_ONLY_ACTIVE_PATHS, ref pathCount, paths, ref modeCount, modes, IntPtr.Zero);
-            if (err == WIN32STATUS.ERROR_INSUFFICIENT_BUFFER)
-            {
-                SharedLogger.logger.Warn($"AMDLibrary/GetSomeDisplayIdentifiers: The displays were modified between GetDisplayConfigBufferSizes and QueryDisplayConfig so we need to get the buffer sizes again.");
-                SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Getting the size of the largest Active Paths and Modes arrays");
-                // Screen changed in between GetDisplayConfigBufferSizes and QueryDisplayConfig, so we need to get buffer sizes again
-                // as per https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-querydisplayconfig 
-                err = CCDImport.GetDisplayConfigBufferSizes(QDC.QDC_ONLY_ACTIVE_PATHS, out pathCount, out modeCount);
-                if (err != WIN32STATUS.ERROR_SUCCESS)
+                // Get the number of AMD adapters that the OS knows about
+                int numAdapters = 0;
+                ADL_STATUS ADLRet = ADLImport.ADL2_Adapter_NumberOfAdapters_Get(_adlContextHandle, out numAdapters);
+                if (ADLRet == ADL_STATUS.ADL_OK)
                 {
-                    SharedLogger.logger.Error($"AMDLibrary/GetSomeDisplayIdentifiers: ERROR - GetDisplayConfigBufferSizes returned WIN32STATUS {err} when trying to get the maximum path and mode sizes again");
-                    throw new AMDLibraryException($"GetDisplayConfigBufferSizes returned WIN32STATUS {err} when trying to get the maximum path and mode sizes again");
-                }
-                SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Getting the current Display Config path and mode arrays");
-                paths = new DISPLAYCONFIG_PATH_INFO[pathCount];
-                modes = new DISPLAYCONFIG_MODE_INFO[modeCount];
-                err = CCDImport.QueryDisplayConfig(QDC.QDC_ONLY_ACTIVE_PATHS, ref pathCount, paths, ref modeCount, modes, IntPtr.Zero);
-                if (err == WIN32STATUS.ERROR_INSUFFICIENT_BUFFER)
-                {
-                    SharedLogger.logger.Error($"AMDLibrary/GetSomeDisplayIdentifiers: ERROR - The displays were still modified between GetDisplayConfigBufferSizes and QueryDisplayConfig, even though we tried twice. Something is wrong.");
-                    throw new AMDLibraryException($"The displays were still modified between GetDisplayConfigBufferSizes and QueryDisplayConfig, even though we tried twice. Something is wrong.");
-                }
-                else if (err != WIN32STATUS.ERROR_SUCCESS)
-                {
-                    SharedLogger.logger.Error($"AMDLibrary/GetSomeDisplayIdentifiers: ERROR - QueryDisplayConfig returned WIN32STATUS {err} when trying to query all available displays again");
-                    throw new AMDLibraryException($"QueryDisplayConfig returned WIN32STATUS {err} when trying to query all available displays again.");
-                }
-            }
-            else if (err != WIN32STATUS.ERROR_SUCCESS)
-            {
-                SharedLogger.logger.Error($"AMDLibrary/GetSomeDisplayIdentifiers: ERROR - QueryDisplayConfig returned WIN32STATUS {err} when trying to query all available displays");
-                throw new AMDLibraryException($"QueryDisplayConfig returned WIN32STATUS {err} when trying to query all available displays.");
-            }
-
-            foreach (var path in paths)
-            {
-                if (path.TargetInfo.TargetAvailable == false)
-                {
-                    // We want to skip this one cause it's not valid
-                    SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Skipping path due to TargetAvailable not existing in display #{path.TargetInfo.Id}");
-                    continue;
-                }
-
-                // get display source name
-                var sourceInfo = new DISPLAYCONFIG_SOURCE_DEVICE_NAME();
-                sourceInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
-                sourceInfo.Header.Size = (uint)Marshal.SizeOf<DISPLAYCONFIG_SOURCE_DEVICE_NAME>();
-                sourceInfo.Header.AdapterId = path.SourceInfo.AdapterId;
-                sourceInfo.Header.Id = path.SourceInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref sourceInfo);
-                if (err == WIN32STATUS.ERROR_SUCCESS)
-                {
-                    SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Successfully got the source info from {path.SourceInfo.Id}.");
+                    SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: ADL2_Adapter_NumberOfAdapters_Get returned the number of AMD Adapters the OS knows about ({numAdapters}).");
                 }
                 else
                 {
-                    SharedLogger.logger.Warn($"AMDLibrary/GetSomeDisplayIdentifiers: WARNING - DisplayConfigGetDeviceInfo returned WIN32STATUS {err} when trying to get the target info for display #{path.SourceInfo.Id}");
+                    SharedLogger.logger.Error($"AMDLibrary/GetSomeDisplayIdentifiers: ERROR - ADL2_Adapter_NumberOfAdapters_Get returned ADL_STATUS {ADLRet} when trying to get number of AMD adapters in the computer.");
+                    throw new AMDLibraryException($"GetSomeDisplayIdentifiers returned ADL_STATUS {ADLRet} when trying to get number of AMD adapters in the computer");
                 }
 
-                // get display target name
-                var targetInfo = new DISPLAYCONFIG_TARGET_DEVICE_NAME();
-                targetInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
-                targetInfo.Header.Size = (uint)Marshal.SizeOf<DISPLAYCONFIG_TARGET_DEVICE_NAME>();
-                targetInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                targetInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref targetInfo);
-                if (err == WIN32STATUS.ERROR_SUCCESS)
+                // Figure out primary adapter
+                int primaryAdapterIndex = 0;
+                ADLRet = ADLImport.ADL2_Adapter_Primary_Get(_adlContextHandle, out primaryAdapterIndex);
+                if (ADLRet == ADL_STATUS.ADL_OK)
                 {
-                    SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Successfully got the target info from {path.TargetInfo.Id}.");
+                    SharedLogger.logger.Trace($"AMDLibrary/ADL2_Adapter_Primary_Get: The primary adapter has index {primaryAdapterIndex}.");
                 }
                 else
                 {
-                    SharedLogger.logger.Warn($"AMDLibrary/GetSomeDisplayIdentifiers: WARNING - DisplayConfigGetDeviceInfo returned WIN32STATUS {err} when trying to get the target info for display #{path.TargetInfo.Id}");
+                    SharedLogger.logger.Error($"AMDLibrary/GetSomeDisplayIdentifiers: ERROR - ADL2_Adapter_Primary_Get returned ADL_STATUS {ADLRet} when trying to get the primary adapter info from all the AMD adapters in the computer.");
+                    throw new AMDLibraryException($"GetSomeDisplayIdentifiers returned ADL_STATUS {ADLRet} when trying to get the adapter info from all the AMD adapters in the computer");
                 }
 
-                // get display adapter name
-                var adapterInfo = new DISPLAYCONFIG_ADAPTER_NAME();
-                adapterInfo.Header.Type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME;
-                adapterInfo.Header.Size = (uint)Marshal.SizeOf<DISPLAYCONFIG_ADAPTER_NAME>();
-                adapterInfo.Header.AdapterId = path.TargetInfo.AdapterId;
-                adapterInfo.Header.Id = path.TargetInfo.Id;
-                err = CCDImport.DisplayConfigGetDeviceInfo(ref adapterInfo);
-                if (err == WIN32STATUS.ERROR_SUCCESS)
+                // Now go through each adapter and get the information we need from it
+                for (int adapterIndex = 0; adapterIndex < numAdapters; adapterIndex++)
                 {
-                    SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Successfully got the display name info from {path.TargetInfo.Id}.");
-                }
-                else
-                {
-                    SharedLogger.logger.Warn($"AMDLibrary/GetSomeDisplayIdentifiers: WARNING - DisplayConfigGetDeviceInfo returned WIN32STATUS {err} when trying to get the target info for display #{path.TargetInfo.Id}");
-                }
+                    // Skip this adapter if it isn't active
+                    int adapterActiveStatus = ADLImport.ADL_FALSE;
+                    ADLRet = ADLImport.ADL2_Adapter_Active_Get(_adlContextHandle, adapterIndex, out adapterActiveStatus);
+                    if (ADLRet == ADL_STATUS.ADL_OK)
+                    {
+                        if (adapterActiveStatus == ADLImport.ADL_TRUE)
+                        {
+                            SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: ADL2_Adapter_Active_Get returned ADL_TRUE - AMD Adapter #{adapterIndex} is active! We can continue.");
+                        }
+                        else
+                        {
+                            SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: ADL2_Adapter_Active_Get returned ADL_FALSE - AMD Adapter #{adapterIndex} is NOT active, so skipping.");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        SharedLogger.logger.Warn($"AMDLibrary/GetSomeDisplayIdentifiers: WARNING - ADL2_Adapter_Active_Get returned ADL_STATUS {ADLRet} when trying to see if AMD Adapter #{adapterIndex} is active. Trying to skip this adapter so something at least works.");
+                        continue;
+                    }
 
-                // Create an array of all the important display info we need to record
-                List<string> displayInfo = new List<string>();
-                displayInfo.Add("WINAPI");
-                try
-                {
-                    displayInfo.Add(adapterInfo.AdapterDevicePath.ToString());
-                }
-                catch (Exception ex)
-                {
-                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting Windows Display Adapter Device Path from video card. Substituting with a # instead");
-                    displayInfo.Add("#");
-                }
-                try
-                {
-                    displayInfo.Add(targetInfo.OutputTechnology.ToString());
-                }
-                catch (Exception ex)
-                {
-                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting Windows Display Connector Instance from video card. Substituting with a # instead");
-                    displayInfo.Add("#");
-                }
-                try
-                {
-                    displayInfo.Add(targetInfo.EdidManufactureId.ToString());
-                }
-                catch (Exception ex)
-                {
-                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting Windows Display EDID Manufacturer Code from video card. Substituting with a # instead");
-                    displayInfo.Add("#");
-                }
-                try
-                {
-                    displayInfo.Add(targetInfo.EdidProductCodeId.ToString());
-                }
-                catch (Exception ex)
-                {
-                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting Windows Display EDID Product Code from video card. Substituting with a # instead");
-                    displayInfo.Add("#");
-                }
-                try
-                {
-                    displayInfo.Add(targetInfo.MonitorFriendlyDeviceName.ToString());
-                }
-                catch (Exception ex)
-                {
-                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting Windows Display Target Friendly name from video card. Substituting with a # instead");
-                    displayInfo.Add("#");
-                }
+                    // Get the Adapter info for this adapter and put it in the AdapterBuffer
+                    SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Running ADL2_Adapter_AdapterInfoX4_Get to get the information about AMD Adapter #{adapterIndex}.");
+                    int numAdaptersInfo = 0;
+                    IntPtr adapterInfoBuffer = IntPtr.Zero;
+                    ADLRet = ADLImport.ADL2_Adapter_AdapterInfoX4_Get(_adlContextHandle, adapterIndex, out numAdaptersInfo, out adapterInfoBuffer);
+                    if (ADLRet == ADL_STATUS.ADL_OK)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: ADL2_Adapter_AdapterInfoX4_Get returned information about AMD Adapter #{adapterIndex}.");
+                    }
+                    else
+                    {
+                        SharedLogger.logger.Error($"AMDLibrary/GetSomeDisplayIdentifiers: ERROR - ADL2_Adapter_AdapterInfoX4_Get returned ADL_STATUS {ADLRet} when trying to get the adapter info from AMD Adapter #{adapterIndex}. Trying to skip this adapter so something at least works.");
+                        continue;
+                    }
 
-                // Create a display identifier out of it
-                string displayIdentifier = String.Join("|", displayInfo);
-                // Add it to the list of display identifiers so we can return it
-                // but only add it if it doesn't already exist. Otherwise we get duplicates :/
-                if (!displayIdentifiers.Contains(displayIdentifier))
-                {
-                    displayIdentifiers.Add(displayIdentifier);
-                    SharedLogger.logger.Debug($"ProfileRepository/GenerateProfileDisplayIdentifiers: DisplayIdentifier: {displayIdentifier}");
-                }
+                    ADL_ADAPTER_INFOX2[] adapterArray = new ADL_ADAPTER_INFOX2[numAdaptersInfo];
+                    if (numAdaptersInfo > 0)
+                    {
+                        IntPtr currentDisplayTargetBuffer = adapterInfoBuffer;
+                        for (int i = 0; i < numAdaptersInfo; i++)
+                        {
+                            // build a structure in the array slot
+                            adapterArray[i] = new ADL_ADAPTER_INFOX2();
+                            // fill the array slot structure with the data from the buffer
+                            adapterArray[i] = (ADL_ADAPTER_INFOX2)Marshal.PtrToStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                            // destroy the bit of memory we no longer need
+                            //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                            // advance the buffer forwards to the next object
+                            currentDisplayTargetBuffer = (IntPtr)((long)currentDisplayTargetBuffer + Marshal.SizeOf(adapterArray[i]));
+                        }
+                        // Free the memory used by the buffer                        
+                        Marshal.FreeCoTaskMem(adapterInfoBuffer);
+                    }
 
+                    SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: Converted ADL2_Adapter_AdapterInfoX4_Get memory buffer into a {adapterArray.Length} long array about AMD Adapter #{adapterIndex}.");
+
+                    AMD_ADAPTER_CONFIG savedAdapterConfig = new AMD_ADAPTER_CONFIG();
+                    ADL_ADAPTER_INFOX2 oneAdapter = adapterArray[0];
+                    if (oneAdapter.Exist != 1)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} doesn't exist at present so skipping detection for this adapter.");
+                        continue;
+                    }
+
+                    // Only skip non-present displays if we want all displays information
+                    if (allDisplays && oneAdapter.Present != 1)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} isn't enabled at present so skipping detection for this adapter.");
+                        continue;
+                    }
+
+                    // Now we still try to get the information we need for the Display Identifiers
+                    // Go grab the DisplayMaps and DisplayTargets as that is useful infor for creating screens
+                    int numDisplayTargets = 0;
+                    int numDisplayMaps = 0;
+                    IntPtr displayTargetBuffer = IntPtr.Zero;
+                    IntPtr displayMapBuffer = IntPtr.Zero;
+                    ADLRet = ADLImport.ADL2_Display_DisplayMapConfig_Get(_adlContextHandle, adapterIndex, out numDisplayMaps, out displayMapBuffer, out numDisplayTargets, out displayTargetBuffer, ADLImport.ADL_DISPLAY_DISPLAYMAP_OPTION_GPUINFO);
+                    if (ADLRet == ADL_STATUS.ADL_OK)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DisplayMapConfig_Get returned information about all displaytargets connected to AMD adapter {adapterIndex}.");
+                    }
+                    else
+                    {
+                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
+                        throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer");
+                    }                   
+
+                    ADL_DISPLAY_TARGET[] displayTargetArray = { };
+                    if (numDisplayTargets > 0)
+                    {
+                        IntPtr currentDisplayTargetBuffer = displayTargetBuffer;
+                        //displayTargetArray = new ADL_DISPLAY_TARGET[numDisplayTargets];
+                        displayTargetArray = new ADL_DISPLAY_TARGET[numDisplayTargets];
+                        for (int i = 0; i < numDisplayTargets; i++)
+                        {
+                            // build a structure in the array slot
+                            displayTargetArray[i] = new ADL_DISPLAY_TARGET();
+                            //displayTargetArray[i] = new ADL_DISPLAY_TARGET();
+                            // fill the array slot structure with the data from the buffer
+                            displayTargetArray[i] = (ADL_DISPLAY_TARGET)Marshal.PtrToStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
+                            //displayTargetArray[i] = (ADL_DISPLAY_TARGET)Marshal.PtrToStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
+                            // destroy the bit of memory we no longer need
+                            Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_DISPLAY_TARGET));
+                            // advance the buffer forwards to the next object
+                            currentDisplayTargetBuffer = (IntPtr)((long)currentDisplayTargetBuffer + Marshal.SizeOf(displayTargetArray[i]));
+                            //currentDisplayTargetBuffer = (IntPtr)((long)currentDisplayTargetBuffer + Marshal.SizeOf(displayTargetArray[i]));
+
+                        }
+                        // Free the memory used by the buffer                        
+                        Marshal.FreeCoTaskMem(displayTargetBuffer);
+                    }
+
+                    int forceDetect = 0;
+                    int numDisplays = 0;
+                    IntPtr displayInfoBuffer = IntPtr.Zero;                    
+                    ADLRet = ADLImport.ADL2_Display_DisplayInfo_Get(_adlContextHandle, adapterIndex, out numDisplays, out displayInfoBuffer, forceDetect);
+                    if (ADLRet == ADL_STATUS.ADL_OK)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DisplayMapConfig_Get returned information about all displaytargets connected to AMD adapter {adapterIndex}.");
+                    }
+                    else
+                    {
+                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
+                        throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer");
+                    }
+
+                    ADL_DISPLAY_INFO[] displayInfoArray = { };
+                    if (numDisplays > 0)
+                    {
+                        IntPtr currentDisplayInfoBuffer = displayInfoBuffer;
+                        displayInfoArray = new ADL_DISPLAY_INFO[numDisplays];
+                        for (int i = 0; i < numDisplays; i++)
+                        {
+                            // build a structure in the array slot
+                            displayInfoArray[i] = new ADL_DISPLAY_INFO();
+                            // fill the array slot structure with the data from the buffer
+                            displayInfoArray[i] = (ADL_DISPLAY_INFO)Marshal.PtrToStructure(currentDisplayInfoBuffer, typeof(ADL_DISPLAY_INFO));
+                            // destroy the bit of memory we no longer need
+                            Marshal.DestroyStructure(currentDisplayInfoBuffer, typeof(ADL_DISPLAY_INFO));
+                            // advance the buffer forwards to the next object
+                            currentDisplayInfoBuffer = (IntPtr)((long)currentDisplayInfoBuffer + Marshal.SizeOf(displayInfoArray[i]));
+                            //currentDisplayTargetBuffer = (IntPtr)((long)currentDisplayTargetBuffer + Marshal.SizeOf(displayTargetArray[i]));
+
+                        }
+                        // Free the memory used by the buffer                        
+                        Marshal.FreeCoTaskMem(displayInfoBuffer);
+                    }
+
+
+                    // Now we need to get all the displays connected to this adapter so that we can get their HDR state
+                    foreach (var displayInfoItem in displayInfoArray)
+                    {
+
+                        if (!displayInfoItem.DisplayConnectedSet)
+                        {
+                            continue;
+                        }
+
+                        // Create an array of all the important display info we need to create the display identifier
+                        List<string> displayInfo = new List<string>();
+                        displayInfo.Add("AMD");
+                        try
+                        {
+                            displayInfo.Add(oneAdapter.DeviceNumber.ToString());
+                        }
+                        catch (Exception ex)
+                        {
+                            SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Adapter Device Number from video card. Substituting with a # instead");
+                            displayInfo.Add("#");
+                        }
+                        try
+                        {
+                            displayInfo.Add(oneAdapter.AdapterName);
+                        }
+                        catch (Exception ex)
+                        {
+                            SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Adapter Name from video card. Substituting with a # instead");
+                            displayInfo.Add("#");
+                        }
+                        try
+                        {
+                            displayInfo.Add(displayInfoItem.DisplayConnector.ToString("G"));
+                        }
+                        catch (Exception ex)
+                        {
+                            SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting Display Connector from video card. Substituting with a # instead");
+                            displayInfo.Add("#");
+                        }
+
+                        // Get some more Display Info (if we can!)
+                        ADL_DDC_INFO2 ddcInfo = new ADL_DDC_INFO2();
+                        ADLRet = ADLImport.ADL2_Display_DDCInfo2_Get(_adlContextHandle, adapterIndex, displayInfoItem.DisplayID.DisplayLogicalIndex, out ddcInfo);
+                        if (ADLRet == ADL_STATUS.ADL_OK)
+                        {                            
+                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DDCInfo2_Get returned information about DDC Information for display {displayInfoItem.DisplayID.DisplayLogicalIndex} connected to AMD adapter {adapterIndex}.");
+                            if (ddcInfo.SupportsDDC == 1)
+                            {
+                                // The display supports DDC and returned some data!
+                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DDCInfo2_Get returned information about DDC Information for display {displayInfoItem.DisplayID.DisplayLogicalIndex} connected to AMD adapter {adapterIndex}.");
+
+                                try
+                                {
+                                    displayInfo.Add(ddcInfo.ManufacturerID.ToString());
+                                }
+                                catch (Exception ex)
+                                {
+                                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Display EDID Manufacturer Code from video card. Substituting with a # instead");
+                                    displayInfo.Add("#");
+                                }
+                                try
+                                {
+                                    displayInfo.Add(ddcInfo.ProductID.ToString());
+                                }
+                                catch (Exception ex)
+                                {
+                                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Display EDID Product Code from video card. Substituting with a # instead");
+                                    displayInfo.Add("#");
+                                }
+                                try
+                                {
+                                    displayInfo.Add(ddcInfo.DisplayName.ToString());
+                                }
+                                catch (Exception ex)
+                                {
+                                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Display Name from video card. Substituting with a # instead");
+                                    displayInfo.Add("#");
+                                }
+                            }
+                            else
+                            {
+                                // The display does NOT support DDC and nothing was returned! We need to find the information some other way!
+
+                                try
+                                {
+                                    displayInfo.Add(displayInfoItem.DisplayManufacturerName.ToString());
+                                }
+                                catch (Exception ex)
+                                {
+                                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Display Manufacturer Name 2 from video card. Substituting with a # instead");
+                                    displayInfo.Add("#");
+                                }
+                                try
+                                {
+                                    displayInfo.Add(displayInfoItem.DisplayName.ToString());
+                                }
+                                catch (Exception ex)
+                                {
+                                    SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Display Name 2 from video card. Substituting with a # instead");
+                                    displayInfo.Add("#");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DDCInfo2_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
+
+                            // ADL2_Display_DDCInfo2_Get had a problem and nothing was returned! We need to find the information some other way!
+
+                            try
+                            {
+                                displayInfo.Add(displayInfoItem.DisplayManufacturerName.ToString());
+                            }
+                            catch (Exception ex)
+                            {
+                                SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Display Manufacturer Name 2 from video card. Substituting with a # instead");
+                                displayInfo.Add("#");
+                            }
+                            try
+                            {
+                                displayInfo.Add(displayInfoItem.DisplayName.ToString());
+                            }
+                            catch (Exception ex)
+                            {
+                                SharedLogger.logger.Warn(ex, $"AMDLibrary/GetSomeDisplayIdentifiers: Exception getting AMD Display Name 2 from video card. Substituting with a # instead");
+                                displayInfo.Add("#");
+                            }
+                        }
+
+                        
+
+                        // Create a display identifier out of it
+                        string displayIdentifier = String.Join("|", displayInfo);
+                        // Add it to the list of display identifiers so we can return it
+                        // but only add it if it doesn't already exist. Otherwise we get duplicates :/
+                        if (!displayIdentifiers.Contains(displayIdentifier))
+                        {
+                            displayIdentifiers.Add(displayIdentifier);
+                            SharedLogger.logger.Debug($"ProfileRepository/GenerateProfileDisplayIdentifiers: DisplayIdentifier: {displayIdentifier}");
+                        }
+                    }
+                }
             }
+            else
+            {
+                SharedLogger.logger.Error($"AMDLibrary/GetSomeDisplayIdentifiers: ERROR - Tried to run GetSomeDisplayIdentifiers but the AMD ADL library isn't initialised!");
+                throw new AMDLibraryException($"Tried to run GetSomeDisplayIdentifiers but the AMD ADL library isn't initialised!");
+            }
+
 
             // Sort the display identifiers
             displayIdentifiers.Sort();
