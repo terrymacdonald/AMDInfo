@@ -1345,7 +1345,7 @@ namespace DisplayMagicianShared.AMD
 
         // SLS Map Mask settings
         public bool SLSMapDisplayArrangedSupported => (SLSMapMask & 0x2) == 0x2;
-        public bool SLSMapCurrentConfigSupported => (SLSMapMask & 0x4) == 0x4;
+        public bool SLSMapCurrentInUseSupported => (SLSMapMask & 0x4) == 0x4;
         public bool SLSMapBezelModeSupported => (SLSMapMask & 0x10) == 0x10;
         public bool SLSMapLayoutModeFitSupported => (SLSMapMask & 0x100) == 0x100;
         public bool SLSMapLayoutModeFillSupported => (SLSMapMask & 0x200) == 0x200;
@@ -1356,7 +1356,7 @@ namespace DisplayMagicianShared.AMD
 
         // SLS Map Value settings
         public bool SLSMapDisplayArrangedSet => (SLSMapValue & 0x2) == 0x2;
-        public bool SLSMapCurrentConfigSet => (SLSMapValue & 0x4) == 0x4;
+        public bool SLSMapCurrentInUseSet => (SLSMapValue & 0x4) == 0x4;
         public bool SLSMapBezelModeSet => (SLSMapValue & 0x10) == 0x10;
         public bool SLSMapLayoutModeFitSet => (SLSMapValue & 0x100) == 0x100;
         public bool SLSMapLayoutModeFillSet => (SLSMapValue & 0x200) == 0x200;
