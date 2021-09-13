@@ -17,6 +17,7 @@ namespace DisplayMagicianShared.AMD
         public int AdapterBusNumber;
         public int AdapterIndex;
         public bool IsPrimaryAdapter;
+        public Dictionary<int, AMD_HDR_CONFIG> HdrConfig;
 
         public override bool Equals(object obj) => obj is AMD_ADAPTER_CONFIG other && this.Equals(other);
 
@@ -24,11 +25,12 @@ namespace DisplayMagicianShared.AMD
         => AdapterIndex == other.AdapterIndex &&
            AdapterBusNumber == other.AdapterBusNumber &&
            AdapterDeviceNumber == other.AdapterDeviceNumber &&
-           IsPrimaryAdapter == other.IsPrimaryAdapter;
+           IsPrimaryAdapter == other.IsPrimaryAdapter &&
+           HdrConfig.SequenceEqual(other.HdrConfig);
         
         public override int GetHashCode()
         {
-            return (AdapterIndex, AdapterBusNumber, AdapterDeviceNumber, IsPrimaryAdapter).GetHashCode();
+            return (AdapterIndex, AdapterBusNumber, AdapterDeviceNumber, IsPrimaryAdapter, HdrConfig).GetHashCode();
         }
 
         public static bool operator ==(AMD_ADAPTER_CONFIG lhs, AMD_ADAPTER_CONFIG rhs) => lhs.Equals(rhs);
@@ -117,22 +119,20 @@ namespace DisplayMagicianShared.AMD
         public List<AMD_ADAPTER_CONFIG> AdapterConfigs;
         public AMD_SLS_CONFIG SlsConfig;
         public List<ADL_DISPLAY_MAP> DisplayMaps;
-        public List<ADL_DISPLAY_TARGET> DisplayTargets;
-        public Dictionary<int, AMD_HDR_CONFIG> HdrConfig;
+        public List<ADL_DISPLAY_TARGET> DisplayTargets;        
         public List<string> DisplayIdentifiers;
         public override bool Equals(object obj) => obj is AMD_DISPLAY_CONFIG other && this.Equals(other);
 
         public bool Equals(AMD_DISPLAY_CONFIG other)
         => AdapterConfigs.SequenceEqual(other.AdapterConfigs) &&
            SlsConfig.Equals(other.SlsConfig) &&
-           HdrConfig.SequenceEqual(other.HdrConfig) &&
            DisplayMaps.SequenceEqual(other.DisplayMaps) &&
            DisplayTargets.SequenceEqual(other.DisplayTargets) &&
            DisplayIdentifiers.SequenceEqual(other.DisplayIdentifiers);
 
         public override int GetHashCode()
         {
-            return (AdapterConfigs, SlsConfig, HdrConfig, DisplayMaps, DisplayTargets, DisplayIdentifiers).GetHashCode();
+            return (AdapterConfigs, SlsConfig, DisplayMaps, DisplayTargets, DisplayIdentifiers).GetHashCode();
         }
 
         public static bool operator ==(AMD_DISPLAY_CONFIG lhs, AMD_DISPLAY_CONFIG rhs) => lhs.Equals(rhs);
@@ -282,8 +282,7 @@ namespace DisplayMagicianShared.AMD
         private AMD_DISPLAY_CONFIG GetAMDDisplayConfig(bool allDisplays = false)
         {
             AMD_DISPLAY_CONFIG myDisplayConfig = new AMD_DISPLAY_CONFIG();
-            myDisplayConfig.AdapterConfigs = new List<AMD_ADAPTER_CONFIG>();
-            myDisplayConfig.HdrConfig = new Dictionary<int, AMD_HDR_CONFIG>();
+            myDisplayConfig.AdapterConfigs = new List<AMD_ADAPTER_CONFIG>();            
 
             if (_initialised)
             {
@@ -374,24 +373,30 @@ namespace DisplayMagicianShared.AMD
                     SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Converted ADL2_Adapter_AdapterInfoX4_Get memory buffer into a {adapterArray.Length} long array about AMD Adapter #{adapterIndex}.");
 
                     AMD_ADAPTER_CONFIG savedAdapterConfig = new AMD_ADAPTER_CONFIG();
-                    ADL_ADAPTER_INFOX2 oneAdapter = adapterArray[0];
-                    if (oneAdapter.Exist != 1)
+                    ADL_ADAPTER_INFOX2 oneAdapter = adapterArray[0]; // There is always just one as we asked for a specific one!
+                    if (oneAdapter.Exist != ADLImport.ADL_TRUE)
                     {
                         SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} doesn't exist at present so skipping detection for this adapter.");
                         continue;
                     }
 
                     // Only skip non-present displays if we want all displays information
-                    if (allDisplays && oneAdapter.Present != 1)
+                    if (oneAdapter.Present != ADLImport.ADL_TRUE)
                     {
                         SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} isn't enabled at present so skipping detection for this adapter.");
                         continue;
                     }
 
+                    if (!allDisplays && oneAdapter.DisplayMappedSet == false)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} doesn't have any displays mapped in Windows at present so skipping detection for this adapter.");
+                        continue;
+                    }
 
                     savedAdapterConfig.AdapterBusNumber = oneAdapter.BusNumber;
                     savedAdapterConfig.AdapterDeviceNumber = oneAdapter.DeviceNumber;
                     savedAdapterConfig.AdapterIndex = oneAdapter.AdapterIndex;
+                    savedAdapterConfig.HdrConfig = new Dictionary<int, AMD_HDR_CONFIG>();
                     if (oneAdapter.AdapterIndex == primaryAdapterIndex)
                     {
                         savedAdapterConfig.IsPrimaryAdapter = true;
@@ -798,13 +803,12 @@ namespace DisplayMagicianShared.AMD
                         AMD_HDR_CONFIG hdrConfig = new AMD_HDR_CONFIG();
                         hdrConfig.HDREnabled = enabled > 0 ? true : false;
                         hdrConfig.HDRSupported = supported > 0 ? true : false;
-                        //hdrConfig.HdrColorDepth = colourDepth;
 
                         // Now add this to the HDR config list.                        
-                        if (!myDisplayConfig.HdrConfig.ContainsKey(displayTarget.DisplayID.DisplayLogicalIndex))
+                        if (!savedAdapterConfig.HdrConfig.ContainsKey(displayTarget.DisplayID.DisplayLogicalIndex))
                         {
                             // Save the new display config only if we haven't already
-                            myDisplayConfig.HdrConfig.Add(displayTarget.DisplayID.DisplayLogicalIndex, hdrConfig);
+                            savedAdapterConfig.HdrConfig.Add(displayTarget.DisplayID.DisplayLogicalIndex, hdrConfig);
                         }
                     }
 
@@ -1224,7 +1228,7 @@ namespace DisplayMagicianShared.AMD
                     }
 
                     // Go through each of the HDR configs we have
-                    foreach (var hdrConfig in displayConfig.HdrConfig)
+                    foreach (var hdrConfig in displayConfig.AdapterConfigs[adapterIndex].HdrConfig)
                     {
                         // Try and find the HDR config displays in the list of currently connected displays
                         foreach (var displayInfoItem in displayInfoArray)
@@ -1668,7 +1672,7 @@ namespace DisplayMagicianShared.AMD
                     else
                     {
                         SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
-                        throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer");
+                        continue;
                     }                   
 
                     ADL_DISPLAY_TARGET[] displayTargetArray = { };
@@ -1702,12 +1706,16 @@ namespace DisplayMagicianShared.AMD
                     ADLRet = ADLImport.ADL2_Display_DisplayInfo_Get(_adlContextHandle, adapterIndex, out numDisplays, out displayInfoBuffer, forceDetect);
                     if (ADLRet == ADL_STATUS.ADL_OK)
                     {
-                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DisplayMapConfig_Get returned information about all displaytargets connected to AMD adapter {adapterIndex}.");
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DisplayInfo_Get returned information about all displaytargets connected to AMD adapter {adapterIndex}.");
+                    }
+                    else if (ADLRet == ADL_STATUS.ADL_ERR_NULL_POINTER || ADLRet == ADL_STATUS.ADL_ERR_NOT_SUPPORTED)
+                    {
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DisplayInfo_Get returned ADL_ERR_NULL_POINTER so skipping getting display info from this AMD adapter {adapterIndex}.");
+                        continue;
                     }
                     else
                     {
-                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
-                        throw new AMDLibraryException($"ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer");
+                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayInfo_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
                     }
 
                     ADL_DISPLAY_INFO[] displayInfoArray = { };
