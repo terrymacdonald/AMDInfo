@@ -17,7 +17,8 @@ namespace DisplayMagicianShared.AMD
         public int AdapterBusNumber;
         public int AdapterIndex;
         public bool IsPrimaryAdapter;
-        public Dictionary<int, AMD_HDR_CONFIG> HdrConfig;
+        public string DisplayName;
+        public int OSDisplayIndex;
 
         public override bool Equals(object obj) => obj is AMD_ADAPTER_CONFIG other && this.Equals(other);
 
@@ -26,11 +27,12 @@ namespace DisplayMagicianShared.AMD
            AdapterBusNumber == other.AdapterBusNumber &&
            AdapterDeviceNumber == other.AdapterDeviceNumber &&
            IsPrimaryAdapter == other.IsPrimaryAdapter &&
-           HdrConfig.SequenceEqual(other.HdrConfig);
-        
+           DisplayName == other.DisplayName &&
+           OSDisplayIndex == other.OSDisplayIndex;
+
         public override int GetHashCode()
         {
-            return (AdapterIndex, AdapterBusNumber, AdapterDeviceNumber, IsPrimaryAdapter, HdrConfig).GetHashCode();
+            return (AdapterIndex, AdapterBusNumber, AdapterDeviceNumber, IsPrimaryAdapter, DisplayName, OSDisplayIndex).GetHashCode();
         }
 
         public static bool operator ==(AMD_ADAPTER_CONFIG lhs, AMD_ADAPTER_CONFIG rhs) => lhs.Equals(rhs);
@@ -119,7 +121,8 @@ namespace DisplayMagicianShared.AMD
         public List<AMD_ADAPTER_CONFIG> AdapterConfigs;
         public AMD_SLS_CONFIG SlsConfig;
         public List<ADL_DISPLAY_MAP> DisplayMaps;
-        public List<ADL_DISPLAY_TARGET> DisplayTargets;        
+        public List<ADL_DISPLAY_TARGET> DisplayTargets;
+        public Dictionary<int,AMD_HDR_CONFIG> HdrConfigs;
         public List<string> DisplayIdentifiers;
         public override bool Equals(object obj) => obj is AMD_DISPLAY_CONFIG other && this.Equals(other);
 
@@ -128,6 +131,7 @@ namespace DisplayMagicianShared.AMD
            SlsConfig.Equals(other.SlsConfig) &&
            DisplayMaps.SequenceEqual(other.DisplayMaps) &&
            DisplayTargets.SequenceEqual(other.DisplayTargets) &&
+           HdrConfigs.SequenceEqual(other.HdrConfigs) &&
            DisplayIdentifiers.SequenceEqual(other.DisplayIdentifiers);
 
         public override int GetHashCode()
@@ -286,24 +290,12 @@ namespace DisplayMagicianShared.AMD
 
             if (_initialised)
             {
-                // Get the number of AMD adapters that the OS knows about
-                int numAdapters = 0;
-                ADL_STATUS ADLRet = ADLImport.ADL2_Adapter_NumberOfAdapters_Get(_adlContextHandle, out numAdapters);
-                if (ADLRet == ADL_STATUS.ADL_OK)
-                {
-                    SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Adapter_NumberOfAdapters_Get returned the number of AMD Adapters the OS knows about ({numAdapters}).");
-                }
-                else
-                {
-                    SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Adapter_NumberOfAdapters_Get returned ADL_STATUS {ADLRet} when trying to get number of AMD adapters in the computer.");
-                    throw new AMDLibraryException($"ADL2_Adapter_NumberOfAdapters_Get returned ADL_STATUS {ADLRet} when trying to get number of AMD adapters in the computer");
-                }
 
                 // Get the Adapter info for ALL adapter and put it in the AdapterBuffer
                 SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Running ADL2_Adapter_AdapterInfoX4_Get to get the information about all AMD Adapters.");
                 int numAdaptersInfo = 0;
                 IntPtr adapterInfoBuffer = IntPtr.Zero;
-                ADLRet = ADLImport.ADL2_Adapter_AdapterInfoX4_Get(_adlContextHandle, -1, out numAdaptersInfo, out adapterInfoBuffer);
+                ADL_STATUS ADLRet = ADLImport.ADL2_Adapter_AdapterInfoX4_Get(_adlContextHandle, -1, out numAdaptersInfo, out adapterInfoBuffer);
                 if (ADLRet == ADL_STATUS.ADL_OK)
                 {
                     SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Adapter_AdapterInfoX4_Get returned information about all AMD Adapters.");
@@ -351,22 +343,9 @@ namespace DisplayMagicianShared.AMD
                         continue;
                     }
 
-                    if (!allDisplays && oneAdapter.DisplayMappedSet == false)
-                    {
-                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} doesn't have any displays mapped in Windows at present so skipping detection for this adapter.");
-                        continue;
-                    }
 
                     SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Converted ADL2_Adapter_AdapterInfoX4_Get memory buffer into a {adapterArray.Length} long array about AMD Adapter #{adapterIndex}.");                    
-
-                    AMD_ADAPTER_CONFIG savedAdapterConfig = new AMD_ADAPTER_CONFIG();
-                    savedAdapterConfig.AdapterBusNumber = oneAdapter.BusNumber;
-                    savedAdapterConfig.AdapterDeviceNumber = oneAdapter.DeviceNumber;
-                    savedAdapterConfig.AdapterIndex = oneAdapter.AdapterIndex;
-                    savedAdapterConfig.HdrConfig = new Dictionary<int, AMD_HDR_CONFIG>();
-
-                    myDisplayConfig.SlsConfig.SLSMapConfigs = new List<AMD_SLSMAP_CONFIG>();
-
+                    
                     // Go grab the DisplayMaps and DisplayTargets as that is useful infor for creating screens
                     int numDisplayTargets = 0;
                     int numDisplayMaps = 0;
@@ -435,6 +414,30 @@ namespace DisplayMagicianShared.AMD
                         myDisplayConfig.DisplayTargets = displayTargetArray.ToList<ADL_DISPLAY_TARGET>();
                     }
 
+                    // Loop through all the displayTargets currently in use
+                    foreach (var displayTarget in displayTargetArray)
+                    {
+                        if (displayTarget.DisplayID.DisplayLogicalAdapterIndex == oneAdapter.AdapterIndex)
+                        {
+                            // we only want to record the adapters that are currently in use as displayTargets
+                            AMD_ADAPTER_CONFIG savedAdapterConfig = new AMD_ADAPTER_CONFIG();
+                            savedAdapterConfig.AdapterBusNumber = oneAdapter.BusNumber;
+                            savedAdapterConfig.AdapterDeviceNumber = oneAdapter.DeviceNumber;
+                            savedAdapterConfig.AdapterIndex = oneAdapter.AdapterIndex;
+                            savedAdapterConfig.DisplayName = oneAdapter.DisplayName;
+                            savedAdapterConfig.OSDisplayIndex = oneAdapter.OSDisplayIndex;
+
+                            // Save the AMD Adapter Config
+                            if (!myDisplayConfig.AdapterConfigs.Contains(savedAdapterConfig))
+                            {
+                                // Save the new adapter config only if we haven't already
+                                myDisplayConfig.AdapterConfigs.Add(savedAdapterConfig);
+                            }
+
+                        }
+                    }
+
+                    myDisplayConfig.SlsConfig.SLSMapConfigs = new List<AMD_SLSMAP_CONFIG>();
 
                     // Check if SLS is enabled for this adapter!
                     int numActiveSLSMapIndexes = -1;
@@ -443,9 +446,8 @@ namespace DisplayMagicianShared.AMD
                     ADLRet = ADLImport.ADL2_Display_SLSMapIndexList_Get(_adlContextHandle, oneAdapter.AdapterIndex, out numActiveSLSMapIndexes, out activeSLSMapIndexesBuffer, ADLImport.ADL_DISPLAY_SLSMAPINDEXLIST_OPTION_ACTIVE);
                     if (ADLRet == ADL_STATUS.ADL_OK && numActiveSLSMapIndexes != -1)
                     {
-                        // We have some SLS enabled!
-                        myDisplayConfig.SlsConfig.IsSlsEnabled = true;
-                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has one or more SLS grids set on it! Eyefinity (SLS) is enabled.");
+                        // We have a matching SLS index!
+                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has one or more SLS grids set on it! Eyefinity (SLS) could be enabled.");
 
                         activeSLSMapIndexArray = new int[numActiveSLSMapIndexes];
                         if (numActiveSLSMapIndexes > 0)
@@ -526,6 +528,7 @@ namespace DisplayMagicianShared.AMD
                                 // We know we don't have an active SLS grid
                                 myDisplayConfig.SlsConfig.IsSlsEnabled = false;
                                 SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has a matching SLS grid but it is not in use.");
+                                continue;
                             }
 
                             // Process the slsMapBuffer
@@ -729,6 +732,7 @@ namespace DisplayMagicianShared.AMD
                         SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_SLSMapIndex_Get returned ADL_STATUS {ADLRet} when trying to see if any SLS grids were active from AMD adapter {adapterIndex} in the computer.");
                     }
 
+                    myDisplayConfig.HdrConfigs = new Dictionary<int, AMD_HDR_CONFIG>();
                     // Now we need to get all the displays connected to this adapter so that we can get their HDR state
                     foreach (var displayTarget in displayTargetArray)
                     {
@@ -780,20 +784,15 @@ namespace DisplayMagicianShared.AMD
                         hdrConfig.HDRSupported = supported > 0 ? true : false;
 
                         // Now add this to the HDR config list.                        
-                        if (!savedAdapterConfig.HdrConfig.ContainsKey(displayTarget.DisplayID.DisplayLogicalIndex))
+                        if (!myDisplayConfig.HdrConfigs.ContainsKey(displayTarget.DisplayID.DisplayLogicalIndex))
                         {
                             // Save the new display config only if we haven't already
-                            savedAdapterConfig.HdrConfig.Add(displayTarget.DisplayID.DisplayLogicalIndex, hdrConfig);
+                            myDisplayConfig.HdrConfigs.Add(displayTarget.DisplayID.DisplayLogicalIndex, hdrConfig);
                         }
                     }
 
-                    // Save the AMD Adapter Config
-                    if (!myDisplayConfig.AdapterConfigs.Contains(savedAdapterConfig))
-                    {
-                        // Save the new adapter config only if we haven't already
-                        myDisplayConfig.AdapterConfigs.Add(savedAdapterConfig);
-                    }                                      
-
+                    // Add the AMD Display Identifiers
+                    myDisplayConfig.DisplayIdentifiers = GetCurrentDisplayIdentifiers();
                 }                
             }
             else
@@ -1110,7 +1109,7 @@ namespace DisplayMagicianShared.AMD
                         // We need to disable the current Eyefinity (SLS) profile to turn it off
                         SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfig: SLS is enabled in the current display configuration, so we need to turn it off");
 
-                        foreach (AMD_SLSMAP_CONFIG slsMapConfig in displayConfig.SlsConfig.SLSMapConfigs)
+                        foreach (AMD_SLSMAP_CONFIG slsMapConfig in currentDisplayConfig.SlsConfig.SLSMapConfigs)
                         {
                             // Turn on this SLS Map Config
                             ADLRet = ADLImport.ADL2_Display_SLSMapConfig_SetState(_adlContextHandle, slsMapConfig.SLSMap.AdapterIndex, slsMapConfig.SLSMap.SLSMapIndex, ADLImport.ADL_FALSE);
@@ -1196,7 +1195,7 @@ namespace DisplayMagicianShared.AMD
                     }
 
                     // Go through each of the HDR configs we have
-                    foreach (var hdrConfig in displayConfig.AdapterConfigs[adapterConfig.AdapterIndex].HdrConfig)
+                    foreach (var hdrConfig in displayConfig.HdrConfigs)
                     {
                         // Try and find the HDR config displays in the list of currently connected displays
                         foreach (var displayInfoItem in displayInfoArray)
