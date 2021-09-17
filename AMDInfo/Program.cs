@@ -52,10 +52,10 @@ namespace AMDInfo
             NLog.LogManager.Configuration = config;
 
             // Start the Log file
-            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v0.0.5");
+            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v0.0.6");
 
 
-            Console.WriteLine($"\nAMDInfo v0.0.5");
+            Console.WriteLine($"\nAMDInfo v0.0.6");
             Console.WriteLine($"==============");
             Console.WriteLine($"By Terry MacDonald 2021\n");
 
