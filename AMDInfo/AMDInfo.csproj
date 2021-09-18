@@ -58,7 +58,6 @@
     <Compile Include="ADL.cs" />
     <Compile Include="AMDLibrary.cs" />
     <Compile Include="CCD.cs" />
-    <Compile Include="AMDLibraryOld.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SharedLogger.cs" />
