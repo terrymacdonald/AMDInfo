@@ -6,6 +6,8 @@ AMDInfo records exactly how you setup your display settings, including AMD Eyefi
 
 NOTE: AMDInfo doesn't handle NVIDIA Surround/Mosaic. Please see [NVIDIAInfo](https://github.com/terrymacdonald/NVIDIAInfo) for that!
 
+IMPORTANT: If you really want to control your NVIDIA or AMD screen, I'd recommend looking at [DisplayMagician](https://github.com/terrymacdonald/DisplayMagician) for that!
+
 Command line examples:
 
 - Show what settings you currently are using: `AMDInfo print`
@@ -17,15 +19,15 @@ Command line examples:
 ## To setup this software:
 
 - Firstly, set up your display configuration using AMD settings and the Windows Display settings exactly as you want to use them (e.g. one single AMD Eyefinity window using 3 screens)
-- Next, save the settings you currently are using to a file to use later, using a command like `AMDInfo save triple-surround-on.cfg`
-- Next, change your display configuration using AMD settings and the Windows Display settings to another display configuration you'd like to have (e.g. 3 single screens without using AMD Surround)
+- Next, save the settings you currently are using to a file to use later, using a command like `AMDInfo save triple-eyefinity-on.cfg`
+- Next, change your display configuration using AMD settings and the Windows Display settings to another display configuration you'd like to have (e.g. 3 single screens that doesn't use AMD Eyefinity)
 - Next, save those settings to a different file to use later, using a command like `AMDInfo save triple-screen.cfg`
 
 ## To swap between different display setups:
 
 Now that you've set up the different display configurations, you can swap between them using a command like this:
 
-- To load the triple screen setup using AMD Eyefinity: `AMDInfo load triple-surround-on.cfg`
+- To load the triple screen setup using AMD Eyefinity: `AMDInfo load triple-eyefinity-on.cfg`
 - To load the triple screen without AMD Eyefinity: `AMDInfo load triple-screen.cfg`
 
 Feel free to use different config file names, and to set up what ever display configurations you like. Enjoy!
