@@ -350,8 +350,27 @@ namespace DisplayMagicianShared.AMD
                         continue;
                     }
 
-
-                    SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: Converted ADL2_Adapter_AdapterInfoX4_Get memory buffer into a {adapterArray.Length} long array about AMD Adapter #{adapterIndex}.");                    
+                    // Check if the adapter is active
+                    // Skip this adapter if it isn't active
+                    int adapterActiveStatus = ADLImport.ADL_FALSE;
+                    ADLRet = ADLImport.ADL2_Adapter_Active_Get(_adlContextHandle, adapterIndex, out adapterActiveStatus);
+                    if (ADLRet == ADL_STATUS.ADL_OK)
+                    {
+                        if (adapterActiveStatus == ADLImport.ADL_TRUE)
+                        {
+                            SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: ADL2_Adapter_Active_Get returned ADL_TRUE - AMD Adapter #{adapterIndex} is active! We can continue.");
+                        }
+                        else
+                        {
+                            SharedLogger.logger.Trace($"AMDLibrary/GetSomeDisplayIdentifiers: ADL2_Adapter_Active_Get returned ADL_FALSE - AMD Adapter #{adapterIndex} is NOT active, so skipping.");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        SharedLogger.logger.Warn($"AMDLibrary/GetSomeDisplayIdentifiers: WARNING - ADL2_Adapter_Active_Get returned ADL_STATUS {ADLRet} when trying to see if AMD Adapter #{adapterIndex} is active. Trying to skip this adapter so something at least works.");
+                        continue;
+                    }
                     
                     // Go grab the DisplayMaps and DisplayTargets as that is useful infor for creating screens
                     int numDisplayTargets = 0;
@@ -507,7 +526,7 @@ namespace DisplayMagicianShared.AMD
                             if (numDisplayTargets != (slsMap.Grid.SLSGridColumn * slsMap.Grid.SLSGridRow))
                             {
                                 //Number of display targets returned is not equal to the SLS grid size, so SLS can't be enabled fo this display
-                                myDisplayConfig.SlsConfig.IsSlsEnabled = false;
+                                //myDisplayConfig.SlsConfig.IsSlsEnabled = false; // This is already set to false at the start!
                                 break;
                             }
 
@@ -809,7 +828,7 @@ namespace DisplayMagicianShared.AMD
                     else
                     {
                         // If we get here then there are less than two displays connected. Eyefinity cannot be enabled in this case!
-                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: There are less than two displays connected to this display so Eyefinity cannot be enabled.");
+                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: There are less than two displays connected to this adapter so Eyefinity cannot be enabled.");
                     }
 
 
