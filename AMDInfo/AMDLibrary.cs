@@ -76,6 +76,8 @@ namespace DisplayMagicianShared.AMD
     {
         public bool IsSlsEnabled;
         public List<AMD_SLSMAP_CONFIG> SLSMapConfigs;
+        public List<ADL_MODE> SLSEnabledDisplayTargets;
+        public List<ADL_MODE> NonSLSDisplayTargets;
 
         public override bool Equals(object obj) => obj is AMD_SLS_CONFIG other && this.Equals(other);
 
@@ -293,6 +295,8 @@ namespace DisplayMagicianShared.AMD
             // We set up the default for this display config as SLS disabled
             // (We will change this later if it turns out we're using SLS)
             myDisplayConfig.SlsConfig.IsSlsEnabled = false;
+            myDisplayConfig.SlsConfig.SLSEnabledDisplayTargets = new List<ADL_MODE>();
+            myDisplayConfig.SlsConfig.NonSLSDisplayTargets = new List<ADL_MODE>();
 
             if (_initialised)
             {
@@ -443,40 +447,20 @@ namespace DisplayMagicianShared.AMD
                         }
                     }
 
+                    // Prep the SLSMapConfig list
                     myDisplayConfig.SlsConfig.SLSMapConfigs = new List<AMD_SLSMAP_CONFIG>();
 
-                    // Check if SLS is enabled for this adapter!
-                    int numMatchingSLSMapIndexes = -1;
-                    IntPtr matchingSLSMapIndexesBuffer = IntPtr.Zero;
-                    int[] matchingSLSMapIndexArray;
-                    ADLRet = ADLImport.ADL2_Display_SLSMapIndexList_Get(_adlContextHandle, oneAdapter.AdapterIndex, out numMatchingSLSMapIndexes, out matchingSLSMapIndexesBuffer, ADLImport.ADL_DISPLAY_SLSMAPINDEXLIST_OPTION_ACTIVE);
-                    if (ADLRet == ADL_STATUS.ADL_OK && numMatchingSLSMapIndexes != -1)
+                    // If there are more than 1 display targets then eyefinity is possible
+                    if (numDisplayTargets > 1)
                     {
-                        // We have a matching SLS index!
-                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has one or more SLS Maps that could be used with this display configuration! Eyefinity (SLS) could be enabled.");
-
-                        matchingSLSMapIndexArray = new int[numMatchingSLSMapIndexes];
-                        if (numMatchingSLSMapIndexes > 0)
+                        // Check if SLS is enabled for this adapter!
+                        int matchingSLSMapIndex = -1;
+                        ADLRet = ADLImport.ADL2_Display_SLSMapIndex_Get(_adlContextHandle, oneAdapter.AdapterIndex, numDisplayTargets, displayTargetArray, out matchingSLSMapIndex);
+                        if (ADLRet == ADL_STATUS.ADL_OK && matchingSLSMapIndex != -1)
                         {
-                            IntPtr currentMatchingSLSMapIndexesBuffer = matchingSLSMapIndexesBuffer;
-                            matchingSLSMapIndexArray = new int[numMatchingSLSMapIndexes];
-                            for (int i = 0; i < numMatchingSLSMapIndexes; i++)
-                            {
-                                // build a structure in the array slot
-                                matchingSLSMapIndexArray[i] = 0;
-                                // fill the array slot structure with the data from the buffer
-                                matchingSLSMapIndexArray[i] = (int)Marshal.PtrToStructure(currentMatchingSLSMapIndexesBuffer, typeof(int));
-                                // destroy the bit of memory we no longer need
-                                //Marshal.DestroyStructure(currentActiveSLSMapIndexesBuffer, typeof(ADL_SLS_MAP));
-                                // advance the buffer forwards to the next object
-                                currentMatchingSLSMapIndexesBuffer = (IntPtr)((long)currentMatchingSLSMapIndexesBuffer + Marshal.SizeOf(matchingSLSMapIndexArray[i]));
-                            }
-                            // Free the memory used by the buffer                        
-                            Marshal.FreeCoTaskMem(matchingSLSMapIndexesBuffer);
-                        }
+                            // We have a matching SLS index!
+                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has one or more SLS Maps that could be used with this display configuration! Eyefinity (SLS) could be enabled.");                            
 
-                        if (numMatchingSLSMapIndexes > 0)
-                        {
                             AMD_SLSMAP_CONFIG mySLSMapConfig = new AMD_SLSMAP_CONFIG();
 
                             // We want to get the SLSMapConfig for this matching SLS Map to see if it is actually in use
@@ -496,7 +480,7 @@ namespace DisplayMagicianShared.AMD
                             ADLRet = ADLImport.ADL2_Display_SLSMapConfigX2_Get(
                                                                             _adlContextHandle,
                                                                                 oneAdapter.AdapterIndex,
-                                                                                matchingSLSMapIndexArray[0], // Force to the first  SLS Map if there are two! (possible limitation later!)
+                                                                                matchingSLSMapIndex,
                                                                                 ref slsMap,
                                                                                 out numSLSTargets,
                                                                                 out slsTargetBuffer,
@@ -520,204 +504,312 @@ namespace DisplayMagicianShared.AMD
                                 SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_SLSMapConfigX2_Get returned ADL_STATUS {ADLRet} when trying to get the SLS Info from AMD adapter {adapterIndex} in the computer.");
                                 continue;
                             }
-                            
-                            if (slsMap.SLSMapCurrentInUseSet)
+
+                            // First check that the number of grid entries is equal to the number
+                            // of display targets associated with this adapter & SLS surface.
+                            if (numDisplayTargets != (slsMap.Grid.SLSGridColumn * slsMap.Grid.SLSGridRow))
                             {
-                                // We know this SLS Map is in use!
-                                // We set the IsSlsEnabled variable to true!
-                                myDisplayConfig.SlsConfig.IsSlsEnabled = true;
-                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has a matching SLS grid set! Eyefinity (SLS) is enabled. Setting IsSlsEnabled to true");
+                                //Number of display targets returned is not equal to the SLS grid size, so SLS can't be enabled fo this display
+                                myDisplayConfig.SlsConfig.IsSlsEnabled = false;
+                                break;
+                            }
 
-                                // Process the slsMapBuffer
-                                //slsMap = (ADL_SLS_MAP)Marshal.PtrToStructure(slsMapBuffer, slsMap.GetType());
-                                // Free the memory we reserved
-                                //Marshal.FreeHGlobal(slsMapBuffer);
+                            // Add the slsMap to the config we want to store
+                            mySLSMapConfig.SLSMap = slsMap;
 
-                                // Add the slsMap to the config we want to store
-                                mySLSMapConfig.SLSMap = slsMap;
-
-                                // Process the slsTargetBuffer
-                                ADL_SLS_TARGET[] slsTargetArray = new ADL_SLS_TARGET[numSLSTargets];
-                                if (numSLSTargets > 0)
+                            // Process the slsTargetBuffer
+                            ADL_SLS_TARGET[] slsTargetArray = new ADL_SLS_TARGET[numSLSTargets];
+                            if (numSLSTargets > 0)
+                            {
+                                IntPtr currentSLSTargetBuffer = slsTargetBuffer;
+                                for (int i = 0; i < numSLSTargets; i++)
                                 {
-                                    IntPtr currentSLSTargetBuffer = slsTargetBuffer;
-                                    for (int i = 0; i < numSLSTargets; i++)
-                                    {
-                                        // build a structure in the array slot
-                                        slsTargetArray[i] = new ADL_SLS_TARGET();
-                                        // fill the array slot structure with the data from the buffer
-                                        slsTargetArray[i] = (ADL_SLS_TARGET)Marshal.PtrToStructure(currentSLSTargetBuffer, typeof(ADL_SLS_TARGET));
-                                        // destroy the bit of memory we no longer need
-                                        //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
-                                        // advance the buffer forwards to the next object
-                                        currentSLSTargetBuffer = (IntPtr)((long)currentSLSTargetBuffer + Marshal.SizeOf(slsTargetArray[i]));
-                                    }
-                                    // Free the memory used by the buffer                        
-                                    Marshal.FreeCoTaskMem(slsTargetBuffer);
-
-                                    // Add the slsTarget to the config we want to store
-                                    mySLSMapConfig.SLSTargets = slsTargetArray.ToList();
-
+                                    // build a structure in the array slot
+                                    slsTargetArray[i] = new ADL_SLS_TARGET();
+                                    // fill the array slot structure with the data from the buffer
+                                    slsTargetArray[i] = (ADL_SLS_TARGET)Marshal.PtrToStructure(currentSLSTargetBuffer, typeof(ADL_SLS_TARGET));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentSLSTargetBuffer = (IntPtr)((long)currentSLSTargetBuffer + Marshal.SizeOf(slsTargetArray[i]));
                                 }
-                                else
-                                {
-                                    // Add the slsTarget to the config we want to store
-                                    mySLSMapConfig.SLSTargets = new List<ADL_SLS_TARGET>();
-                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(slsTargetBuffer);
 
-                                // Process the nativeModeBuffer
-                                ADL_SLS_MODE[] nativeModeArray = new ADL_SLS_MODE[numNativeMode];
-                                if (numNativeMode > 0)
-                                {
-                                    IntPtr currentNativeModeBuffer = nativeModeBuffer;
-                                    for (int i = 0; i < numNativeMode; i++)
-                                    {
-                                        // build a structure in the array slot
-                                        nativeModeArray[i] = new ADL_SLS_MODE();
-                                        // fill the array slot structure with the data from the buffer
-                                        nativeModeArray[i] = (ADL_SLS_MODE)Marshal.PtrToStructure(currentNativeModeBuffer, typeof(ADL_SLS_MODE));
-                                        // destroy the bit of memory we no longer need
-                                        //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
-                                        // advance the buffer forwards to the next object
-                                        currentNativeModeBuffer = (IntPtr)((long)currentNativeModeBuffer + Marshal.SizeOf(nativeModeArray[i]));
-                                    }
-                                    // Free the memory used by the buffer                        
-                                    Marshal.FreeCoTaskMem(nativeModeBuffer);
-
-                                    // Add the nativeMode to the config we want to store
-                                    mySLSMapConfig.NativeModes = nativeModeArray.ToList();
-
-                                }
-                                else
-                                {
-                                    // Add the slsTarget to the config we want to store
-                                    mySLSMapConfig.NativeModes = new List<ADL_SLS_MODE>();
-                                }
-
-                                // Process the nativeModeOffsetsBuffer
-                                ADL_SLS_OFFSET[] nativeModeOffsetArray = new ADL_SLS_OFFSET[numNativeModeOffsets];
-                                if (numNativeModeOffsets > 0)
-                                {
-                                    IntPtr currentNativeModeOffsetsBuffer = nativeModeOffsetsBuffer;
-                                    for (int i = 0; i < numNativeModeOffsets; i++)
-                                    {
-                                        // build a structure in the array slot
-                                        nativeModeOffsetArray[i] = new ADL_SLS_OFFSET();
-                                        // fill the array slot structure with the data from the buffer
-                                        nativeModeOffsetArray[i] = (ADL_SLS_OFFSET)Marshal.PtrToStructure(currentNativeModeOffsetsBuffer, typeof(ADL_SLS_OFFSET));
-                                        // destroy the bit of memory we no longer need
-                                        //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
-                                        // advance the buffer forwards to the next object
-                                        currentNativeModeOffsetsBuffer = (IntPtr)((long)currentNativeModeOffsetsBuffer + Marshal.SizeOf(nativeModeOffsetArray[i]));
-                                    }
-                                    // Free the memory used by the buffer                        
-                                    Marshal.FreeCoTaskMem(nativeModeOffsetsBuffer);
-
-                                    // Add the nativeModeOffsets to the config we want to store
-                                    mySLSMapConfig.NativeModeOffsets = nativeModeOffsetArray.ToList();
-
-                                }
-                                else
-                                {
-                                    // Add the empty list to the config we want to store
-                                    mySLSMapConfig.NativeModeOffsets = new List<ADL_SLS_OFFSET>();
-                                }
-
-                                // Process the bezelModeBuffer
-                                ADL_BEZEL_TRANSIENT_MODE[] bezelModeArray = new ADL_BEZEL_TRANSIENT_MODE[numBezelMode];
-                                if (numBezelMode > 0)
-                                {
-                                    IntPtr currentBezelModeBuffer = bezelModeBuffer;
-                                    for (int i = 0; i < numBezelMode; i++)
-                                    {
-                                        // build a structure in the array slot
-                                        bezelModeArray[i] = new ADL_BEZEL_TRANSIENT_MODE();
-                                        // fill the array slot structure with the data from the buffer
-                                        bezelModeArray[i] = (ADL_BEZEL_TRANSIENT_MODE)Marshal.PtrToStructure(currentBezelModeBuffer, typeof(ADL_BEZEL_TRANSIENT_MODE));
-                                        // destroy the bit of memory we no longer need
-                                        //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
-                                        // advance the buffer forwards to the next object
-                                        currentBezelModeBuffer = (IntPtr)((long)currentBezelModeBuffer + Marshal.SizeOf(bezelModeArray[i]));
-                                    }
-                                    // Free the memory used by the buffer                        
-                                    Marshal.FreeCoTaskMem(bezelModeBuffer);
-
-                                    // Add the bezelModes to the config we want to store
-                                    mySLSMapConfig.BezelModes = bezelModeArray.ToList();
-
-                                }
-                                else
-                                {
-                                    // Add the slsTarget to the config we want to store
-                                    mySLSMapConfig.BezelModes = new List<ADL_BEZEL_TRANSIENT_MODE>();
-                                }
-
-                                // Process the transientModeBuffer
-                                ADL_BEZEL_TRANSIENT_MODE[] transientModeArray = new ADL_BEZEL_TRANSIENT_MODE[numTransientMode];
-                                if (numTransientMode > 0)
-                                {
-                                    IntPtr currentTransientModeBuffer = transientModeBuffer;
-                                    for (int i = 0; i < numTransientMode; i++)
-                                    {
-                                        // build a structure in the array slot
-                                        transientModeArray[i] = new ADL_BEZEL_TRANSIENT_MODE();
-                                        // fill the array slot structure with the data from the buffer
-                                        transientModeArray[i] = (ADL_BEZEL_TRANSIENT_MODE)Marshal.PtrToStructure(currentTransientModeBuffer, typeof(ADL_BEZEL_TRANSIENT_MODE));
-                                        // destroy the bit of memory we no longer need
-                                        //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
-                                        // advance the buffer forwards to the next object
-                                        currentTransientModeBuffer = (IntPtr)((long)currentTransientModeBuffer + Marshal.SizeOf(transientModeArray[i]));
-                                    }
-                                    // Free the memory used by the buffer                        
-                                    Marshal.FreeCoTaskMem(transientModeBuffer);
-
-                                    // Add the transientModes to the config we want to store
-                                    mySLSMapConfig.TransientModes = transientModeArray.ToList();
-                                }
-                                else
-                                {
-                                    // Add the slsTarget to the config we want to store
-                                    mySLSMapConfig.TransientModes = new List<ADL_BEZEL_TRANSIENT_MODE>();
-                                }
-
-                                // Process the slsOffsetBuffer
-                                ADL_SLS_OFFSET[] slsOffsetArray = new ADL_SLS_OFFSET[numSLSOffset];
-                                if (numSLSOffset > 0)
-                                {
-                                    IntPtr currentSLSOffsetBuffer = slsOffsetBuffer;
-                                    for (int i = 0; i < numSLSOffset; i++)
-                                    {
-                                        // build a structure in the array slot
-                                        slsOffsetArray[i] = new ADL_SLS_OFFSET();
-                                        // fill the array slot structure with the data from the buffer
-                                        slsOffsetArray[i] = (ADL_SLS_OFFSET)Marshal.PtrToStructure(currentSLSOffsetBuffer, typeof(ADL_SLS_OFFSET));
-                                        // destroy the bit of memory we no longer need
-                                        //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
-                                        // advance the buffer forwards to the next object
-                                        currentSLSOffsetBuffer = (IntPtr)((long)currentSLSOffsetBuffer + Marshal.SizeOf(slsOffsetArray[i]));
-                                    }
-                                    // Free the memory used by the buffer                        
-                                    Marshal.FreeCoTaskMem(slsOffsetBuffer);
-
-                                    // Add the slsOffsets to the config we want to store
-                                    mySLSMapConfig.SLSOffsets = slsOffsetArray.ToList();
-
-                                }
-                                else
-                                {
-                                    // Add the slsTarget to the config we want to store
-                                    mySLSMapConfig.SLSOffsets = new List<ADL_SLS_OFFSET>();
-                                }
-
-                                // Add the mySLSMapConfig to the displayConfig
-                                myDisplayConfig.SlsConfig.SLSMapConfigs.Add(mySLSMapConfig);
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.SLSTargets = slsTargetArray.ToList();
 
                             }
                             else
                             {
-                                // We know this SLS Map isn't in use, so we skip processing it.
-                                SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has a matching SLS grid but it is not currently in use. Keeping the default IsSlsEnabled value of false.");
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.SLSTargets = new List<ADL_SLS_TARGET>();
                             }
+
+                            // Process the nativeModeBuffer
+                            ADL_SLS_MODE[] nativeModeArray = new ADL_SLS_MODE[numNativeMode];
+                            if (numNativeMode > 0)
+                            {
+                                IntPtr currentNativeModeBuffer = nativeModeBuffer;
+                                for (int i = 0; i < numNativeMode; i++)
+                                {
+                                    // build a structure in the array slot
+                                    nativeModeArray[i] = new ADL_SLS_MODE();
+                                    // fill the array slot structure with the data from the buffer
+                                    nativeModeArray[i] = (ADL_SLS_MODE)Marshal.PtrToStructure(currentNativeModeBuffer, typeof(ADL_SLS_MODE));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentNativeModeBuffer = (IntPtr)((long)currentNativeModeBuffer + Marshal.SizeOf(nativeModeArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(nativeModeBuffer);
+
+                                // Add the nativeMode to the config we want to store
+                                mySLSMapConfig.NativeModes = nativeModeArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.NativeModes = new List<ADL_SLS_MODE>();
+                            }
+
+                            // Process the nativeModeOffsetsBuffer
+                            ADL_SLS_OFFSET[] nativeModeOffsetArray = new ADL_SLS_OFFSET[numNativeModeOffsets];
+                            if (numNativeModeOffsets > 0)
+                            {
+                                IntPtr currentNativeModeOffsetsBuffer = nativeModeOffsetsBuffer;
+                                for (int i = 0; i < numNativeModeOffsets; i++)
+                                {
+                                    // build a structure in the array slot
+                                    nativeModeOffsetArray[i] = new ADL_SLS_OFFSET();
+                                    // fill the array slot structure with the data from the buffer
+                                    nativeModeOffsetArray[i] = (ADL_SLS_OFFSET)Marshal.PtrToStructure(currentNativeModeOffsetsBuffer, typeof(ADL_SLS_OFFSET));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentNativeModeOffsetsBuffer = (IntPtr)((long)currentNativeModeOffsetsBuffer + Marshal.SizeOf(nativeModeOffsetArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(nativeModeOffsetsBuffer);
+
+                                // Add the nativeModeOffsets to the config we want to store
+                                mySLSMapConfig.NativeModeOffsets = nativeModeOffsetArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the empty list to the config we want to store
+                                mySLSMapConfig.NativeModeOffsets = new List<ADL_SLS_OFFSET>();
+                            }
+
+                            // Process the bezelModeBuffer
+                            ADL_BEZEL_TRANSIENT_MODE[] bezelModeArray = new ADL_BEZEL_TRANSIENT_MODE[numBezelMode];
+                            if (numBezelMode > 0)
+                            {
+                                IntPtr currentBezelModeBuffer = bezelModeBuffer;
+                                for (int i = 0; i < numBezelMode; i++)
+                                {
+                                    // build a structure in the array slot
+                                    bezelModeArray[i] = new ADL_BEZEL_TRANSIENT_MODE();
+                                    // fill the array slot structure with the data from the buffer
+                                    bezelModeArray[i] = (ADL_BEZEL_TRANSIENT_MODE)Marshal.PtrToStructure(currentBezelModeBuffer, typeof(ADL_BEZEL_TRANSIENT_MODE));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentBezelModeBuffer = (IntPtr)((long)currentBezelModeBuffer + Marshal.SizeOf(bezelModeArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(bezelModeBuffer);
+
+                                // Add the bezelModes to the config we want to store
+                                mySLSMapConfig.BezelModes = bezelModeArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.BezelModes = new List<ADL_BEZEL_TRANSIENT_MODE>();
+                            }
+
+                            // Process the transientModeBuffer
+                            ADL_BEZEL_TRANSIENT_MODE[] transientModeArray = new ADL_BEZEL_TRANSIENT_MODE[numTransientMode];
+                            if (numTransientMode > 0)
+                            {
+                                IntPtr currentTransientModeBuffer = transientModeBuffer;
+                                for (int i = 0; i < numTransientMode; i++)
+                                {
+                                    // build a structure in the array slot
+                                    transientModeArray[i] = new ADL_BEZEL_TRANSIENT_MODE();
+                                    // fill the array slot structure with the data from the buffer
+                                    transientModeArray[i] = (ADL_BEZEL_TRANSIENT_MODE)Marshal.PtrToStructure(currentTransientModeBuffer, typeof(ADL_BEZEL_TRANSIENT_MODE));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentTransientModeBuffer = (IntPtr)((long)currentTransientModeBuffer + Marshal.SizeOf(transientModeArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(transientModeBuffer);
+
+                                // Add the transientModes to the config we want to store
+                                mySLSMapConfig.TransientModes = transientModeArray.ToList();
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.TransientModes = new List<ADL_BEZEL_TRANSIENT_MODE>();
+                            }
+
+                            // Process the slsOffsetBuffer
+                            ADL_SLS_OFFSET[] slsOffsetArray = new ADL_SLS_OFFSET[numSLSOffset];
+                            if (numSLSOffset > 0)
+                            {
+                                IntPtr currentSLSOffsetBuffer = slsOffsetBuffer;
+                                for (int i = 0; i < numSLSOffset; i++)
+                                {
+                                    // build a structure in the array slot
+                                    slsOffsetArray[i] = new ADL_SLS_OFFSET();
+                                    // fill the array slot structure with the data from the buffer
+                                    slsOffsetArray[i] = (ADL_SLS_OFFSET)Marshal.PtrToStructure(currentSLSOffsetBuffer, typeof(ADL_SLS_OFFSET));
+                                    // destroy the bit of memory we no longer need
+                                    //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                    // advance the buffer forwards to the next object
+                                    currentSLSOffsetBuffer = (IntPtr)((long)currentSLSOffsetBuffer + Marshal.SizeOf(slsOffsetArray[i]));
+                                }
+                                // Free the memory used by the buffer                        
+                                Marshal.FreeCoTaskMem(slsOffsetBuffer);
+
+                                // Add the slsOffsets to the config we want to store
+                                mySLSMapConfig.SLSOffsets = slsOffsetArray.ToList();
+
+                            }
+                            else
+                            {
+                                // Add the slsTarget to the config we want to store
+                                mySLSMapConfig.SLSOffsets = new List<ADL_SLS_OFFSET>();
+                            }                           
+
+                            // Now we try to calculate whether SLS is enabled
+                            // NFI why they don't just add a ADL2_Display_SLSMapConfig_GetState function to make this easy for ppl :(
+                            // NVIDIA make it easy, why can't you AMD?
+
+                            // Logic cribbed from https://github.com/elitak/amd-adl-sdk/blob/master/Sample/Eyefinity/ati_eyefinity.c
+                            // Go through each display Target
+                            foreach (var displayTarget in displayTargetArray)
+                            {
+                                // Get the current Display Modes for this adapter/display combination
+                                int numDisplayModes;
+                                IntPtr displayModeBuffer;
+                                ADLRet = ADLImport.ADL2_Display_Modes_Get(
+                                                                            _adlContextHandle,
+                                                                                oneAdapter.AdapterIndex,
+                                                                                displayTarget.DisplayID.DisplayLogicalIndex,
+                                                                                out numDisplayModes,
+                                                                                out displayModeBuffer);
+                                if (ADLRet == ADL_STATUS.ADL_OK)
+                                {
+                                    SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_Modes_Get returned information about the display modes used by display #{displayTarget.DisplayID.DisplayLogicalAdapterIndex} connected to AMD adapter {adapterIndex}.");
+                                }
+                                else
+                                {
+                                    SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_Modes_Get returned ADL_STATUS {ADLRet} when trying to get the display modes from AMD adapter {adapterIndex} in the computer.");
+                                    continue;
+                                }
+
+                                ADL_MODE[] displayModeArray = new ADL_MODE[numDisplayModes];
+                                if (numDisplayModes > 0)
+                                {
+                                    IntPtr currentDisplayModeBuffer = displayModeBuffer;
+                                    for (int i = 0; i < numDisplayModes; i++)
+                                    {
+                                        // build a structure in the array slot
+                                        displayModeArray[i] = new ADL_MODE();
+                                        // fill the array slot structure with the data from the buffer
+                                        displayModeArray[i] = (ADL_MODE)Marshal.PtrToStructure(currentDisplayModeBuffer, typeof(ADL_MODE));
+                                        // destroy the bit of memory we no longer need
+                                        //Marshal.DestroyStructure(currentDisplayTargetBuffer, typeof(ADL_ADAPTER_INFOX2));
+                                        // advance the buffer forwards to the next object
+                                        currentDisplayModeBuffer = (IntPtr)((long)currentDisplayModeBuffer + Marshal.SizeOf(displayModeArray[i]));
+                                    }
+                                    // Free the memory used by the buffer                        
+                                    Marshal.FreeCoTaskMem(displayModeBuffer);
+
+                                    // Add the slsOffsets to the config we want to store
+                                    //mySLSMapConfig.SLSOffsets = displayModeArray.ToList();
+
+                                }
+
+                                // If Eyefinity is enabled for this adapter, then the display mode of an
+                                // attached display target will match one of the SLS display modes reported by
+                                // ADL_Display_SLSMapConfig_Get(). The match will either be with "native" SLS 
+                                // modes (which are not bezel-compensated), or with "bezel" SLS modes which are.
+                                // 
+                                // So, simply compare current display mode against all the ones listed for the
+                                // SLS native or bezel-compensated modes: if there is a match, then the mode
+                                // currently used by this adapter is an Eyefinity/SLS mode, and Eyefinity is enabled.
+                                // First check the native SLS mode list
+                                // Process the slsOffsetBuffer
+                                bool isSlsEnabled = false;
+                                bool isBezelCompensatedDisplay = false;
+                                foreach (var displayMode in displayModeArray)
+                                {
+                                    foreach (var nativeMode in nativeModeArray)
+                                    {
+                                        if (nativeMode.DisplayMode.XRes == displayMode.XRes && nativeMode.DisplayMode.YRes == displayMode.YRes)
+                                        {
+                                            isSlsEnabled = true;
+                                            break;
+                                        }
+
+                                    }
+
+                                    // If no match was found, check the bezel-compensated SLS mode list
+                                    if (!isSlsEnabled)
+                                    {
+                                        foreach (var bezelMode in bezelModeArray)
+                                        {
+                                            if (bezelMode.DisplayMode.XRes == displayMode.XRes && bezelMode.DisplayMode.YRes == displayMode.YRes)
+                                            {
+                                                isSlsEnabled = true;
+                                                isBezelCompensatedDisplay = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    // Now we check which slot we need to put this display into
+                                    if (isSlsEnabled)
+                                    {
+                                        // SLS is enabled for this display
+                                        if (!myDisplayConfig.SlsConfig.SLSEnabledDisplayTargets.Contains(displayMode))
+                                        {
+                                            myDisplayConfig.SlsConfig.SLSEnabledDisplayTargets.Add(displayMode);
+                                        }
+                                        // we also update the main IsSLSEnabled so that it is indicated at the top level too
+
+                                        myDisplayConfig.SlsConfig.IsSlsEnabled = true;
+                                        SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has a matching SLS grid set! Eyefinity (SLS) is enabled. Setting IsSlsEnabled to true");
+
+                                    }
+                                    else
+                                    {
+                                        // SLS is disabled for this display
+                                        if (!myDisplayConfig.SlsConfig.NonSLSDisplayTargets.Contains(displayMode))
+                                        {
+                                            myDisplayConfig.SlsConfig.NonSLSDisplayTargets.Add(displayMode);
+                                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} is not currently used in an SLS Map. Keeping the default IsSlsEnabled value of false.");
+                                        }
+
+                                    }
+                                }
+
+                            }
+
+
+                            // TODO: move this to where it should go
+                            // Only Add the mySLSMapConfig to the displayConfig if SLS is enabled
+                            myDisplayConfig.SlsConfig.SLSMapConfigs.Add(mySLSMapConfig);
 
                         }
                         else
@@ -725,12 +817,13 @@ namespace DisplayMagicianShared.AMD
                             // If we get here then there there was no active SLSGrid, meaning Eyefinity is disabled!
                             SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has no active SLS grids set! Eyefinity (SLS) hasn't even been setup yet. Keeping the default IsSlsEnabled value of false.");
                         }
-                    }
+                    }                                        
                     else
                     {
-                        // If we get here then there there is an error. We'll assume that SLS isn't set, just in case it happens to mean someone can still use this software
-                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_SLSMapIndex_Get returned ADL_STATUS {ADLRet} when trying to see if any SLS grids were active from AMD adapter {adapterIndex} in the computer. Keeping the default IsSlsEnabled value of false.");
+                        // If we get here then there are less than two displays connected. Eyefinity cannot be enabled in this case!
+                        SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: There are less than two displays connected to this display so Eyefinity cannot be enabled.");
                     }
+
 
                     myDisplayConfig.HdrConfigs = new Dictionary<int, AMD_HDR_CONFIG>();
                     // Now we need to get all the displays connected to this adapter so that we can get their HDR state
