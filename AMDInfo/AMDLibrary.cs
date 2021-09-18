@@ -77,17 +77,17 @@ namespace DisplayMagicianShared.AMD
         public bool IsSlsEnabled;
         public List<AMD_SLSMAP_CONFIG> SLSMapConfigs;
         public List<ADL_MODE> SLSEnabledDisplayTargets;
-        //public List<ADL_MODE> NonSLSDisplayTargets;
 
         public override bool Equals(object obj) => obj is AMD_SLS_CONFIG other && this.Equals(other);
 
         public bool Equals(AMD_SLS_CONFIG other)
         => IsSlsEnabled == other.IsSlsEnabled &&
-           SLSMapConfigs.SequenceEqual(other.SLSMapConfigs);
+           SLSMapConfigs.SequenceEqual(other.SLSMapConfigs) &&
+           SLSEnabledDisplayTargets.SequenceEqual(other.SLSEnabledDisplayTargets);
 
         public override int GetHashCode()
         {
-            return (IsSlsEnabled, SLSMapConfigs).GetHashCode();
+            return (IsSlsEnabled, SLSMapConfigs, SLSEnabledDisplayTargets).GetHashCode();
         }
         public static bool operator ==(AMD_SLS_CONFIG lhs, AMD_SLS_CONFIG rhs) => lhs.Equals(rhs);
 
@@ -97,15 +97,13 @@ namespace DisplayMagicianShared.AMD
     [StructLayout(LayoutKind.Sequential)]
     public struct AMD_HDR_CONFIG : IEquatable<AMD_HDR_CONFIG>
     {
-        //public ADL_COLORDEPTH HdrColorDepth;
         public int AdapterIndex;
         public bool HDRSupported;
         public bool HDREnabled;
 
         public override bool Equals(object obj) => obj is AMD_HDR_CONFIG other && this.Equals(other);
         public bool Equals(AMD_HDR_CONFIG other)
-        => //HdrColorDepth == other.HdrColorDepth &&
-           AdapterIndex == other.AdapterIndex && 
+        => AdapterIndex == other.AdapterIndex && 
            HDRSupported == other.HDRSupported &&
            HDREnabled == other.HDREnabled;
 
@@ -296,7 +294,6 @@ namespace DisplayMagicianShared.AMD
             // (We will change this later if it turns out we're using SLS)
             myDisplayConfig.SlsConfig.IsSlsEnabled = false;
             myDisplayConfig.SlsConfig.SLSEnabledDisplayTargets = new List<ADL_MODE>();
-            //myDisplayConfig.SlsConfig.NonSLSDisplayTargets = new List<ADL_MODE>();
 
             if (_initialised)
             {
