@@ -77,7 +77,7 @@ namespace DisplayMagicianShared.AMD
         public bool IsSlsEnabled;
         public List<AMD_SLSMAP_CONFIG> SLSMapConfigs;
         public List<ADL_MODE> SLSEnabledDisplayTargets;
-        public List<ADL_MODE> NonSLSDisplayTargets;
+        //public List<ADL_MODE> NonSLSDisplayTargets;
 
         public override bool Equals(object obj) => obj is AMD_SLS_CONFIG other && this.Equals(other);
 
@@ -296,7 +296,7 @@ namespace DisplayMagicianShared.AMD
             // (We will change this later if it turns out we're using SLS)
             myDisplayConfig.SlsConfig.IsSlsEnabled = false;
             myDisplayConfig.SlsConfig.SLSEnabledDisplayTargets = new List<ADL_MODE>();
-            myDisplayConfig.SlsConfig.NonSLSDisplayTargets = new List<ADL_MODE>();
+            //myDisplayConfig.SlsConfig.NonSLSDisplayTargets = new List<ADL_MODE>();
 
             if (_initialised)
             {
@@ -792,24 +792,15 @@ namespace DisplayMagicianShared.AMD
                                         SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has a matching SLS grid set! Eyefinity (SLS) is enabled. Setting IsSlsEnabled to true");
 
                                     }
-                                    else
-                                    {
-                                        // SLS is disabled for this display
-                                        if (!myDisplayConfig.SlsConfig.NonSLSDisplayTargets.Contains(displayMode))
-                                        {
-                                            myDisplayConfig.SlsConfig.NonSLSDisplayTargets.Add(displayMode);
-                                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} is not currently used in an SLS Map. Keeping the default IsSlsEnabled value of false.");
-                                        }
-
-                                    }
                                 }
 
                             }
 
-
-                            // TODO: move this to where it should go
                             // Only Add the mySLSMapConfig to the displayConfig if SLS is enabled
-                            myDisplayConfig.SlsConfig.SLSMapConfigs.Add(mySLSMapConfig);
+                            if (myDisplayConfig.SlsConfig.IsSlsEnabled)
+                            {
+                                myDisplayConfig.SlsConfig.SLSMapConfigs.Add(mySLSMapConfig);
+                            }
 
                         }
                         else
@@ -1882,57 +1873,6 @@ namespace DisplayMagicianShared.AMD
 
             return displayIdentifiers;
         }
-
-
-        /*public static bool ListOfArraysEqual(List<NV_RECT[]> a1, List<NV_RECT[]> a2)
-        {
-            if (a1.Count == a2.Count)
-            {
-                for (int i = 0; i < a1.Count; i++)
-                {
-                    if (a1[i].Length == a2[i].Length)
-                    {
-                        for (int j = 0; j < a1[i].Length; j++)
-                        {
-                            if (a1[i][j] != a2[i][j])
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public static bool Arrays2DEqual(int[][] a1, int[][] a2)
-        {
-            if (a1.Length == a2.Length)
-            {
-                for (int i = 0; i < a1.Length; i++)
-                {
-                    if (a1[i].Length == a2[i].Length)
-                    {
-                        for (int j = 0; j < a1[i].Length; j++)
-                        {
-                            if (a1[i][j] != a2[i][j])
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }*/
 
     }
 
