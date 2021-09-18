@@ -1504,14 +1504,14 @@ namespace DisplayMagicianShared.AMD
 
         public List<string> GetCurrentDisplayIdentifiers()
         {
-            SharedLogger.logger.Error($"AMDLibrary/GetCurrentDisplayIdentifiers: Getting the current display identifiers for the displays in use now");
+            SharedLogger.logger.Trace($"AMDLibrary/GetCurrentDisplayIdentifiers: Getting the current display identifiers for the displays in use now");
             bool allDisplays = false;
             return GetSomeDisplayIdentifiers(allDisplays);
         }
 
         public List<string> GetAllConnectedDisplayIdentifiers()
         {
-            SharedLogger.logger.Error($"AMDLibrary/GetAllConnectedDisplayIdentifiers: Getting all the display identifiers that can possibly be used");
+            SharedLogger.logger.Trace($"AMDLibrary/GetAllConnectedDisplayIdentifiers: Getting all the display identifiers that can possibly be used");
             bool allDisplays = true;
             return GetSomeDisplayIdentifiers(allDisplays);            
         }
