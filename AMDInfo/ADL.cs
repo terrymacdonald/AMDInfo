@@ -223,7 +223,7 @@ namespace DisplayMagicianShared.AMD
         public override bool Equals(object obj) => obj is ADL_DISPLAY_TARGET other && this.Equals(other);
         public bool Equals(ADL_DISPLAY_TARGET other)
             => DisplayID.Equals(other.DisplayID) &&
-                DisplayMapIndex == other.DisplayMapIndex&&
+                DisplayMapIndex == other.DisplayMapIndex &&
                 DisplayTargetMask == other.DisplayTargetMask &&
                 DisplayTargetValue == other.DisplayTargetValue;
 
@@ -291,9 +291,9 @@ namespace DisplayMagicianShared.AMD
 
         public override bool Equals(object obj) => obj is ADL_ADAPTER_DISPLAY_CAP other && this.Equals(other);
         public bool Equals(ADL_ADAPTER_DISPLAY_CAP other)
-            =>  AdapterIndex == other.AdapterIndex &&
-                AdapterDisplayCapMask == other.AdapterDisplayCapMask&&
-                AdapterDisplayCapValue== other.AdapterDisplayCapValue;
+            => AdapterIndex == other.AdapterIndex &&
+                AdapterDisplayCapMask == other.AdapterDisplayCapMask &&
+                AdapterDisplayCapValue == other.AdapterDisplayCapValue;
 
         public override int GetHashCode()
         {
@@ -678,7 +678,7 @@ namespace DisplayMagicianShared.AMD
             MaxVResolution == other.MaxVResolution &&
             MaxRefresh == other.MaxRefresh &&
             PTMCx == other.PTMCx &&
-            PTMCy== other.PTMCy &&
+            PTMCy == other.PTMCy &&
             PTMRefreshRate == other.PTMRefreshRate &&
             DDCInfoFlag == other.DDCInfoFlag &&
             PackedPixelSupported == other.PackedPixelSupported &&
@@ -711,7 +711,7 @@ namespace DisplayMagicianShared.AMD
         {
             return (Size, SupportsDDC, ManufacturerID, ProductID, DisplayName, MaxHResolution, MaxVResolution, MaxRefresh, PTMCx, PTMCy, PTMRefreshRate, DDCInfoFlag,
                 PackedPixelSupported, PanelPixelFormat, SerialID, MinLuminanceData, AvgLuminanceData, MaxLuminanceData, SupportedTransferFunction, SupportedColorSpace,
-                NativeDisplayChromaticityRedX, NativeDisplayChromaticityRedY, NativeDisplayChromaticityGreenX, NativeDisplayChromaticityGreenY, 
+                NativeDisplayChromaticityRedX, NativeDisplayChromaticityRedY, NativeDisplayChromaticityGreenX, NativeDisplayChromaticityGreenY,
                 NativeDisplayChromaticityBlueX, NativeDisplayChromaticityBlueY, NativeDisplayChromaticityWhiteX, NativeDisplayChromaticityWhiteY,
                 DiffuseScreenReflectance, SpecularScreenReflectance, SupportedHDR, FreesyncFlags, MinLuminanceNoDimmingData, MaxBacklightMaxLuminanceData,
                 MinBacklightMaxLuminanceData, MaxBacklightMinLuminanceData, MinBacklightMinLuminanceData).GetHashCode();
@@ -838,7 +838,7 @@ namespace DisplayMagicianShared.AMD
         public bool DisplayOutputTypeIsPassiveDongleDP_DVI => DisplayOutputType == ADL_CONNECTION_TYPE.PassiveDongleDPToDVI;
         public bool DisplayOutputTypeIsMST => DisplayOutputType == ADL_CONNECTION_TYPE.MST;
         public bool DisplayOutputTypeIsActiveDongle => DisplayOutputType == ADL_CONNECTION_TYPE.ActiveDongle;
-        public bool DisplayOutputTypeIsVirtual => DisplayOutputType == ADL_CONNECTION_TYPE.Virtual;       
+        public bool DisplayOutputTypeIsVirtual => DisplayOutputType == ADL_CONNECTION_TYPE.Virtual;
 
         /*#define ADL_CONNECTION_TYPE_VGA 0
         #define ADL_CONNECTION_TYPE_DVI 1
@@ -919,7 +919,7 @@ namespace DisplayMagicianShared.AMD
         //public override string ToString() => $"{type.ToString("G")}";
     }
 
-   
+
     /// <summary> ADLDisplayConfig Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_DISPLAY_CONFIG : IEquatable<ADL_DISPLAY_CONFIG>
@@ -1300,7 +1300,7 @@ namespace DisplayMagicianShared.AMD
     /// <summary> ADLSLSMap Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_SLS_MAP : IEquatable<ADL_SLS_MAP>
-{
+    {
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> The current display map index. It is the OS Desktop index. </summary>
@@ -1411,7 +1411,7 @@ namespace DisplayMagicianShared.AMD
     /// <summary> ADLSLSTarget Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_SLS_TARGET : IEquatable<ADL_SLS_TARGET>
-{
+    {
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> The SLS map index. </summary>
@@ -1462,7 +1462,7 @@ namespace DisplayMagicianShared.AMD
     /// <summary> ADLSLSMode Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_SLS_MODE : IEquatable<ADL_SLS_MODE>
-{
+    {
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> The current display map index. It is the OS Desktop index. </summary>
@@ -1500,7 +1500,7 @@ namespace DisplayMagicianShared.AMD
     /// <summary> ADLBezelTransientMode Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_BEZEL_TRANSIENT_MODE : IEquatable<ADL_BEZEL_TRANSIENT_MODE>
-{
+    {
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> SLS Map Index. </summary>
@@ -1552,13 +1552,13 @@ namespace DisplayMagicianShared.AMD
         /// <summary> The SLS Map List.  </summary>
         public ADL_SLS_MAP[] SLSMaps;  // Not quite sure this is right
         /// <summary> The number of SLS Targets</summary>
-        public int NumSLSTarget; 
+        public int NumSLSTarget;
         /// <summary> The SLS Target List. </summary>
         public ADL_SLS_TARGET[] SLSTargets; // Not quite sure this is right
 
         public override bool Equals(object obj) => obj is ADL_POSSIBLE_SLS_MAP other && this.Equals(other);
         public bool Equals(ADL_POSSIBLE_SLS_MAP other)
-            =>  SLSMapIndex == other.SLSMapIndex &&
+            => SLSMapIndex == other.SLSMapIndex &&
                 NumSLSMap == other.NumSLSMap &&
                 SLSMaps.Equals(other.SLSMaps) &&
                 NumSLSTarget == other.NumSLSTarget &&
@@ -1580,7 +1580,7 @@ namespace DisplayMagicianShared.AMD
     /// <summary> ADLSLSOffset Structure</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ADL_SLS_OFFSET : IEquatable<ADL_SLS_OFFSET>
-{
+    {
         /// <summary> The Adapter Index </summary>
         public int AdapterIndex;
         /// <summary> The current display map index. It is the OS Desktop index. </summary>
@@ -1676,7 +1676,7 @@ namespace DisplayMagicianShared.AMD
         /// <summary> Maximum number of GL-Sync ports on the GL-Sync module </summary>
         public const int ADL_MAX_GLSYNC_PORT_LEDS = 8;
         /// <summary> Maximum number of ADLModes for the adapter </summary>
-        public const int ADL_MAX_NUM_DISPLAYMODES = 1024;        
+        public const int ADL_MAX_NUM_DISPLAYMODES = 1024;
         /// <summary> Indicates the active dongle, all types </summary>
         public const int ADL_CONNECTION_TYPE_ACTIVE_DONGLE = 12;
         /// <summary> Indicates the Active dongle DP->DVI(double link) connection type is valid. </summary>
@@ -2027,7 +2027,7 @@ namespace DisplayMagicianShared.AMD
 
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_Adapter_Desktop_Caps(IntPtr ADLContextHandle, int adapterIndex, out int DesktopCapsValue, out int DesktopCapsMask);
-       
+
         // Function to retrieve active desktop supported SLS grid size.
         [DllImport(ATI_ADL_DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ADL_STATUS ADL2_Adapter_Desktop_SupportedSLSGridTypes_Get(IntPtr ADLContextHandle, int adapterIndex, int numDisplayTargetToUse, ref ADL_DISPLAY_TARGET displayTargetToUse, out int numSLSGrid, out ADL_DISPLAY_TARGET SLSGrid, out int option);
@@ -2216,9 +2216,9 @@ namespace DisplayMagicianShared.AMD
         public static IntPtr ADL_Main_Memory_Alloc_Function(int size)
         {
             //Console.WriteLine($"\nCallback called with param: {size}");
-            IntPtr result = Marshal.AllocCoTaskMem(size);           
+            IntPtr result = Marshal.AllocCoTaskMem(size);
             return result;
         }
 
-    }        
+    }
 }

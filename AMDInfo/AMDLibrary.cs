@@ -103,7 +103,7 @@ namespace DisplayMagicianShared.AMD
 
         public override bool Equals(object obj) => obj is AMD_HDR_CONFIG other && this.Equals(other);
         public bool Equals(AMD_HDR_CONFIG other)
-        => AdapterIndex == other.AdapterIndex && 
+        => AdapterIndex == other.AdapterIndex &&
            HDRSupported == other.HDRSupported &&
            HDREnabled == other.HDREnabled;
 
@@ -124,7 +124,7 @@ namespace DisplayMagicianShared.AMD
         public AMD_SLS_CONFIG SlsConfig;
         public List<ADL_DISPLAY_MAP> DisplayMaps;
         public List<ADL_DISPLAY_TARGET> DisplayTargets;
-        public Dictionary<int,AMD_HDR_CONFIG> HdrConfigs;
+        public Dictionary<int, AMD_HDR_CONFIG> HdrConfigs;
         public List<string> DisplayIdentifiers;
         public override bool Equals(object obj) => obj is AMD_DISPLAY_CONFIG other && this.Equals(other);
 
@@ -203,11 +203,11 @@ namespace DisplayMagicianShared.AMD
 
                 _winLibrary = WinLibrary.GetLibrary();
             }
-            catch(DllNotFoundException ex)
+            catch (DllNotFoundException ex)
             {
                 // If we get here then the AMD ADL DLL wasn't found. We can't continue to use it, so we log the error and exit
                 SharedLogger.logger.Info(ex, $"AMDLibrary/AMDLibrary: Exception trying to load the AMD ADL DLL {ADLImport.ATI_ADL_DLL}. This generally means you don't have the AMD ADL driver installed.");
-            }            
+            }
 
         }
 
@@ -222,11 +222,11 @@ namespace DisplayMagicianShared.AMD
                     ADLImport.ADL2_Main_Control_Destroy(_adlContextHandle);
                     SharedLogger.logger.Trace($"AMDLibrary/AMDLibrary: AMD ADL2 library was destroyed successfully");
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     SharedLogger.logger.Trace(ex, $"AMDLibrary/AMDLibrary: Exception destroying AMD ADL2 library. ADL2_Main_Control_Destroy() caused an exception.");
                 }
-                
+
             }
         }
 
@@ -275,8 +275,23 @@ namespace DisplayMagicianShared.AMD
         {
             return _instance;
         }
-        
-       
+
+        public AMD_DISPLAY_CONFIG CreateDefaultConfig()
+        {
+            AMD_DISPLAY_CONFIG myDefaultConfig = new AMD_DISPLAY_CONFIG();
+
+            // Fill in the minimal amount we need to avoid null references
+            // so that we won't break json.net when we save a default config
+
+            myDefaultConfig.AdapterConfigs = new List<AMD_ADAPTER_CONFIG>();
+            myDefaultConfig.SlsConfig.SLSMapConfigs = new List<AMD_SLSMAP_CONFIG>();
+            myDefaultConfig.SlsConfig.SLSEnabledDisplayTargets = new List<ADL_MODE>();
+            myDefaultConfig.DisplayTargets = new List<ADL_DISPLAY_TARGET>();
+            myDefaultConfig.HdrConfigs = new Dictionary<int, AMD_HDR_CONFIG>();
+            myDefaultConfig.DisplayIdentifiers = new List<string>();
+
+            return myDefaultConfig;
+        }
 
         public AMD_DISPLAY_CONFIG GetActiveConfig()
         {
@@ -371,7 +386,7 @@ namespace DisplayMagicianShared.AMD
                         SharedLogger.logger.Warn($"AMDLibrary/GetSomeDisplayIdentifiers: WARNING - ADL2_Adapter_Active_Get returned ADL_STATUS {ADLRet} when trying to see if AMD Adapter #{adapterIndex} is active. Trying to skip this adapter so something at least works.");
                         continue;
                     }
-                    
+
                     // Go grab the DisplayMaps and DisplayTargets as that is useful infor for creating screens
                     int numDisplayTargets = 0;
                     int numDisplayMaps = 0;
@@ -475,7 +490,7 @@ namespace DisplayMagicianShared.AMD
                         if (ADLRet == ADL_STATUS.ADL_OK && matchingSLSMapIndex != -1)
                         {
                             // We have a matching SLS index!
-                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has one or more SLS Maps that could be used with this display configuration! Eyefinity (SLS) could be enabled.");                            
+                            SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has one or more SLS Maps that could be used with this display configuration! Eyefinity (SLS) could be enabled.");
 
                             AMD_SLSMAP_CONFIG mySLSMapConfig = new AMD_SLSMAP_CONFIG();
 
@@ -704,7 +719,7 @@ namespace DisplayMagicianShared.AMD
                             {
                                 // Add the slsTarget to the config we want to store
                                 mySLSMapConfig.SLSOffsets = new List<ADL_SLS_OFFSET>();
-                            }                           
+                            }
 
                             // Now we try to calculate whether SLS is enabled
                             // NFI why they don't just add a ADL2_Display_SLSMapConfig_GetState function to make this easy for ppl :(
@@ -824,7 +839,7 @@ namespace DisplayMagicianShared.AMD
                             // If we get here then there there was no active SLSGrid, meaning Eyefinity is disabled!
                             SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: AMD Adapter #{oneAdapter.AdapterIndex.ToString()} has no active SLS grids set! Eyefinity (SLS) hasn't even been setup yet. Keeping the default IsSlsEnabled value of false.");
                         }
-                    }                                        
+                    }
                     else
                     {
                         // If we get here then there are less than two displays connected. Eyefinity cannot be enabled in this case!
@@ -850,10 +865,10 @@ namespace DisplayMagicianShared.AMD
                             {
                                 SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that display {displayTarget.DisplayID.DisplayLogicalIndex} on adapter {adapterIndex} supports HDR and HDR is NOT enabled.");
                             }
-                            else 
+                            else
                             {
                                 SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Get says that display {displayTarget.DisplayID.DisplayLogicalIndex} on adapter {adapterIndex} does NOT support HDR.");
-                            }                            
+                            }
                         }
                         else
                         {
@@ -874,16 +889,18 @@ namespace DisplayMagicianShared.AMD
                         }
                     }
 
-                    // Add the AMD Display Identifiers
-                    myDisplayConfig.DisplayIdentifiers = GetCurrentDisplayIdentifiers();
-                }                
+
+                }
+
+                // Add the AMD Display Identifiers
+                myDisplayConfig.DisplayIdentifiers = GetCurrentDisplayIdentifiers();
             }
             else
             {
                 SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - Tried to run GetAMDDisplayConfig but the AMD ADL library isn't initialised!");
                 throw new AMDLibraryException($"Tried to run GetAMDDisplayConfig but the AMD ADL library isn't initialised!");
             }
-            
+
             // Return the configuration
             return myDisplayConfig;
         }
@@ -1113,7 +1130,7 @@ namespace DisplayMagicianShared.AMD
 
                         // Now we need to get all the displays connected to this adapter so that we can get their HDR state
                         foreach (var displayInfoItem in displayInfoArray)
-                        {                            
+                        {
 
                             // Ignore the display if it isn't connected (note: we still need to see if it's actively mapped to windows!)
                             if (!displayInfoItem.DisplayConnectedSet)
@@ -1214,7 +1231,7 @@ namespace DisplayMagicianShared.AMD
                             }
 
                         }
-                    }                    
+                    }
 
                 }
 
@@ -1256,7 +1273,7 @@ namespace DisplayMagicianShared.AMD
                 throw new AMDLibraryException($"Tried to run PrintActiveConfig but the AMD ADL library isn't initialised!");
             }
 
-            
+
 
             stringToReturn += $"\n\n";
             // Now we also get the Windows CCD Library info, and add it to the above
@@ -1362,11 +1379,11 @@ namespace DisplayMagicianShared.AMD
                                 {
                                     SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Set was NOT able to turn off HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
                                 }
-                            }                                
+                            }
                             break;
                         }
                     }
-                    
+
                 }
 
             }
@@ -1449,7 +1466,7 @@ namespace DisplayMagicianShared.AMD
         {
             SharedLogger.logger.Trace($"AMDLibrary/GetAllConnectedDisplayIdentifiers: Getting all the display identifiers that can possibly be used");
             bool allDisplays = true;
-            return GetSomeDisplayIdentifiers(allDisplays);            
+            return GetSomeDisplayIdentifiers(allDisplays);
         }
 
         private List<string> GetSomeDisplayIdentifiers(bool allDisplays = false)
@@ -1576,7 +1593,7 @@ namespace DisplayMagicianShared.AMD
                     {
                         SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ERROR - ADL2_Display_DisplayMapConfig_Get returned ADL_STATUS {ADLRet} when trying to get the display target info from AMD adapter {adapterIndex} in the computer.");
                         continue;
-                    }                   
+                    }
 
                     ADL_DISPLAY_TARGET[] displayTargetArray = { };
                     if (numDisplayTargets > 0)
@@ -1605,7 +1622,7 @@ namespace DisplayMagicianShared.AMD
 
                     int forceDetect = 0;
                     int numDisplays;
-                    IntPtr displayInfoBuffer;                    
+                    IntPtr displayInfoBuffer;
                     ADLRet = ADLImport.ADL2_Display_DisplayInfo_Get(_adlContextHandle, adapterIndex, out numDisplays, out displayInfoBuffer, forceDetect);
                     if (ADLRet == ADL_STATUS.ADL_OK)
                     {
@@ -1695,7 +1712,7 @@ namespace DisplayMagicianShared.AMD
                         ADL_DDC_INFO2 ddcInfo = new ADL_DDC_INFO2();
                         ADLRet = ADLImport.ADL2_Display_DDCInfo2_Get(_adlContextHandle, adapterIndex, displayInfoItem.DisplayID.DisplayLogicalIndex, out ddcInfo);
                         if (ADLRet == ADL_STATUS.ADL_OK)
-                        {                            
+                        {
                             SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_DDCInfo2_Get returned information about DDC Information for display {displayInfoItem.DisplayID.DisplayLogicalIndex} connected to AMD adapter {adapterIndex}.");
                             if (ddcInfo.SupportsDDC == 1)
                             {
@@ -1780,7 +1797,7 @@ namespace DisplayMagicianShared.AMD
                             }
                         }
 
-                        
+
 
                         // Create a display identifier out of it
                         string displayIdentifier = String.Join("|", displayInfo);
