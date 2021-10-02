@@ -1359,7 +1359,7 @@ namespace DisplayMagicianShared.AMD
 
                         }
 
-                    }                    
+                    }
 
                 }
                 else
