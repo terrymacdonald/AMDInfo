@@ -52,10 +52,10 @@ namespace AMDInfo
             NLog.LogManager.Configuration = config;
 
             // Start the Log file
-            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.0.3");
+            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.0.4");
 
 
-            Console.WriteLine($"\nAMDInfo v1.0.3");
+            Console.WriteLine($"\nAMDInfo v1.0.4");
             Console.WriteLine($"==============");
             Console.WriteLine($"By Terry MacDonald 2021\n");
 
@@ -311,8 +311,18 @@ namespace AMDInfo
                             bool itWorkedforWindows = WinLibrary.GetLibrary().SetActiveConfig(myDisplayConfig.WindowsConfig);
                             if (itWorkedforWindows)
                             {
-                                SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The Windows CCD display settings within {filename} were successfully applied.");
-                                Console.WriteLine($"AMDInfo Display config successfully applied");
+                                bool itWorkedforAMDColor = AMDLibrary.GetLibrary().SetActiveConfigOverride(myDisplayConfig.AMDConfig);
+
+                                if (itWorkedforAMDColor)
+                                {
+                                    SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The AMD display settings that override windows within {filename} were successfully applied.");
+                                    Console.WriteLine($"AMDInfo Display config successfully applied");
+                                }
+                                else
+                                {
+                                    SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The AMD display settings that override windows within {filename} were NOT applied correctly.");
+                                    Console.WriteLine($"ERROR - AMDInfo AMD Override settings were not applied correctly.");
+                                }
                             }
                             else
                             {
