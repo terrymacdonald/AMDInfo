@@ -52,10 +52,10 @@ namespace AMDInfo
             NLog.LogManager.Configuration = config;
 
             // Start the Log file
-            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.0.4");
+            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.1.0");
 
 
-            Console.WriteLine($"\nAMDInfo v1.0.4");
+            Console.WriteLine($"\nAMDInfo v1.1.0");
             Console.WriteLine($"==============");
             Console.WriteLine($"By Terry MacDonald 2021\n");
 
@@ -203,7 +203,7 @@ namespace AMDInfo
         {
             Console.WriteLine($"AMDInfo is a little program to help test setting display layout and HDR settings in Windows 10 64-bit and later.\n");
             Console.WriteLine($"You need to have AMD Radeon Software Adrenalin 2020 Edition 21.2.1 or later installed and an AMD video card installed and active.\n");
-            Console.WriteLine($"You can run it without any command line parameters, and it will print all the information it can find from the \nWindows Display CCD interface.\n");
+            Console.WriteLine($"You can run it without any command line parameters, and it will print all the information it can find from the \nAMD and Windows Display CCD and GDI interfaces.\n");
             Console.WriteLine($"You can also run it with 'AMDInfo save myfilename.cfg' and it will save the current display configuration into\nthe myfilename.cfg file.\n");
             Console.WriteLine($"This is most useful when you subsequently use the 'AMDInfo load myfilename.cfg' command, as it will load the\ndisplay configuration from the myfilename.cfg file and make it live. In this way, you can make yourself a library\nof different cfg files with different display layouts, then use the AMDInfo load command to swap between them.\n\n");
             Console.WriteLine($"Valid commands:\n");
