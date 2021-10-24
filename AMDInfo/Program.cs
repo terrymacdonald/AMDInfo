@@ -70,6 +70,10 @@ namespace AMDInfo
                 Environment.Exit(1);
             }
 
+            // Update the configuration
+            AMDLibrary amdLibrary = AMDLibrary.GetLibrary();
+            WinLibrary winLibrary = WinLibrary.GetLibrary();
+
             if (args.Length > 0)
             {
                 if (args[0] == "save")
@@ -153,7 +157,7 @@ namespace AMDInfo
                     SharedLogger.logger.Debug($"AMDInfo/Main: showing currently connected display ids as currentids command was provided");
                     Console.WriteLine("The current display identifiers are:");
                     SharedLogger.logger.Info($"AMDInfo/Main: The current display identifiers are:");
-                    foreach (string displayId in AMDLibrary.GetLibrary().GetCurrentDisplayIdentifiers())
+                    foreach (string displayId in amdLibrary.CurrentDisplayIdentifiers)
                     {
                         Console.WriteLine(@displayId);
                         SharedLogger.logger.Info($@"{displayId}");
@@ -164,7 +168,7 @@ namespace AMDInfo
                     SharedLogger.logger.Debug($"AMDInfo/Main: showing all display ids as allids command was provided");
                     Console.WriteLine("All connected display identifiers are:");
                     SharedLogger.logger.Info($"AMDInfo/Main: All connected display identifiers are:");
-                    foreach (string displayId in AMDLibrary.GetLibrary().GetAllConnectedDisplayIdentifiers())
+                    foreach (string displayId in amdLibrary.GetAllConnectedDisplayIdentifiers())
                     {
                         Console.WriteLine(@displayId);
                         SharedLogger.logger.Info($@"{displayId}");
@@ -173,7 +177,7 @@ namespace AMDInfo
                 else if (args[0] == "print")
                 {
                     SharedLogger.logger.Debug($"AMDInfo/Main: printing display info as print command was provided");
-                    Console.WriteLine(AMDLibrary.GetLibrary().PrintActiveConfig());
+                    Console.WriteLine(amdLibrary.PrintActiveConfig());
                 }
                 else if (args[0] == "help" || args[0] == "--help" || args[0] == "-h" || args[0] == "/?" || args[0] == "-?")
                 {
@@ -219,9 +223,12 @@ namespace AMDInfo
             SharedLogger.logger.Trace($"AMDInfo/saveToFile: Attempting to save the current display configuration to the {filename}.");
 
             SharedLogger.logger.Trace($"AMDInfo/saveToFile: Getting the current Active Config");
+            // Get references to the libraries used
+            AMDLibrary amdLibrary = AMDLibrary.GetLibrary();
+            WinLibrary winLibrary = WinLibrary.GetLibrary();
             // Get the current configuration
-            myDisplayConfig.AMDConfig = AMDLibrary.GetLibrary().GetActiveConfig();
-            myDisplayConfig.WindowsConfig = WinLibrary.GetLibrary().GetActiveConfig();
+            myDisplayConfig.AMDConfig = amdLibrary.ActiveDisplayConfig;
+            myDisplayConfig.WindowsConfig = winLibrary.ActiveDisplayConfig;
 
             SharedLogger.logger.Trace($"AMDInfo/saveToFile: Attempting to convert the current Active Config objects to JSON format");
             // Save the object to file!
@@ -292,15 +299,19 @@ namespace AMDInfo
                 {
                     Console.WriteLine($"AMDInfo/loadFromFile: ERROR - Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
                     SharedLogger.logger.Error(ex, $"AMDInfo/loadFromFile: Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
-                }                
+                }
 
-                if (!AMDLibrary.GetLibrary().IsActiveConfig(myDisplayConfig.AMDConfig) && !WinLibrary.GetLibrary().IsActiveConfig(myDisplayConfig.WindowsConfig))
+                // Get references to the libraries used
+                AMDLibrary amdLibrary = AMDLibrary.GetLibrary();
+                WinLibrary winLibrary = WinLibrary.GetLibrary();
+
+                if (!amdLibrary.IsActiveConfig(myDisplayConfig.AMDConfig) && !winLibrary.IsActiveConfig(myDisplayConfig.WindowsConfig))
                 {
-                    if (AMDLibrary.GetLibrary().IsPossibleConfig(myDisplayConfig.AMDConfig))
+                    if (amdLibrary.IsPossibleConfig(myDisplayConfig.AMDConfig))
                     {
                         SharedLogger.logger.Trace($"AMDInfo/loadFromFile: The AMD display settings within {filename} are possible to use right now, so we'll use attempt to use them.");
                         Console.WriteLine($"Attempting to apply AMD display config from {filename}");
-                        bool itWorkedforAMD = AMDLibrary.GetLibrary().SetActiveConfig(myDisplayConfig.AMDConfig);
+                        bool itWorkedforAMD = amdLibrary.SetActiveConfig(myDisplayConfig.AMDConfig);
 
                         if (itWorkedforAMD)
                         {
@@ -308,10 +319,10 @@ namespace AMDInfo
                             // Then let's try to also apply the windows changes
                             // Note: we are unable to check if the Windows CCD display config is possible, as it won't match if either the current display config is a Eyefinity config,
                             // or if the display config we want to change to is a Eyefinity config. So we just have to assume that it will work!
-                            bool itWorkedforWindows = WinLibrary.GetLibrary().SetActiveConfig(myDisplayConfig.WindowsConfig);
+                            bool itWorkedforWindows = winLibrary.SetActiveConfig(myDisplayConfig.WindowsConfig);
                             if (itWorkedforWindows)
                             {
-                                bool itWorkedforAMDColor = AMDLibrary.GetLibrary().SetActiveConfigOverride(myDisplayConfig.AMDConfig);
+                                bool itWorkedforAMDColor = amdLibrary.SetActiveConfigOverride(myDisplayConfig.AMDConfig);
 
                                 if (itWorkedforAMDColor)
                                 {
@@ -362,6 +373,10 @@ namespace AMDInfo
 
         static void possibleFromFile(string filename)
         {
+            // Get references to the libraries used
+            AMDLibrary amdLibrary = AMDLibrary.GetLibrary();
+            WinLibrary winLibrary = WinLibrary.GetLibrary();
+
             string json = "";
             try
             {
@@ -395,7 +410,7 @@ namespace AMDInfo
                     SharedLogger.logger.Error(ex, $"AMDInfo/possibleFromFile: Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
                 }
 
-                if (AMDLibrary.GetLibrary().IsPossibleConfig(myDisplayConfig.AMDConfig))
+                if (amdLibrary.IsPossibleConfig(myDisplayConfig.AMDConfig) && winLibrary.IsPossibleConfig(myDisplayConfig.WindowsConfig))
                 {
                     SharedLogger.logger.Trace($"AMDInfo/possibleFromFile: The AMD display settings in {filename} are able to be applied on this computer if you'd like to apply them.");
                     Console.WriteLine($"The AMD display settings in {filename} are able to be applied on this computer if you'd like to apply them.");
@@ -484,7 +499,7 @@ namespace AMDInfo
                     SharedLogger.logger.Error(ex, $"AMDInfo/equalFromFile: Tried to parse the JSON in the {filename} but the JsonConvert threw an exception.");
                 }
 
-                if (displayConfig.AMDConfig.Equals(otherDisplayConfig.AMDConfig))
+                if (displayConfig.WindowsConfig.Equals(otherDisplayConfig.WindowsConfig) && displayConfig.AMDConfig.Equals(otherDisplayConfig.AMDConfig))
                 {
                     SharedLogger.logger.Trace($"AMDInfo/equalFromFile: The AMD display settings in {filename} and {otherFilename} are equal.");
                     Console.WriteLine($"The AMD display settings in {filename} and {otherFilename} are equal.");
