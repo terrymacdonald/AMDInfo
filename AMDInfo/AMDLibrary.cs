@@ -1451,34 +1451,42 @@ namespace DisplayMagicianShared.AMD
                     // Try and find the HDR config displays in the list of currently connected displays
                     foreach (var displayInfoItem in ActiveDisplayConfig.DisplayTargets)
                     {
-                        // If we find the HDR config display in the list of currently connected displays then try to set the HDR setting we recorded earlier
-                        if (hdrConfig.Key == displayInfoItem.DisplayID.DisplayLogicalIndex)
+                        try
                         {
-                            if (hdrConfig.Value.HDREnabled)
+                            // If we find the HDR config display in the list of currently connected displays then try to set the HDR setting we recorded earlier
+                            if (hdrConfig.Key == displayInfoItem.DisplayID.DisplayLogicalIndex)
                             {
-                                ADLRet = ADLImport.ADL2_Display_HDRState_Set(_adlContextHandle, hdrConfig.Value.AdapterIndex, displayInfoItem.DisplayID, 1);
-                                if (ADLRet == ADL_STATUS.ADL_OK)
+                                if (hdrConfig.Value.HDREnabled)
                                 {
-                                    SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Set was able to turn on HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
+                                    ADLRet = ADLImport.ADL2_Display_HDRState_Set(_adlContextHandle, hdrConfig.Value.AdapterIndex, displayInfoItem.DisplayID, 1);
+                                    if (ADLRet == ADL_STATUS.ADL_OK)
+                                    {
+                                        SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfigOverride: ADL2_Display_HDRState_Set was able to turn on HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
+                                    }
+                                    else
+                                    {
+                                        SharedLogger.logger.Error($"AMDLibrary/SetActiveConfigOverride: ADL2_Display_HDRState_Set was NOT able to turn on HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
+                                    }
                                 }
                                 else
                                 {
-                                    SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Set was NOT able to turn on HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
+                                    ADLRet = ADLImport.ADL2_Display_HDRState_Set(_adlContextHandle, hdrConfig.Value.AdapterIndex, displayInfoItem.DisplayID, 0);
+                                    if (ADLRet == ADL_STATUS.ADL_OK)
+                                    {
+                                        SharedLogger.logger.Trace($"AMDLibrary/SetActiveConfigOverride: ADL2_Display_HDRState_Set was able to turn off HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
+                                    }
+                                    else
+                                    {
+                                        SharedLogger.logger.Error($"AMDLibrary/SetActiveConfigOverride: ADL2_Display_HDRState_Set was NOT able to turn off HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
+                                    }
                                 }
+                                break;
                             }
-                            else
-                            {
-                                ADLRet = ADLImport.ADL2_Display_HDRState_Set(_adlContextHandle, hdrConfig.Value.AdapterIndex, displayInfoItem.DisplayID, 0);
-                                if (ADLRet == ADL_STATUS.ADL_OK)
-                                {
-                                    SharedLogger.logger.Trace($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Set was able to turn off HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
-                                }
-                                else
-                                {
-                                    SharedLogger.logger.Error($"AMDLibrary/GetAMDDisplayConfig: ADL2_Display_HDRState_Set was NOT able to turn off HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
-                                }
-                            }
-                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            SharedLogger.logger.Error(ex, $"AMDLibrary/GetAMDDisplayConfig: Exception! ADL2_Display_HDRState_Set was NOT able to change HDR for display {displayInfoItem.DisplayID.DisplayLogicalIndex}.");
+                            continue;
                         }
                     }
 
