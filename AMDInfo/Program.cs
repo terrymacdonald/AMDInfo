@@ -52,10 +52,10 @@ namespace AMDInfo
             NLog.LogManager.Configuration = config;
 
             // Start the Log file
-            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.3.4");
+            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.3.8");
 
 
-            Console.WriteLine($"\nAMDInfo v1.3.4");
+            Console.WriteLine($"\nAMDInfo v1.3.8");
             Console.WriteLine($"==============");
             Console.WriteLine($"By Terry MacDonald 2021\n");
 
@@ -215,6 +215,10 @@ namespace AMDInfo
             Console.WriteLine($"\t'AMDInfo save myfilename.cfg' will save your current display setting to the myfilename.cfg file.");
             Console.WriteLine($"\t'AMDInfo load myfilename.cfg' will load and apply the display setting in the myfilename.cfg file.");
             Console.WriteLine($"\t'AMDInfo possible myfilename.cfg' will test the display setting in the myfilename.cfg file to see\n\t\tif it is possible.");
+            Console.WriteLine($"\t'AMDInfo equal myfilename.cfg' will test if the display setting in the myfilename.cfg is equal to\n\t\tthe one in use.");
+            Console.WriteLine($"\t'AMDInfo equal myfilename.cfg myother.cfg' will test if the display setting in the myfilename.cfg\n\t\tis equal to the one in myother.cfg.");
+            Console.WriteLine($"\t'AMDInfo currentids' will display the display identifiers for all active displays.");
+            Console.WriteLine($"\t'AMDInfo allids' will display the display identifiers for all displays that are active or can be \n\t\tmade active.");
             Console.WriteLine($"\nUse DisplayMagician to store display settings for each game you have. https://github.com/terrymacdonald/DisplayMagician\n");
         }
 
