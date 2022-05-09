@@ -52,12 +52,12 @@ namespace AMDInfo
             NLog.LogManager.Configuration = config;
 
             // Start the Log file
-            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.5.0");
+            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.7.3");
 
 
-            Console.WriteLine($"\nAMDInfo v1.5.0");
+            Console.WriteLine($"\nAMDInfo v1.7.3");
             Console.WriteLine($"==============");
-            Console.WriteLine($"By Terry MacDonald 2021\n");
+            Console.WriteLine($"By Terry MacDonald 2022\n");
 
             // First check that we have an AMD Video Card in this PC
             List<string> videoCardVendors = WinLibrary.GetLibrary().GetCurrentPCIVideoCardVendors();
