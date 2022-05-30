@@ -1,12 +1,12 @@
 # AMDInfo
 
-AMDInfo is a test programme designed to exercise the NVAPI library that I developed for DisplayMagician. This little programme helps me validate that the library is working properly, and that it will work when added to the main DisplayMagician code.
+AMDInfo is a test programme designed to exercise the ADL library that I developed for DisplayMagician. This little programme helps me validate that the library is working properly, and that it will work when added to the main DisplayMagician code.
 
 AMDInfo records exactly how you setup your display settings, including AMD Eyefinity sccreens, display position, resolution, HDR settings, and even which screen is your main one, and then AMDInfo saves those settings to a file. It works using the AMD API and the Windows Display CCD interface to configure your display settings for you. You can set up your display settings exactly how you like them using AMD Setup and Windows Display Setup, and then use AMDInfo to save those settings to a file.
 
 NOTE: AMDInfo doesn't handle NVIDIA Surround/Mosaic. Please see [NVIDIAInfo](https://github.com/terrymacdonald/NVIDIAInfo) for that!
 
-IMPORTANT: If you really want to control your NVIDIA or AMD screen, I'd recommend looking at [DisplayMagician](https://github.com/terrymacdonald/DisplayMagician) for that!
+IMPORTANT: If you really want to control your NVIDIA or AMD screen, I'd recommend looking at [DisplayMagician](https://github.com/terrymacdonald/DisplayMagician) as it also provides the ability to change display layout when running a game!
 
 Command line examples:
 
@@ -14,6 +14,8 @@ Command line examples:
 - Save the settings you currently are using to a file to use later: `AMDInfo save my-cool-settings.cfg`
 - Load the settings you saved earlier and use them now: `AMDInfo load my-cool-settings.cfg`
 - Show whether the display config file can be used: `AMDInfo possible my-cool-settings.cfg`
+- Determine if a particular cfg is in use now used: `AMDInfo equal my-cool-settings.cfg`
+- Determine if two cfg files are the same: `AMDInfo equal my-cool-settings.cfg other-cool-settings.cfg`
 
 
 ## To setup this software:
