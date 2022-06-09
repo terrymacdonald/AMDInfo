@@ -951,6 +951,7 @@ namespace DisplayMagicianShared.AMD
                         catch (Exception ex)
                         {
                             displayConnector = ADL_DISPLAY_CONNECTION_TYPE.Unknown;
+                            SharedLogger.logger.Warn(ex,$"AMDLibrary/PrintActiveConfig: Exception while trying to get the display connector for Display {displayTarget.DisplayID} on AMD adapter #{adapterIndex}.");
                         }
                         SharedLogger.logger.Trace($"AMDLibrary/PrintActiveConfig: Display {displayTarget.DisplayID} on AMD adapter #{adapterIndex} has a {displayConnector} connector.");
                         // Then only get the HDR config stuff if the connection actually suports getting the HDR info!
