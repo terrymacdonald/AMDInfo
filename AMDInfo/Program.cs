@@ -52,15 +52,15 @@ namespace AMDInfo
             NLog.LogManager.Configuration = config;
 
             // Start the Log file
-            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.8.0");
+            SharedLogger.logger.Info($"AMDInfo/Main: Starting AMDInfo v1.8.1");
 
 
-            Console.WriteLine($"\nAMDInfo v1.8.0");
+            Console.WriteLine($"\nAMDInfo v1.8.1");
             Console.WriteLine($"==============");
             Console.WriteLine($"By Terry MacDonald 2022\n");
 
             // First check that we have an AMD Video Card in this PC
-            List<string> videoCardVendors = WinLibrary.GetLibrary().GetCurrentPCIVideoCardVendors();
+            List<string> videoCardVendors = WinLibrary.GetLibrary().GetAllPCIVideoCardVendors();
             if (!AMDLibrary.GetLibrary().PCIVendorIDs.All(value => videoCardVendors.Contains(value)))
             {
                 SharedLogger.logger.Error($"NVIDIAInfo/Main: There are no AMD Video Cards enabled within this computer. AMDInfo requires at least one AMD Video Card to work. Please use DisplayMagician instead.");
